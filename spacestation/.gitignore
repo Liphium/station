@@ -1,0 +1,17 @@
+node-integration/
+node-integration/*
+
+pipes/
+pipes/*
+
+pipes-fiber/
+pipes-fiber/*
+
+
+.env
+app-linux
+data.node
+
+# Build files
+app
+app.exe

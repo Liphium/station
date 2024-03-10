@@ -1,0 +1,12 @@
+.env
+app-linux
+/app.go
+
+advancedchallenges/
+advancedchallenges/*
+
+functions.js
+
+# Air (in case someone wants to use another OS)
+tmp/
+.air.toml

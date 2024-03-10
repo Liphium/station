@@ -1,0 +1,21 @@
+database/credentials/credentials.go
+env/
+
+node-integration/
+node-integration/*
+
+pipes-fiber/
+pipes-fiber/*
+
+# Air files
+tmp/
+.air.toml
+
+pipes/
+pipes/*
+.env
+data.node
+
+# build stuff
+app
+app.exe
