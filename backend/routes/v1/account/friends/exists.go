@@ -1,10 +1,9 @@
 package friends
 
 import (
-	"node-backend/database"
-	"node-backend/entities/account/properties"
-	"node-backend/util"
-
+	"github.com/Liphium/station/backend/database"
+	"github.com/Liphium/station/backend/entities/account/properties"
+	"github.com/Liphium/station/backend/util"
 	"github.com/gofiber/fiber/v2"
 )
 

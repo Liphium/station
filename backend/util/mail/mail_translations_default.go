@@ -1,8 +1,9 @@
 package mail
 
 import (
-	"node-backend/util"
 	"os"
+
+	"github.com/Liphium/station/backend/util"
 )
 
 // English is the default for email translations yk

@@ -1,8 +1,7 @@
 package app
 
 import (
-	"node-backend/routes/v1/app/manage"
-
+	"github.com/Liphium/station/backend/routes/v1/app/manage"
 	"github.com/gofiber/fiber/v2"
 )
 

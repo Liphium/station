@@ -1,8 +1,7 @@
 package session
 
 import (
-	"node-backend/routes/v1/session/manage"
-
+	"github.com/Liphium/station/backend/routes/v1/session/manage"
 	"github.com/gofiber/fiber/v2"
 )
 

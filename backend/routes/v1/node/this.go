@@ -1,9 +1,8 @@
 package node
 
 import (
-	"node-backend/util"
-	"node-backend/util/nodes"
-
+	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/nodes"
 	"github.com/gofiber/fiber/v2"
 )
 

@@ -2,8 +2,9 @@ package nodes
 
 import (
 	"errors"
-	"node-backend/database"
-	"node-backend/entities/node"
+
+	"github.com/Liphium/station/backend/database"
+	"github.com/Liphium/station/backend/entities/node"
 )
 
 func Node(id uint, token string) (node.Node, error) {

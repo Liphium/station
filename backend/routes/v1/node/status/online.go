@@ -2,11 +2,11 @@ package status
 
 import (
 	"log"
-	"node-backend/database"
-	"node-backend/entities/node"
-	"node-backend/util"
-	"node-backend/util/nodes"
 
+	"github.com/Liphium/station/backend/database"
+	"github.com/Liphium/station/backend/entities/node"
+	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/nodes"
 	"github.com/gofiber/fiber/v2"
 )
 

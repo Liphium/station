@@ -4,8 +4,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
-	"node-backend/util"
 	"testing"
+
+	"github.com/Liphium/station/backend/util"
 )
 
 func TestEncryption(t *testing.T) {

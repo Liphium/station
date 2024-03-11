@@ -2,10 +2,10 @@ package invite_routes
 
 import (
 	"errors"
-	"node-backend/database"
-	"node-backend/entities/account"
-	"node-backend/util"
 
+	"github.com/Liphium/station/backend/database"
+	"github.com/Liphium/station/backend/entities/account"
+	"github.com/Liphium/station/backend/util"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )

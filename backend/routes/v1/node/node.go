@@ -1,11 +1,10 @@
 package node
 
 import (
-	"node-backend/routes/v1/node/connect"
-	"node-backend/routes/v1/node/manage"
-	"node-backend/routes/v1/node/status"
-	"node-backend/util"
-
+	"github.com/Liphium/station/backend/routes/v1/node/connect"
+	"github.com/Liphium/station/backend/routes/v1/node/manage"
+	"github.com/Liphium/station/backend/routes/v1/node/status"
+	"github.com/Liphium/station/backend/util"
 	"github.com/gofiber/fiber/v2"
 )
 

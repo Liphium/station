@@ -1,10 +1,9 @@
 package app
 
 import (
-	"node-backend/database"
-	"node-backend/entities/app"
-	"node-backend/util"
-
+	"github.com/Liphium/station/backend/database"
+	"github.com/Liphium/station/backend/entities/app"
+	"github.com/Liphium/station/backend/util"
 	"github.com/gofiber/fiber/v2"
 )
 

@@ -1,13 +1,13 @@
 package connect
 
 import (
-	"node-backend/database"
-	"node-backend/entities/account"
-	"node-backend/entities/node"
-	"node-backend/util"
-	"node-backend/util/nodes"
 	"time"
 
+	"github.com/Liphium/station/backend/database"
+	"github.com/Liphium/station/backend/entities/account"
+	"github.com/Liphium/station/backend/entities/node"
+	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/nodes"
 	"github.com/gofiber/fiber/v2"
 )
 

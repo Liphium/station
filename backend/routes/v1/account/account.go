@@ -1,16 +1,15 @@
 package account
 
 import (
-	"node-backend/routes/v1/account/files"
-	"node-backend/routes/v1/account/friends"
-	invite_routes "node-backend/routes/v1/account/invite"
-	"node-backend/routes/v1/account/keys"
-	"node-backend/routes/v1/account/profile"
-	"node-backend/routes/v1/account/rank"
-	settings_routes "node-backend/routes/v1/account/settings"
-	"node-backend/routes/v1/account/stored_actions"
-	"node-backend/routes/v1/account/vault"
-
+	"github.com/Liphium/station/backend/routes/v1/account/files"
+	"github.com/Liphium/station/backend/routes/v1/account/friends"
+	invite_routes "github.com/Liphium/station/backend/routes/v1/account/invite"
+	"github.com/Liphium/station/backend/routes/v1/account/keys"
+	"github.com/Liphium/station/backend/routes/v1/account/profile"
+	"github.com/Liphium/station/backend/routes/v1/account/rank"
+	settings_routes "github.com/Liphium/station/backend/routes/v1/account/settings"
+	"github.com/Liphium/station/backend/routes/v1/account/stored_actions"
+	"github.com/Liphium/station/backend/routes/v1/account/vault"
 	"github.com/gofiber/fiber/v2"
 )
 

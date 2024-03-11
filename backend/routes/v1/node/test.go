@@ -2,9 +2,9 @@ package node
 
 import (
 	"log"
-	"node-backend/util"
-	"node-backend/util/requests"
 
+	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/requests"
 	"github.com/gofiber/fiber/v2"
 )
 

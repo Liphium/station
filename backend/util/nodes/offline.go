@@ -2,9 +2,10 @@ package nodes
 
 import (
 	"log"
-	"node-backend/database"
-	"node-backend/entities/account"
-	"node-backend/entities/node"
+
+	"github.com/Liphium/station/backend/database"
+	"github.com/Liphium/station/backend/entities/account"
+	"github.com/Liphium/station/backend/entities/node"
 )
 
 func TurnOff(node *node.Node, status uint) {

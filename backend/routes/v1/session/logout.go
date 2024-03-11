@@ -1,11 +1,10 @@
 package session
 
 import (
-	"node-backend/database"
-	"node-backend/entities/account"
-	"node-backend/util"
-	"node-backend/util/requests"
-
+	"github.com/Liphium/station/backend/database"
+	"github.com/Liphium/station/backend/entities/account"
+	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/requests"
 	"github.com/gofiber/fiber/v2"
 )
 

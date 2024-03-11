@@ -1,9 +1,9 @@
 package auth
 
 import (
-	"node-backend/util"
 	"time"
 
+	"github.com/Liphium/station/backend/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
