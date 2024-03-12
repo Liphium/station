@@ -1,6 +1,5 @@
 .env
 app-linux
-/app.go
 
 advancedchallenges/
 advancedchallenges/*

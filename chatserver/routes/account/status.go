@@ -1,7 +1,7 @@
 package account_routes
 
 import (
-	"github.com/Liphium/station/integration"
+	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
 )
 

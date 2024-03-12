@@ -3,6 +3,9 @@ module github.com/Liphium/station/chatserver
 go 1.22.1
 
 require (
+	github.com/Liphium/station/main v0.0.0-00010101000000-000000000000
+	github.com/Liphium/station/pipes v0.0.0-20240311181740-c669621ea584
+	github.com/Liphium/station/pipeshandler v0.0.0-20240311181740-c669621ea584
 	github.com/gofiber/contrib/jwt v1.0.8
 	github.com/gofiber/fiber/v2 v2.52.2
 	github.com/livekit/protocol v1.11.0
@@ -68,12 +71,12 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20231201235250-de7065d80cb9 // indirect
-	github.com/jackc/pgx/v5 v5.5.4 // indirect
+	github.com/jackc/pgx/v5 v5.5.5 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	gorm.io/driver/postgres v1.5.6
+	gorm.io/driver/postgres v1.5.7
 	gorm.io/gorm v1.25.7
 )
 
@@ -84,7 +87,7 @@ require (
 )
 
 require (
-	github.com/bytedance/sonic v1.11.2
+	github.com/bytedance/sonic v1.11.3
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
@@ -129,7 +132,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240304212257-790db918fca8 // indirect
 )
 
-replace github.com/Liphium/station/integration => ../integration
+replace github.com/Liphium/station/main => ../main
 
 replace github.com/Liphium/station/pipeshandler => ../pipeshandler
 

@@ -17,8 +17,6 @@ var Testing = false
 var TestingToken = ""
 
 var JwtSecret = ""
-var NODE_TOKEN = ""
-var NODE_ID uint = 0
 
 const StatusOnline = 0
 const StatusOffline = 1

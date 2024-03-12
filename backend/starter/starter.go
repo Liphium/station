@@ -1,4 +1,4 @@
-package starter
+package backend_starter
 
 import (
 	"bufio"
@@ -16,7 +16,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func Startup() {
+func Startup(routine bool) {
 
 	log.SetOutput(os.Stdout)
 
@@ -67,11 +67,23 @@ func Startup() {
 		}()
 
 		// Listen for commands
-		listenForCommands()
+		if routine {
+			go listenForCommands()
+		} else {
+			listenForCommands()
+		}
 	} else {
-		err = app.Listen(os.Getenv("LISTEN"))
 
-		log.Println(err.Error())
+		var err error
+		if routine {
+			go app.Listen(os.Getenv("LISTEN"))
+		} else {
+			err = app.Listen(os.Getenv("LISTEN"))
+		}
+
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 

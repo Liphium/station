@@ -11,7 +11,7 @@ import (
 var RoomClient *lksdk.RoomServiceClient
 
 func InitLiveKit() {
-	RoomClient = lksdk.NewRoomServiceClient(os.Getenv("LK_URL"), os.Getenv("LK_KEY"), os.Getenv("LK_SECRET"))
+	RoomClient = lksdk.NewRoomServiceClient(os.Getenv("SS_LK_URL"), os.Getenv("SS_LK_KEY"), os.Getenv("SS_LK_SECRET"))
 
 	_, err := RoomClient.CreateRoom(context.Background(), &livekit.CreateRoomRequest{
 		Name:         "test",

@@ -1,4 +1,4 @@
-package starter
+package backend_starter
 
 import (
 	"bufio"
@@ -31,29 +31,7 @@ func listenForCommands() {
 		case "exit":
 			os.Exit(0)
 		case "create-default":
-
-			if database.DBConn.Where("name = ?", "Default").Take(&account.Rank{}).RowsAffected > 0 {
-				fmt.Println("Default stuff already exists")
-				continue
-			}
-
-			// Create default ranks
-			database.DBConn.Create(&account.Rank{
-				Name:  "Default",
-				Level: 20,
-			})
-			database.DBConn.Create(&account.Rank{
-				Name:  "Admin",
-				Level: 100,
-			})
-
-			// Create default cluster
-			database.DBConn.Create(&node.Cluster{
-				Name:    "Vaterland",
-				Country: "DE",
-			})
-
-			fmt.Println("Created default ranks and cluster")
+			CreateDefaultObjects()
 
 		case "create-app":
 
@@ -329,4 +307,38 @@ func listenForCommands() {
 			fmt.Println("Unknown command. Type 'help' for a list of commands.")
 		}
 	}
+}
+
+func GenerateKeyPair() (publicKey string, privateKey string, theError error) {
+	priv, pub, err := util.GenerateRSAKey(util.StandardKeySize)
+	if err != nil {
+		return "", "", err
+	}
+
+	return util.PackageRSAPublicKey(pub), util.PackageRSAPrivateKey(priv), nil
+}
+
+func CreateDefaultObjects() {
+	if database.DBConn.Where("name = ?", "Default").Take(&account.Rank{}).RowsAffected > 0 {
+		fmt.Println("Default stuff already exists")
+		return
+	}
+
+	// Create default ranks
+	database.DBConn.Create(&account.Rank{
+		Name:  "Default",
+		Level: 20,
+	})
+	database.DBConn.Create(&account.Rank{
+		Name:  "Admin",
+		Level: 100,
+	})
+
+	// Create default cluster
+	database.DBConn.Create(&node.Cluster{
+		Name:    "Default cluster",
+		Country: "DE",
+	})
+
+	fmt.Println("Created default ranks and cluster")
 }

@@ -3,7 +3,7 @@ package util
 import (
 	"time"
 
-	"github.com/Liphium/station/integration"
+	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )

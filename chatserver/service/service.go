@@ -4,7 +4,7 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/fetching"
 	"github.com/Liphium/station/chatserver/util"
-	"github.com/Liphium/station/integration"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 )
@@ -20,7 +20,7 @@ func User(client *pipeshandler.Client) bool {
 		if database.DBConn.Create(&fetching.Status{
 			ID:   account,
 			Data: "-", // Status is disabled
-			Node: integration.NODE_ID,
+			Node: integration.Nodes[integration.IdentifierChatNode].NodeId,
 		}).Error != nil {
 			return false
 		}

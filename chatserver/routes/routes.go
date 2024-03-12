@@ -14,7 +14,7 @@ import (
 	"github.com/Liphium/station/chatserver/routes/ping"
 	"github.com/Liphium/station/chatserver/service"
 	"github.com/Liphium/station/chatserver/util"
-	"github.com/Liphium/station/integration"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipes/adapter"
 	"github.com/Liphium/station/pipeshandler"
@@ -147,9 +147,10 @@ func setupPipesFiber(router fiber.Router, serverPublicKey *rsa.PublicKey) {
 			}
 
 			// Tell the backend that someone disconnected
+			nodeData := integration.Nodes[integration.IdentifierChatNode]
 			integration.PostRequest("/node/disconnect", map[string]interface{}{
-				"node":    util.NODE_ID,
-				"token":   util.NODE_TOKEN,
+				"node":    nodeData.NodeId,
+				"token":   nodeData.NodeToken,
 				"session": client.Session,
 			})
 		},

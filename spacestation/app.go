@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Liphium/station/integration"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipes/connection"
 	"github.com/Liphium/station/spacestation/caching"
@@ -34,19 +34,22 @@ func main() {
 	app.Use(cors.New())
 	app.Use(logger.New())
 
-	if !integration.Setup() {
+	if !integration.Setup(integration.IdentifierSpaceNode) {
 		return
 	}
 
 	server.InitLiveKit()
 
 	launcher.InitGames()
-	pipes.SetupCurrent(fmt.Sprintf("%d", integration.NODE_ID), integration.NODE_TOKEN)
+	nodeData := integration.Nodes[integration.IdentifierSpaceNode]
+	pipes.SetupCurrent(fmt.Sprintf("%d", nodeData.NodeId), nodeData.NodeToken)
 	util.Log.Println("Starting..")
 
 	// Query current node AND JWT TOKEN
-	_, _, currentApp, domain := integration.GetCurrent()
-	APP_ID = currentApp
+	_, _, currentApp, domain := integration.GetCurrent(integration.IdentifierChatNode)
+	currentNodeData := integration.Nodes[integration.IdentifierChatNode]
+	currentNodeData.AppId = currentApp
+	integration.Nodes[integration.IdentifierChatNode] = currentNodeData
 
 	// Setup routes (called here because of the jwt secret)
 	app.Route("/", routes.SetupRoutes)
@@ -61,7 +64,7 @@ func main() {
 	handler.Initialize()
 
 	// Report online status
-	res := integration.SetOnline()
+	res := integration.SetOnline(integration.IdentifierSpaceNode)
 	parseNodes(res)
 
 	// Check if test mode or production
@@ -134,7 +137,6 @@ func main() {
 	})
 
 	// Start on localhost
-	go server.Listen(os.Getenv("LISTEN"), util.UDPPort)
 	app.Listen(fmt.Sprintf("%s:%d", os.Getenv("LISTEN"), util.Port))
 }
 

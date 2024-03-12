@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"github.com/Liphium/station/integration"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/spacestation/caching"
 	"github.com/gofiber/fiber/v2"
 )

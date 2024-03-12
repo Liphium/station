@@ -3,7 +3,7 @@ package util
 import (
 	"errors"
 
-	"github.com/Liphium/station/integration"
+	"github.com/Liphium/station/main/integration"
 )
 
 type AppToken struct {
@@ -14,13 +14,15 @@ type AppToken struct {
 
 func ConnectToApp(account string, session string, app uint, cluster uint) (AppToken, error) {
 
+	// Get the lowest node
+	nodeData := integration.Nodes[integration.IdentifierChatNode]
 	res, err := integration.PostRequest("/node/get_lowest", map[string]interface{}{
 		"account": account,
 		"session": session,
 		"app":     app,
 		"cluster": cluster,
-		"node":    integration.NODE_ID,
-		"token":   integration.NODE_TOKEN,
+		"node":    nodeData.NodeId,
+		"token":   nodeData.NodeToken,
 	})
 	if err != nil {
 		return AppToken{}, err

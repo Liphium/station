@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/Liphium/station/integration"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipeshandler/wshandler"
 	"github.com/Liphium/station/spacestation/caching"
 	"github.com/Liphium/station/spacestation/server"

@@ -18,7 +18,18 @@ var FilePath = ""
 var NodePrivateKey *rsa.PrivateKey // Private key for current node
 var NodePublicKey *rsa.PublicKey   // Public key for current node
 
-func Setup() bool {
+type NodeData struct {
+	NodeToken string
+	NodeId    uint
+	AppId     uint
+}
+
+const IdentifierChatNode = "chat"
+const IdentifierSpaceNode = "space"
+
+var Nodes map[string]NodeData = make(map[string]NodeData)
+
+func Setup(identifier string) bool {
 
 	// Setup environment
 	err := godotenv.Load()
@@ -29,6 +40,7 @@ func Setup() bool {
 
 	if os.Getenv("PROTOCOL") == "" {
 		Log.Println("Please set PROTOCOL in the .env file to 'https://' if you are using HTTPS.")
+		os.Setenv("PROTOCOL", "http://")
 	} else {
 		Protocol = os.Getenv("PROTOCOL")
 	}
@@ -69,6 +81,12 @@ func Setup() bool {
 		}
 	}
 
+	// Check if already setup
+	_, ok := Nodes[identifier]
+	if ok {
+		return true
+	}
+
 	input := ""
 	if os.Getenv("DEFAULT_FILE") != "" {
 		Log.Println("Using default file from .env: " + os.Getenv("DEFAULT_FILE"))
@@ -87,7 +105,7 @@ func Setup() bool {
 	}
 	FilePath = os.Getenv("NODE_ENV")
 
-	if readData(FilePath + "/" + input + ".node") {
+	if readData(FilePath+"/"+input+".node", identifier) {
 
 		Log.Println("Grabbing server public key..")
 		err = grabServerPublicKey()
@@ -173,8 +191,11 @@ func Setup() bool {
 	Log.Println("Node created successfully.")
 
 	// Setup
-	NODE_TOKEN = res["token"].(string)
-	NODE_ID = uint(res["id"].(float64))
+	Nodes[identifier] = NodeData{
+		NodeToken: res["token"].(string),
+		NodeId:    uint(res["id"].(float64)),
+		AppId:     uint(appId),
+	}
 
 	// Save data to file
 	f, err := os.Create(FilePath + "/" + input + ".node")
@@ -186,15 +207,15 @@ func Setup() bool {
 
 	// Write data to file
 	f.WriteString(BasePath + "\n")
-	f.WriteString(NODE_TOKEN + "\n")
-	f.WriteString(fmt.Sprintf("%d", NODE_ID) + "\n")
+	f.WriteString(Nodes[identifier].NodeToken + "\n")
+	f.WriteString(fmt.Sprintf("%d", Nodes[identifier].NodeId) + "\n")
 
 	Log.Println("Data saved to file.")
 
 	return true
 }
 
-func readData(path string) bool {
+func readData(path string, identifier string) bool {
 	Log.Println(path)
 
 	f, err := os.Open(path)
@@ -209,11 +230,15 @@ func readData(path string) bool {
 	BasePath = scanner.Text()
 
 	scanner.Scan()
-	NODE_TOKEN = scanner.Text()
+	nodeToken := scanner.Text()
 
 	scanner.Scan()
 	nodeId, err := strconv.Atoi(scanner.Text())
-	NODE_ID = uint(nodeId)
+
+	Nodes[identifier] = NodeData{
+		NodeToken: nodeToken,
+		NodeId:    uint(nodeId),
+	}
 
 	if err != nil {
 		Log.Println("Error while reading data file.")

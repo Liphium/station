@@ -5,7 +5,7 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
 	"github.com/Liphium/station/chatserver/util/localization"
-	"github.com/Liphium/station/integration"
+	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
 )
 

@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/Liphium/station/integration"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipes/adapter"
 	"github.com/Liphium/station/pipeshandler"

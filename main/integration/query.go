@@ -10,11 +10,11 @@ import (
 
 var ClusterID uint = 0
 
-func GetCurrent() (id int64, token string, app uint, domain string) {
+func GetCurrent(identifier string) (id int64, token string, app uint, domain string) {
 
 	res, err := PostRequest("/node/this", fiber.Map{
-		"node":  NODE_ID,
-		"token": NODE_TOKEN,
+		"node":  Nodes[identifier].NodeId,
+		"token": Nodes[identifier].NodeToken,
 	})
 
 	if err != nil {
@@ -34,11 +34,11 @@ func GetCurrent() (id int64, token string, app uint, domain string) {
 	return int64(n["id"].(float64)), n["token"].(string), uint(n["app"].(float64)), n["domain"].(string)
 }
 
-func SetOnline() map[string]interface{} {
+func SetOnline(identifier string) map[string]interface{} {
 
 	res, err := PostRequest("/node/status/online", fiber.Map{
-		"id":    NODE_ID,
-		"token": NODE_TOKEN,
+		"id":    Nodes[identifier].NodeId,
+		"token": Nodes[identifier].NodeToken,
 	})
 
 	if err != nil {

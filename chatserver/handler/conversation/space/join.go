@@ -3,7 +3,7 @@ package space
 import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/util/localization"
-	"github.com/Liphium/station/integration"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipeshandler/wshandler"
 )
 

@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/Liphium/station/chatserver/util"
-	"github.com/Liphium/station/integration"
+	"github.com/Liphium/station/main/integration"
 	"github.com/dgraph-io/ristretto"
 )
 
