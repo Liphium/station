@@ -11,6 +11,7 @@ import (
 	"github.com/Liphium/station/backend/util/auth"
 	chatserver_starter "github.com/Liphium/station/chatserver/starter"
 	"github.com/Liphium/station/main/integration"
+	spacestation_starter "github.com/Liphium/station/spacestation/starter"
 )
 
 func main() {
@@ -42,6 +43,7 @@ func main() {
 		}).Error; err != nil {
 			panic(err)
 		}
+		printWithPrefix("Created default chat app")
 	}
 
 	if err := database.DBConn.Where("id = ?", 2).First(&app.App{}).Error; err != nil {
@@ -54,6 +56,7 @@ func main() {
 		}).Error; err != nil {
 			panic(err)
 		}
+		printWithPrefix("Created default spaces app")
 	}
 
 	os.Setenv("CHAT_APP", "1")
@@ -61,8 +64,8 @@ func main() {
 
 	// Create default nodes
 	var defaultChatNode node.Node
-	if err := database.DBConn.Where("id = ? AND app = ?", 1, 1).First(&defaultChatNode).Error; err != nil {
-		if err := database.DBConn.Create(&node.Node{
+	if err := database.DBConn.Where("id = ? AND app_id = ?", 1, 1).First(&defaultChatNode).Error; err != nil {
+		defaultChatNode = node.Node{
 			ID:              1,
 			ClusterID:       1,
 			AppID:           1,
@@ -71,9 +74,11 @@ func main() {
 			Token:           auth.GenerateToken(300),
 			Domain:          os.Getenv("CHAT_NODE"),
 			Status:          node.StatusStopped,
-		}).Error; err != nil {
+		}
+		if err := database.DBConn.Create(&defaultChatNode).Error; err != nil {
 			panic(err)
 		}
+		printWithPrefix("Created default chat node")
 	}
 	integration.Nodes[integration.IdentifierChatNode] = integration.NodeData{
 		NodeToken: defaultChatNode.Token,
@@ -82,8 +87,8 @@ func main() {
 	}
 
 	var defaultSpaceNode node.Node
-	if err := database.DBConn.Where("id = ? AND app = ?", 2, 2).First(&defaultSpaceNode).Error; err != nil {
-		if err := database.DBConn.Create(&node.Node{
+	if err := database.DBConn.Where("id = ? AND app_id = ?", 2, 2).First(&defaultSpaceNode).Error; err != nil {
+		defaultSpaceNode = node.Node{
 			ID:              2,
 			ClusterID:       1,
 			AppID:           2,
@@ -92,9 +97,11 @@ func main() {
 			Token:           auth.GenerateToken(300),
 			Domain:          os.Getenv("SPACE_NODE"),
 			Status:          node.StatusStopped,
-		}).Error; err != nil {
+		}
+		if err := database.DBConn.Create(&defaultSpaceNode).Error; err != nil {
 			panic(err)
 		}
+		printWithPrefix("Created default space node")
 	}
 	integration.Nodes[integration.IdentifierSpaceNode] = integration.NodeData{
 		NodeToken: defaultSpaceNode.Token,
@@ -104,7 +111,11 @@ func main() {
 
 	// Start chat server
 	printWithPrefix("Starting chat server..")
-	chatserver_starter.Start()
+	chatserver_starter.Start(true)
+
+	// Start space station
+	printWithPrefix("Starting space station..")
+	spacestation_starter.Start()
 }
 
 func printWithPrefix(s string) {

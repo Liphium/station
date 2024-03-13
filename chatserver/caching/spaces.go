@@ -1,7 +1,6 @@
 package caching
 
 import (
-	"log"
 	"os"
 	"strconv"
 
@@ -61,11 +60,11 @@ func LeaveSpace(accId string) bool {
 		"conn": space.ConnectionID,
 	})
 	if err != nil {
-		log.Println("Error while leaving space:", err)
+		util.Log.Println("Error while leaving space:", err)
 		return false
 	}
 	if !body["success"].(bool) {
-		log.Println("Error while leaving space:", body["error"])
+		util.Log.Println("Error while leaving space:", body["error"])
 		return false
 	}
 
@@ -86,7 +85,7 @@ func JoinSpace(accId string, space string, cluster uint) (util.AppToken, bool) {
 	connId := generateConnectionID()
 	token, err := util.ConnectToApp(connId, space, spaceApp, cluster) // Use accId as roomId so it's unique
 	if err != nil {
-		log.Println("Error while connecting to Spaces:", err)
+		util.Log.Println("Error while connecting to Spaces:", err)
 		return util.AppToken{}, false
 	}
 	spacesCache.Set(accId, SpaceInfo{
@@ -109,7 +108,7 @@ func CreateSpace(accId string, cluster uint) (string, util.AppToken, bool) {
 	*/
 
 	if os.Getenv("SPACES_APP") == "" {
-		log.Println("Spaces is currently disabled. Please set SPACES_APP in your .env file to enable it.")
+		util.Log.Println("Spaces is currently disabled. Please set SPACES_APP in your .env file to enable it.")
 		return "", util.AppToken{}, false
 	}
 
@@ -118,7 +117,7 @@ func CreateSpace(accId string, cluster uint) (string, util.AppToken, bool) {
 	roomId := util.GenerateToken(16)
 	token, err := util.ConnectToApp(connId, roomId, spaceApp, cluster) // Use accId as roomId so it's unique
 	if err != nil {
-		log.Println("Error while connecting to Spaces:", err)
+		util.Log.Println("Error while connecting to Spaces:", err)
 		return "", util.AppToken{}, false
 	}
 	spacesCache.Set(accId, SpaceInfo{

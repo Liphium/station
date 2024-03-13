@@ -1,7 +1,6 @@
 package profile
 
 import (
-	"log"
 	"strings"
 
 	"github.com/Liphium/station/backend/database"
@@ -41,7 +40,7 @@ func setProfilePicture(c *fiber.Ctx) error {
 	args := strings.Split(file.Id, ".")
 	extension := args[len(args)-1]
 	found := false
-	log.Println("file extension: " + extension)
+	util.Log.Println("file extension: " + extension)
 	for _, fType := range fileTypes {
 		if extension == fType {
 			found = true

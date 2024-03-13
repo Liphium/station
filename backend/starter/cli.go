@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -192,7 +191,7 @@ func listenForCommands() {
 				continue
 			}
 			directory = directory + "/test.msg"
-			log.Println(directory)
+			util.Log.Println(directory)
 			err = os.WriteFile(directory, encrypted, os.ModeAppend)
 			if err != nil {
 				fmt.Println("Couldn't write file:", err)

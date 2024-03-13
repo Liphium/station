@@ -2,7 +2,6 @@ package receive
 
 import (
 	"errors"
-	"log"
 	"time"
 
 	"github.com/Liphium/station/pipes"
@@ -34,15 +33,15 @@ func ReceiveWSAdoption(request string) (pipes.Node, error) {
 		go func() {
 			time.Sleep(2 * time.Second)
 
-			log.Println("Connecting to", adoptionRq.Adopting.ID)
+			pipes.Log.Println("Connecting to", adoptionRq.Adopting.ID)
 
 			connection.IterateWS(func(id string, value *websocket.Conn) bool {
-				log.Println(id)
+				pipes.Log.Println(id)
 				return true
 			})
 
 			if err := connection.ConnectWS(adoptionRq.Adopting); err != nil {
-				log.Println(err)
+				pipes.Log.Println(err)
 			}
 		}()
 	}

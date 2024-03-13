@@ -1,11 +1,10 @@
 package message_routes
 
 import (
-	"log"
-
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
+	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
 	"github.com/bytedance/sonic"
@@ -41,12 +40,12 @@ func deleteMessage(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "invalid certificate claims")
 	}
 
-	log.Println(claims)
+	util.Log.Println(claims)
 
 	// Check if certificate is valid for the provided conversation token
-	log.Println("message:", claims.Message, claims.Message)
-	log.Println("conv:", claims.Conversation, token.Conversation)
-	log.Println("sender:", claims.Sender, token.ID)
+	util.Log.Println("message:", claims.Message, claims.Message)
+	util.Log.Println("conv:", claims.Conversation, token.Conversation)
+	util.Log.Println("sender:", claims.Sender, token.ID)
 	if !claims.Valid(claims.Message, token.Conversation, token.ID) {
 		return integration.InvalidRequest(c, "no permssion to delete message")
 	}

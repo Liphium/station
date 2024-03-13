@@ -1,8 +1,6 @@
 package account
 
 import (
-	"log"
-
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/fetching"
 	"github.com/Liphium/station/chatserver/handler/conversation"
@@ -39,7 +37,7 @@ func sendStatus(message wshandler.Message) {
 
 		var memberIds []string
 		var memberNodes []string
-		log.Printf("%d", len(members[token.Conversation]))
+		util.Log.Printf("%d", len(members[token.Conversation]))
 		if len(members[token.Conversation]) == 2 {
 			for _, member := range members[token.Conversation] {
 				if member.Token != token.Token {
@@ -48,7 +46,7 @@ func sendStatus(message wshandler.Message) {
 				}
 			}
 		}
-		log.Printf("Sending to %d members", len(memberIds))
+		util.Log.Printf("Sending to %d members", len(memberIds))
 
 		// Send the subscription event
 		send.Pipe(send.ProtocolWS, pipes.Message{

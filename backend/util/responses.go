@@ -1,7 +1,6 @@
 package util
 
 import (
-	"log"
 	"os"
 	"runtime/debug"
 
@@ -25,7 +24,7 @@ const InviteInvalid = "invite.invalid"
 
 func DebugRouteError(c *fiber.Ctx, msg string) {
 	if Testing {
-		log.Println(c.Route().Path+":", msg)
+		Log.Println(c.Route().Path+":", msg)
 	}
 }
 
@@ -38,7 +37,7 @@ func SuccessfulRequest(c *fiber.Ctx) error {
 func FailedRequest(c *fiber.Ctx, error string, err error) error {
 
 	if LogErrors && err != nil {
-		log.Println(c.Route().Path+":", err)
+		Log.Println(c.Route().Path+":", err)
 		if os.Getenv("SHOW_STACK") == "1" {
 			debug.PrintStack()
 		}

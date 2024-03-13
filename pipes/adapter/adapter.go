@@ -1,7 +1,6 @@
 package adapter
 
 import (
-	"log"
 	"sync"
 
 	"github.com/Liphium/station/pipes"
@@ -62,7 +61,7 @@ func AdaptWS(adapter Adapter) {
 	_, ok := websocketCache.Get(adapter.ID)
 	if ok {
 		websocketCache.Del(adapter.ID)
-		log.Printf("[ws] Replacing adapter for target %s \n", adapter.ID)
+		pipes.Log.Printf("[ws] Replacing adapter for target %s \n", adapter.ID)
 	}
 
 	websocketCache.Set(adapter.ID, &adapter, 1)
@@ -81,7 +80,7 @@ func AdaptUDP(adapter Adapter) {
 	_, ok := udpCache.Get(adapter.ID)
 	if ok {
 		udpCache.Del(adapter.ID)
-		log.Printf("[udp] Replacing adapter for target %s \n", adapter.ID)
+		pipes.Log.Printf("[udp] Replacing adapter for target %s \n", adapter.ID)
 	}
 
 	udpCache.Set(adapter.ID, &adapter, 1)
@@ -115,7 +114,7 @@ func ReceiveWeb(ID string, event pipes.Event, msg []byte) {
 	adapter.Mutex.Unlock()
 
 	if err != nil {
-		log.Printf("[ws] Error receiving message from target %s: %s \n", ID, err)
+		pipes.Log.Printf("[ws] Error receiving message from target %s: %s \n", ID, err)
 	}
 }
 
@@ -137,6 +136,6 @@ func ReceiveUDP(ID string, event pipes.Event, msg []byte) {
 	adapter.Mutex.Unlock()
 
 	if err != nil {
-		log.Printf("[udp] Error receiving message from target %s: %s \n", ID, err)
+		pipes.Log.Printf("[udp] Error receiving message from target %s: %s \n", ID, err)
 	}
 }

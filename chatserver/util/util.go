@@ -5,7 +5,9 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"math/big"
+	"os"
 	"strconv"
 )
 
@@ -16,6 +18,7 @@ const StatusOnline = 0
 const StatusOffline = 1
 const StatusError = 2
 
+var Log = log.New(os.Stdout, "chat-server ", log.Flags())
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
 func GenerateToken(tkLength int32) string {

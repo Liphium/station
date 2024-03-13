@@ -3,7 +3,6 @@ package files
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -29,18 +28,18 @@ func uploadFile(c *fiber.Ctx) error {
 	extension := c.FormValue("extension", "-")
 	favorite := c.FormValue("favorite", "false")
 	if key == "-" || name == "-" || extension == "-" {
-		log.Println("invalid form data")
+		util.Log.Println("invalid form data")
 		return util.InvalidRequest(c)
 	}
 	file, err := c.FormFile("file")
 	if err != nil {
-		log.Println("no file")
+		util.Log.Println("no file")
 		return util.InvalidRequest(c)
 	}
 	accId := util.GetAcc(c)
 	fileType := file.Header.Get("Content-Type")
 	if fileType == "" {
-		log.Println("invalid headers")
+		util.Log.Println("invalid headers")
 		return util.InvalidRequest(c)
 	}
 

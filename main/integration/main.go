@@ -84,6 +84,14 @@ func Setup(identifier string) bool {
 	// Check if already setup
 	_, ok := Nodes[identifier]
 	if ok {
+		BasePath = os.Getenv("PROTOCOL") + os.Getenv("BASE_PATH")
+
+		Log.Println("Grabbing server public key..")
+		err = grabServerPublicKey()
+		if err != nil {
+			panic(err)
+		}
+
 		return true
 	}
 

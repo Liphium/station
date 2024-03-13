@@ -1,8 +1,6 @@
 package node
 
 import (
-	"log"
-
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/requests"
 	"github.com/gofiber/fiber/v2"
@@ -33,7 +31,7 @@ func sendToNode(c *fiber.Ctx) error {
 		return util.FailedRequest(c, "node.error", err)
 	}
 
-	log.Println("sent to pipes")
+	util.Log.Println("sent to pipes")
 
 	return nil
 }

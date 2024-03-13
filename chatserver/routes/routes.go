@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
-	"log"
 	"time"
 
 	"github.com/Liphium/station/chatserver/caching"
@@ -51,12 +50,12 @@ func encryptedRoutes(router fiber.Router) {
 		// Get the AES encryption key from the Auth-Tag header
 		aesKeyEncoded, valid := c.GetReqHeaders()["Auth-Tag"]
 		if !valid {
-			log.Println("no header")
+			util.Log.Println("no header")
 			return c.SendStatus(fiber.StatusPreconditionFailed)
 		}
 		aesKeyEncrypted, err := base64.StdEncoding.DecodeString(aesKeyEncoded[0])
 		if err != nil {
-			log.Println("no decoding")
+			util.Log.Println("no decoding")
 			return c.SendStatus(fiber.StatusPreconditionFailed)
 		}
 
@@ -106,7 +105,7 @@ func encryptedRoutes(router fiber.Router) {
 		// Error handler
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 
-			log.Println(c.Route().Path, "jwt error:", err.Error())
+			util.Log.Println(c.Route().Path, "jwt error:", err.Error())
 
 			// Return error message
 			return c.SendStatus(fiber.StatusUnauthorized)
@@ -137,13 +136,13 @@ func setupPipesFiber(router fiber.Router, serverPublicKey *rsa.PublicKey) {
 
 			// Print debug stuff if in debug mode
 			if integration.Testing {
-				log.Println("Client disconnected:", client.ID)
+				util.Log.Println("Client disconnected:", client.ID)
 			}
 
 			// Remove all adapters from pipes
 			err := caching.DeleteAdapters(client.ID)
 			if err != nil {
-				log.Println("COULDN'T DELETE ADAPTERS:", err.Error())
+				util.Log.Println("COULDN'T DELETE ADAPTERS:", err.Error())
 			}
 
 			// Tell the backend that someone disconnected
@@ -168,7 +167,7 @@ func setupPipesFiber(router fiber.Router, serverPublicKey *rsa.PublicKey) {
 		// Handle client entering network
 		ClientEnterNetworkHandler: func(client *pipeshandler.Client, key string) bool {
 			if integration.Testing {
-				log.Println("Client connected:", client.ID)
+				util.Log.Println("Client connected:", client.ID)
 			}
 
 			// Get the AES key from attachments
@@ -184,7 +183,7 @@ func setupPipesFiber(router fiber.Router, serverPublicKey *rsa.PublicKey) {
 			}
 
 			// Just for debug purposes
-			log.Println(base64.StdEncoding.EncodeToString(aesKey))
+			util.Log.Println(base64.StdEncoding.EncodeToString(aesKey))
 
 			// Set AES key in client data
 			client.Data = ExtraClientData{aesKey}
@@ -192,9 +191,9 @@ func setupPipesFiber(router fiber.Router, serverPublicKey *rsa.PublicKey) {
 
 			// Initialize the user and check if he needs to be disconnected
 			disconnect := !service.User(client)
-			log.Println("Setup finish")
+			util.Log.Println("Setup finish")
 			if disconnect {
-				log.Println("Something went wrong with setup: ", client.ID)
+				util.Log.Println("Something went wrong with setup: ", client.ID)
 			}
 			return disconnect
 		},
@@ -204,7 +203,7 @@ func setupPipesFiber(router fiber.Router, serverPublicKey *rsa.PublicKey) {
 		DecodingMiddleware:       EncryptionDecodingMiddleware,
 
 		ErrorHandler: func(err error) {
-			log.Printf("pipes-fiber error: %s \n", err.Error())
+			util.Log.Printf("pipes-fiber error: %s \n", err.Error())
 		},
 	})
 	router.Route("/", func(router fiber.Router) {
@@ -220,11 +219,11 @@ type ExtraClientData struct {
 // Middleware for pipes-fiber to add encryption support
 func EncryptionDecodingMiddleware(client *pipeshandler.Client, bytes []byte) (pipeshandler.Message, error) {
 
-	log.Println("DECRYPTING")
+	util.Log.Println("DECRYPTING")
 
 	// Decrypt the message using AES
 	key := client.Data.(ExtraClientData).Key
-	log.Println(len(bytes))
+	util.Log.Println(len(bytes))
 	messageEncoded, err := integration.DecryptAES(key, bytes)
 	if err != nil {
 		return pipeshandler.Message{}, err
@@ -237,7 +236,7 @@ func EncryptionDecodingMiddleware(client *pipeshandler.Client, bytes []byte) (pi
 		return pipeshandler.Message{}, err
 	}
 
-	log.Println("DECRYPTED")
+	util.Log.Println("DECRYPTED")
 
 	return message, nil
 }
@@ -259,9 +258,9 @@ func EncryptionClientEncodingMiddleware(client *pipeshandler.Client, message []b
 
 	// Encrypt the message using the client encryption key
 	key := client.Data.(ExtraClientData).Key
-	log.Println("ENCODING KEY: "+base64.StdEncoding.EncodeToString(key), client.ID, string(message))
+	util.Log.Println("ENCODING KEY: "+base64.StdEncoding.EncodeToString(key), client.ID, string(message))
 	result, err := integration.EncryptAES(key, message)
 	hash := sha256.Sum256(result)
-	log.Println("hash: " + base64.StdEncoding.EncodeToString(hash[:]))
+	util.Log.Println("hash: " + base64.StdEncoding.EncodeToString(hash[:]))
 	return result, err
 }

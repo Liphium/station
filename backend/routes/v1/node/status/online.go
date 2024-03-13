@@ -1,8 +1,6 @@
 package status
 
 import (
-	"log"
-
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
@@ -46,7 +44,7 @@ func online(c *fiber.Ctx) error {
 		if n.ID != requested.ID {
 			if err := n.SendPing(); err != nil {
 
-				log.Println("Found offline node: " + n.Domain + "! Shutting down..")
+				util.Log.Println("Found offline node: " + n.Domain + "! Shutting down..")
 
 				nodes.TurnOff(&n, node.StatusStopped)
 			} else {

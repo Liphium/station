@@ -2,7 +2,6 @@ package chatserver_starter
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	"github.com/Liphium/station/chatserver/handler"
 	"github.com/Liphium/station/chatserver/processors"
 	"github.com/Liphium/station/chatserver/routes"
+	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipes/connection"
@@ -21,10 +21,10 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
-func Start() {
+func Start(routine bool) {
 
 	fmt.Println("IF YOU ARE ON LINUX, MAKE SURE TO RUN THIS PROGRAM WITH RIGHT PERMISSIONS TO NODE_ENV")
-	log.SetOutput(os.Stdout)
+	util.Log.SetOutput(os.Stdout)
 
 	// Setting up the node
 	if !integration.Setup(integration.IdentifierChatNode) {
@@ -78,7 +78,7 @@ func Start() {
 		port, err = strconv.Atoi(args[1])
 	}
 	if err != nil {
-		log.Println("Error: Couldn't parse port of current node")
+		util.Log.Println("Error: Couldn't parse port of current node")
 		return
 	}
 
@@ -91,10 +91,10 @@ func Start() {
 	// Connect to other nodes
 	pipes.IterateNodes(func(_ string, node pipes.Node) bool {
 
-		log.Println("Connecting to node " + node.WS)
+		util.Log.Println("Connecting to node " + node.WS)
 
 		if err := connection.ConnectWS(node); err != nil {
-			log.Println(err.Error())
+			util.Log.Println(err.Error())
 		}
 		return true
 	})
@@ -103,11 +103,19 @@ func Start() {
 	if integration.Testing {
 
 		// Start on localhost
-		app.Listen(fmt.Sprintf("localhost:%d", port))
+		if routine {
+			go app.Listen(fmt.Sprintf("localhost:%d", port))
+		} else {
+			app.Listen(fmt.Sprintf("localhost:%d", port))
+		}
 	} else {
 
 		// Start on all interfaces
-		app.Listen(fmt.Sprintf("0.0.0.0:%d", port))
+		if routine {
+			go app.Listen(fmt.Sprintf("0.0.0.0:%d", port))
+		} else {
+			app.Listen(fmt.Sprintf("0.0.0.0:%d", port))
+		}
 	}
 }
 
@@ -128,7 +136,7 @@ func parseNodes(res map[string]interface{}) bool {
 		domain := args[0]
 		port, err := strconv.Atoi(args[1])
 		if err != nil {
-			log.Println("Error: Couldn't parse port of node " + n["id"].(string))
+			util.Log.Println("Error: Couldn't parse port of node " + n["id"].(string))
 			return true
 		}
 

@@ -1,12 +1,12 @@
 package wshandler
 
 import (
-	"log"
 	"time"
 
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipes/send"
 	"github.com/Liphium/station/pipeshandler"
+	pipeshutil "github.com/Liphium/station/pipeshandler/util"
 )
 
 type Message struct {
@@ -30,7 +30,7 @@ func Handle(message Message) bool {
 		return false
 	}
 
-	log.Println("Handling message: " + message.Action)
+	pipeshutil.Log.Println("Handling message: " + message.Action)
 
 	go Route(message.Action, message)
 
@@ -40,7 +40,7 @@ func Handle(message Message) bool {
 func Route(action string, message Message) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println(err)
+			pipeshutil.Log.Println(err)
 			ErrorResponse(message, "invalid")
 		}
 	}()

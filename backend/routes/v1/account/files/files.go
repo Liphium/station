@@ -2,7 +2,6 @@ package files
 
 import (
 	"context"
-	"log"
 	"os"
 	"time"
 
@@ -50,7 +49,7 @@ func Unencrypted(router fiber.Router) {
 		// Error handler
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 
-			log.Println(err.Error())
+			util.Log.Println(err.Error())
 
 			// Return error message
 			return c.SendStatus(401)
@@ -79,22 +78,22 @@ func Authorized(router fiber.Router) {
 	)
 	if err != nil {
 		disabled = true
-		log.Println("Failed to connect to R2. File integration disabled.")
-		log.Fatal(err)
+		util.Log.Println("Failed to connect to R2. File integration disabled.")
+		util.Log.Fatal(err)
 	}
 
 	// Setup uploader
 	client = s3.NewFromConfig(cfg)
 
-	log.Println("Checking R2 connection..")
+	util.Log.Println("Checking R2 connection..")
 	_, err = client.HeadBucket(context.TODO(), &s3.HeadBucketInput{
 		Bucket: aws.String(bucketName),
 	})
 	if err != nil {
-		log.Println("R2 NOT WORKING")
+		util.Log.Println("R2 NOT WORKING")
 		panic(err)
 	}
-	log.Println("Successfully connected to R2.")
+	util.Log.Println("Successfully connected to R2.")
 
 	// Setup file routes
 	router.Post("/delete", deleteFile)

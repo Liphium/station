@@ -1,8 +1,6 @@
 package conversation
 
 import (
-	"log"
-
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
@@ -45,15 +43,15 @@ func subscribe(message wshandler.Message) {
 			ID: "s-" + token.Token,
 			Receive: func(ctx *adapter.Context) error {
 				client := *message.Client
-				log.Println(ctx.Adapter.ID, token.Token, client.ID)
+				util.Log.Println(ctx.Adapter.ID, token.Token, client.ID)
 				err := client.SendEvent(*ctx.Event)
 				if err != nil {
-					log.Println("COULDN'T SEND:", err.Error())
+					util.Log.Println("COULDN'T SEND:", err.Error())
 				}
 				return err
 			},
 		})
-		log.Println("SUB", "s-"+token.Token)
+		util.Log.Println("SUB", "s-"+token.Token)
 		adapters = append(adapters, "s-"+token.Token)
 
 		var memberIds []string
@@ -143,7 +141,7 @@ func PrepareConversationTokensWithLookup(message wshandler.Message, lookup bool)
 	}
 
 	for id, token := range members {
-		log.Printf("%s %d", id, len(token))
+		util.Log.Printf("%s %d", id, len(token))
 	}
 
 	return conversationTokens, tokenIds, members, missingTokens, true

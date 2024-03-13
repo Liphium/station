@@ -3,7 +3,6 @@ package tests
 import (
 	"encoding/base64"
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/Liphium/station/backend/util"
@@ -17,7 +16,7 @@ func TestEncryption(t *testing.T) {
 		t.Fatalf("Failed to generate keys: %v", err)
 	}
 
-	log.Println(priv.D.String() + " | " + fmt.Sprintf("%d", priv.PublicKey.E))
+	util.Log.Println(priv.D.String() + " | " + fmt.Sprintf("%d", priv.PublicKey.E))
 
 	//* Test public key packaging and unpackaging
 	packaged := util.PackageRSAPublicKey(pub)

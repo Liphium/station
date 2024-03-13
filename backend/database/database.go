@@ -1,7 +1,6 @@
 package database
 
 import (
-	"log"
 	"os"
 	"time"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/entities/app"
 	"github.com/Liphium/station/backend/entities/node"
+	"github.com/Liphium/station/backend/util"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -24,10 +24,10 @@ func Connect() {
 	})
 
 	if err != nil {
-		log.Fatal("Something went wrong during the connection with the database.", err)
+		util.Log.Fatal("Something went wrong during the connection with the database.", err)
 	}
 
-	log.Println("Successfully connected to the database.")
+	util.Log.Println("Successfully connected to the database.")
 
 	// Configure the database driver
 	driver, _ := db.DB()

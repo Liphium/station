@@ -1,11 +1,11 @@
 package pipeshandler
 
 import (
-	"log"
 	"sync"
 	"time"
 
 	"github.com/Liphium/station/pipes"
+	pipeshutil "github.com/Liphium/station/pipeshandler/util"
 	"github.com/gofiber/websocket/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -39,7 +39,7 @@ func CheckToken(token string) (*ConnectionTokenClaims, bool) {
 	})
 
 	if err != nil {
-		log.Println(err)
+		pipeshutil.Log.Println(err)
 		return nil, false
 	}
 
@@ -48,19 +48,19 @@ func CheckToken(token string) (*ConnectionTokenClaims, bool) {
 
 		// Validate the node id
 		if claims.Node != pipes.CurrentNode.ID {
-			log.Println("invalid node")
+			pipeshutil.Log.Println("invalid node")
 			return nil, false
 		}
 
 		// Validate the expiration time
 		if time.Now().After(time.Unix(claims.ExpiredUnixSec, 0)) {
-			log.Println("invalid time")
+			pipeshutil.Log.Println("invalid time")
 			return nil, false
 		}
 
 		return claims, true
 	}
 
-	log.Println("invalid")
+	pipeshutil.Log.Println("invalid")
 	return nil, false
 }

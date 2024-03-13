@@ -1,12 +1,11 @@
 package handler
 
 import (
-	"log"
-
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipes/send"
 	"github.com/Liphium/station/pipeshandler/wshandler"
 	"github.com/Liphium/station/spacestation/caching"
+	"github.com/Liphium/station/spacestation/util"
 )
 
 // Action: update
@@ -33,7 +32,7 @@ func update(message wshandler.Message) {
 	client.ClientID = connection.ClientID
 	client.Muted = message.Data["muted"].(bool)
 	client.Deafened = message.Data["deafened"].(bool)
-	log.Println("UPDATED CLIENT", client.Data, client.ClientID, connection.ID)
+	util.Log.Println("UPDATED CLIENT", client.Data, client.ClientID, connection.ID)
 	connections[message.Client.ID] = client
 	caching.SaveConnections(message.Client.Session, connections)
 

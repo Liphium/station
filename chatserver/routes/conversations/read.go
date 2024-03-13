@@ -1,7 +1,6 @@
 package conversation_routes
 
 import (
-	"log"
 	"time"
 
 	"github.com/Liphium/station/chatserver/caching"
@@ -33,7 +32,7 @@ func read(c *fiber.Ctx) error {
 
 	// Validate request
 	if !req.Validate() {
-		log.Println(len(req.Token))
+		util.Log.Println(len(req.Token))
 		return integration.InvalidRequest(c, "request is invalid")
 	}
 

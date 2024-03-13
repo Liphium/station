@@ -3,12 +3,12 @@ package pipeshroutes
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
 	"github.com/Liphium/station/pipes/adapter"
 	"github.com/Liphium/station/pipeshandler"
+	pipeshutil "github.com/Liphium/station/pipeshandler/util"
 	"github.com/Liphium/station/pipeshandler/wshandler"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
@@ -107,7 +107,7 @@ func ws(conn *websocket.Conn) {
 				return err
 			}
 
-			log.Println("sending "+c.Event.Name, "to", tk.Account)
+			pipeshutil.Log.Println("sending "+c.Event.Name, "to", tk.Account)
 
 			return conn.WriteMessage(websocket.BinaryMessage, msg)
 		},

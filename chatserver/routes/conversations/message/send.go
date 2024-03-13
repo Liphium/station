@@ -1,7 +1,6 @@
 package message_routes
 
 import (
-	"log"
 	"time"
 
 	"github.com/Liphium/station/chatserver/caching"
@@ -74,7 +73,7 @@ func sendMessage(c *fiber.Ctx) error {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	log.Println(certificate)
+	util.Log.Println(certificate)
 
 	message := conversations.Message{
 		ID:           messageId,

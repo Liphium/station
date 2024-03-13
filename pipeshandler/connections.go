@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/Liphium/station/pipes"
-	pipesfutil "github.com/Liphium/station/pipeshandler/util"
+	pipeshutil "github.com/Liphium/station/pipeshandler/util"
 	"github.com/bytedance/sonic"
 	"github.com/dgraph-io/ristretto"
 	"github.com/gofiber/websocket/v2"
@@ -123,7 +123,7 @@ func removeSession(id string, session string) {
 			return
 		}
 
-		sessionsCache.Set(id, pipesfutil.RemoveString(sessions.([]string), session), 1)
+		sessionsCache.Set(id, pipeshutil.RemoveString(sessions.([]string), session), 1)
 	}
 }
 

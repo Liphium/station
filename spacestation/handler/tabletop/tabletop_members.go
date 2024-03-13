@@ -1,11 +1,10 @@
 package tabletop_handlers
 
 import (
-	"log"
-
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler/wshandler"
 	"github.com/Liphium/station/spacestation/caching"
+	"github.com/Liphium/station/spacestation/util"
 )
 
 // Action: table_join
@@ -13,7 +12,7 @@ func joinTable(message wshandler.Message) {
 
 	err := caching.JoinTable(message.Client.Session, message.Client.ID)
 	if err != nil {
-		log.Println("Couldn't join table of room", message.Client.Session, ":", err.Error())
+		util.Log.Println("Couldn't join table of room", message.Client.Session, ":", err.Error())
 		wshandler.ErrorResponse(message, "server.error")
 		return
 	}
@@ -23,7 +22,7 @@ func joinTable(message wshandler.Message) {
 	// Send all the objects
 	objects, err := caching.TableObjects(message.Client.Session)
 	if err != nil {
-		log.Println("Couldn't get objects of room", message.Client.Session, ":", err.Error())
+		util.Log.Println("Couldn't get objects of room", message.Client.Session, ":", err.Error())
 		return
 	}
 
@@ -34,7 +33,7 @@ func joinTable(message wshandler.Message) {
 		},
 	})
 	if err != nil {
-		log.Println("Couldn't send objects of room through event", message.Client.Session, ":", err.Error())
+		util.Log.Println("Couldn't send objects of room through event", message.Client.Session, ":", err.Error())
 	}
 }
 
@@ -42,7 +41,7 @@ func joinTable(message wshandler.Message) {
 func leaveTable(message wshandler.Message) {
 	err := caching.LeaveTable(message.Client.Session, message.Client.ID)
 	if err != nil {
-		log.Println("Couldn't leave table of room", message.Client.Session, ":", err.Error())
+		util.Log.Println("Couldn't leave table of room", message.Client.Session, ":", err.Error())
 		wshandler.ErrorResponse(message, "server.error")
 		return
 	}

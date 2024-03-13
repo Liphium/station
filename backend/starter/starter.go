@@ -2,7 +2,6 @@ package backend_starter
 
 import (
 	"bufio"
-	"log"
 	"os"
 	"time"
 
@@ -18,8 +17,6 @@ import (
 
 func Startup(routine bool) {
 
-	log.SetOutput(os.Stdout)
-
 	// Create a new Fiber instance
 	app := fiber.New(fiber.Config{
 		JSONEncoder:       sonic.Marshal,
@@ -32,7 +29,7 @@ func Startup(routine bool) {
 	// Load environment variables
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		util.Log.Fatal("Error loading .env file")
 	}
 	util.JWT_SECRET = os.Getenv("JWT_SECRET")
 
@@ -63,7 +60,7 @@ func Startup(routine bool) {
 		go func() {
 			err = app.Listen(os.Getenv("LISTEN"))
 
-			log.Println(err.Error())
+			util.Log.Println(err.Error())
 		}()
 
 		// Listen for commands
@@ -92,10 +89,10 @@ func testMode() {
 	if os.Getenv("TESTING") != "" {
 		util.Testing = os.Getenv("TESTING") == "true"
 		if util.Testing {
-			log.Println("Test mode enabled (Read from .env).")
+			util.Log.Println("Test mode enabled (Read from .env).")
 		}
 	} else {
-		log.Println("Do you want to continue in test mode? (y/n)")
+		util.Log.Println("Do you want to continue in test mode? (y/n)")
 
 		scanner := bufio.NewScanner(os.Stdin)
 
@@ -107,11 +104,11 @@ func testMode() {
 		return
 	}
 
-	log.Println("Test mode enabled.")
+	util.Log.Println("Test mode enabled.")
 
 	token, _ := util.Token("123", "123", 100, time.Now().Add(time.Hour*24))
 
-	log.Println("Test token: " + token)
+	util.Log.Println("Test token: " + token)
 
 	/* not need for now
 	var foundNodes []node.Node
@@ -119,7 +116,7 @@ func testMode() {
 
 	for _, n := range foundNodes {
 		if n.Status == node.StatusStarted {
-			log.Println("Stopping node", n.Domain)
+			util.Log.Println("Stopping node", n.Domain)
 
 			nodes.TurnOff(&n, node.StatusStopped)
 		}

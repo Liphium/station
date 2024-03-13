@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
-	"log"
 	"time"
 
 	"github.com/Liphium/station/main/integration"
@@ -38,7 +37,7 @@ func SetupRoutes(router fiber.Router) {
 
 func setupPipesFiber(router fiber.Router) {
 	adapter.SetupCaching()
-	log.Println("JWT Secret:", integration.JwtSecret)
+	util.Log.Println("JWT Secret:", integration.JwtSecret)
 	pipeshandler.Setup(pipeshandler.Config{
 		Secret:              []byte(integration.JwtSecret),
 		ExpectedConnections: 10_0_0_0,       // 10 thousand, but funny
@@ -52,7 +51,7 @@ func setupPipesFiber(router fiber.Router) {
 		// Handle client disconnect
 		ClientDisconnectHandler: func(client *pipeshandler.Client) {
 			if integration.Testing {
-				log.Println("Client disconnected:", client.ID)
+				util.Log.Println("Client disconnected:", client.ID)
 			}
 
 			// Remove from room
@@ -98,7 +97,7 @@ func setupPipesFiber(router fiber.Router) {
 			pipeshandler.UpdateClient(client)
 
 			if integration.Testing {
-				log.Println("Client connected:", client.ID)
+				util.Log.Println("Client connected:", client.ID)
 			}
 
 			return false
@@ -160,9 +159,9 @@ func EncryptionClientEncodingMiddleware(client *pipeshandler.Client, message []b
 
 	// Encrypt the message using the client encryption key
 	key := client.Data.(ExtraClientData).Key
-	log.Println("ENCODING KEY: "+base64.StdEncoding.EncodeToString(key), client.ID, string(message))
+	util.Log.Println("ENCODING KEY: "+base64.StdEncoding.EncodeToString(key), client.ID, string(message))
 	result, err := integration.EncryptAES(key, message)
 	hash := sha256.Sum256(result)
-	log.Println("hash: " + base64.StdEncoding.EncodeToString(hash[:]))
+	util.Log.Println("hash: " + base64.StdEncoding.EncodeToString(hash[:]))
 	return result, err
 }

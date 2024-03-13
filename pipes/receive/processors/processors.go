@@ -1,8 +1,6 @@
 package processors
 
 import (
-	"log"
-
 	"github.com/Liphium/station/pipes"
 	"github.com/bytedance/sonic"
 )
@@ -24,7 +22,7 @@ func ProcessMarshal(message *pipes.Message, target string) []byte {
 func ProcessEvent(message *pipes.Message, target string) pipes.Event {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Printf("Error processing message: %s \n", err)
+			pipes.Log.Printf("Error processing message: %s \n", err)
 		}
 	}()
 

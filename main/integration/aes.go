@@ -7,7 +7,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"io"
-	"log"
 )
 
 // Encrypt encrypts the given plaintext using AES-GCM.
@@ -76,8 +75,8 @@ func TestAES() {
 
 	decrypted, err := DecryptAES(key, msg)
 	if err != nil {
-		log.Fatalln("Error while decrypting with AES:", err)
+		Log.Fatalln("Error while decrypting with AES:", err)
 	}
-	log.Println(string(decrypted))
+	Log.Println(string(decrypted))
 
 }

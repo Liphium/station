@@ -1,8 +1,6 @@
 package account
 
 import (
-	"log"
-
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
@@ -19,7 +17,7 @@ func getAccount(c *fiber.Ctx) error {
 	// Parse request
 	var req getRequest
 	if err := util.BodyParser(c, &req); err != nil {
-		log.Println(err)
+		util.Log.Println(err)
 		return util.InvalidRequest(c)
 	}
 

@@ -6,7 +6,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/bytedance/sonic"
@@ -24,6 +26,8 @@ const LocalsBody = "body"
 
 var Testing = false
 var LogErrors = true
+
+var Log = log.New(os.Stdout, "backend ", log.Flags())
 
 // Permissions
 var Permissions = map[string]int16{

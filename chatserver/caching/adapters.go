@@ -2,8 +2,8 @@ package caching
 
 import (
 	"errors"
-	"log"
 
+	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/pipes/adapter"
 	"github.com/dgraph-io/ristretto"
 )
@@ -42,7 +42,7 @@ func DeleteAdapters(account string) error {
 
 	// Remove adapters from pipes
 	for _, adapterName := range adapters {
-		log.Println("DELETED " + adapterName)
+		util.Log.Println("DELETED " + adapterName)
 		adapter.RemoveWS(adapterName)
 	}
 

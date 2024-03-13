@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"log"
 	"os"
 
 	"github.com/Liphium/station/main/integration"
@@ -74,7 +73,7 @@ func setup(message wshandler.Message) {
 		return
 	}
 
-	log.Println("creating new room for", message.Client.Session)
+	util.Log.Println("creating new room for", message.Client.Session)
 
 	_, err = server.RoomClient.CreateRoom(context.Background(), &livekit.CreateRoomRequest{
 		Name:            message.Client.Session,

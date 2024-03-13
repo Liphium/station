@@ -3,7 +3,6 @@ package routes_v1
 import (
 	"crypto/rsa"
 	"encoding/base64"
-	"log"
 	"os"
 
 	"github.com/Liphium/station/backend/routes/v1/account"
@@ -52,14 +51,14 @@ func encryptedRoutes(router fiber.Router, serverPublicKey *rsa.PublicKey, server
 		// Check if the auth tag exists
 		aesKeyEncoded, valid := c.GetReqHeaders()["Auth-Tag"]
 		if !valid {
-			log.Println("no header")
+			util.Log.Println("no header")
 			return c.SendStatus(fiber.StatusPreconditionFailed)
 		}
 
 		// Decode the auth tag
 		aesKeyEncrypted, err := base64.StdEncoding.DecodeString(aesKeyEncoded[0])
 		if err != nil {
-			log.Println("no decoding")
+			util.Log.Println("no decoding")
 			return c.SendStatus(fiber.StatusPreconditionFailed)
 		}
 
@@ -115,7 +114,7 @@ func authorizedRoutes(router fiber.Router) {
 		// Error handler
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 
-			log.Println(err.Error())
+			util.Log.Println(err.Error())
 
 			// Return error message
 			return c.SendStatus(401)

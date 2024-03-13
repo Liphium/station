@@ -1,11 +1,11 @@
 package wshandler
 
 import (
-	"log"
 	"runtime/debug"
 
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipes/send"
+	pipeshutil "github.com/Liphium/station/pipeshandler/util"
 )
 
 func NormalResponse(message Message, data map[string]interface{}) {
@@ -36,7 +36,7 @@ func StatusResponse(message Message, status string) {
 func ErrorResponse(message Message, err string) {
 
 	if pipes.DebugLogs {
-		log.Println("error with action " + message.Action + ": " + err)
+		pipeshutil.Log.Println("error with action " + message.Action + ": " + err)
 		debug.PrintStack()
 	}
 
