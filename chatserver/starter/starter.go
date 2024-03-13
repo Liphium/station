@@ -69,17 +69,11 @@ func Start(routine bool) {
 	processors.SetupProcessors()
 
 	// Check if test mode or production
-	args := strings.Split(domain, ":")
 	var port int
 	var err error
-	if os.Getenv("OVERWRITE_PORT") != "" {
-		port, err = strconv.Atoi(os.Getenv("OVERWRITE_PORT"))
-	} else {
-		port, err = strconv.Atoi(args[1])
-	}
+	port, err = strconv.Atoi(os.Getenv("CHAT_NODE_PORT"))
 	if err != nil {
-		util.Log.Println("Error: Couldn't parse port of current node")
-		return
+		panic(err)
 	}
 
 	protocol := os.Getenv("WEBSOCKET_PROTOCOL")
@@ -100,22 +94,11 @@ func Start(routine bool) {
 	})
 
 	pipes.DebugLogs = true // TODO: Replace in production
-	if integration.Testing {
-
-		// Start on localhost
-		if routine {
-			go app.Listen(fmt.Sprintf("localhost:%d", port))
-		} else {
-			app.Listen(fmt.Sprintf("localhost:%d", port))
-		}
+	// Start on localhost
+	if routine {
+		go app.Listen(fmt.Sprintf("%s:%d", os.Getenv("LISTEN"), port))
 	} else {
-
-		// Start on all interfaces
-		if routine {
-			go app.Listen(fmt.Sprintf("0.0.0.0:%d", port))
-		} else {
-			app.Listen(fmt.Sprintf("0.0.0.0:%d", port))
-		}
+		app.Listen(fmt.Sprintf("%s:%d", os.Getenv("LISTEN"), port))
 	}
 }
 

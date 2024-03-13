@@ -66,15 +66,8 @@ func Start() {
 
 	// Check if test mode or production
 	args := strings.Split(domain, ":")
-	if os.Getenv("OVERWRITE_PORT") != "" {
-		if len(args) < 2 {
-			args = append(args, os.Getenv("OVERWRITE_PORT"))
-		} else {
-			args[1] = os.Getenv("OVERWRITE_PORT")
-		}
-	}
 	var err error
-	util.Port, err = strconv.Atoi(args[1])
+	util.Port, err = strconv.Atoi(os.Getenv("SPACE_NODE_PORT"))
 	if err != nil {
 		util.Log.Println("Error: Couldn't parse port of current node")
 		return
@@ -134,7 +127,10 @@ func Start() {
 	})
 
 	// Start on localhost
-	app.Listen(fmt.Sprintf("%s:%d", os.Getenv("LISTEN"), util.Port))
+	err = app.Listen(fmt.Sprintf("%s:%d", os.Getenv("LISTEN"), util.Port))
+	if err != nil {
+		panic(err)
+	}
 }
 
 // This function is used to test if the encryption is working properly and always different

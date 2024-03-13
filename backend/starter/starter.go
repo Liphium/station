@@ -2,6 +2,7 @@ package backend_starter
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"time"
 
@@ -56,9 +57,10 @@ func Startup(routine bool) {
 	testMode()
 
 	// Listen on port 3000
+	listenAddress := fmt.Sprintf("%s:%s", os.Getenv("LISTEN"), os.Getenv("BASE_PORT"))
 	if os.Getenv("CLI") == "true" {
 		go func() {
-			err = app.Listen(os.Getenv("LISTEN"))
+			err = app.Listen(listenAddress)
 
 			util.Log.Println(err.Error())
 		}()
@@ -73,9 +75,9 @@ func Startup(routine bool) {
 
 		var err error
 		if routine {
-			go app.Listen(os.Getenv("LISTEN"))
+			go app.Listen(listenAddress)
 		} else {
-			err = app.Listen(os.Getenv("LISTEN"))
+			err = app.Listen(listenAddress)
 		}
 
 		if err != nil {
