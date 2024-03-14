@@ -1,13 +1,13 @@
 package account
 
 import (
+	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/fetching"
 	"github.com/Liphium/station/chatserver/handler/conversation"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/send"
 	"github.com/Liphium/station/pipeshandler/wshandler"
 )
 
@@ -49,7 +49,7 @@ func sendStatus(message wshandler.Message) {
 		util.Log.Printf("Sending to %d members", len(memberIds))
 
 		// Send the subscription event
-		send.Pipe(send.ProtocolWS, pipes.Message{
+		caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
 			Channel: pipes.Conversation(memberIds, memberNodes),
 			Event:   statusEvent(statusMessage, data, ""),
 		})

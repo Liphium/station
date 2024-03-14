@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Liphium/station/pipes/adapter"
+	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 	pipeshutil "github.com/Liphium/station/pipeshandler/util"
 	"github.com/Liphium/station/pipeshandler/wshandler"
@@ -14,7 +14,7 @@ import (
 	"github.com/gofiber/websocket/v2"
 )
 
-func gatewayRouter(router fiber.Router) {
+func gatewayRouter(router fiber.Router, localNode *pipes.LocalNode) {
 
 	// Inject a middleware to check if the request is a websocket upgrade request
 	router.Use("/", func(c *fiber.Ctx) error {
@@ -38,7 +38,7 @@ func gatewayRouter(router fiber.Router) {
 			}
 
 			// Check if the token is valid
-			tk, ok := pipeshandler.CheckToken(token)
+			tk, ok := pipeshandler.CheckToken(token, localNode)
 			if !ok {
 				return c.SendStatus(fiber.StatusBadRequest)
 			}
@@ -63,10 +63,12 @@ func gatewayRouter(router fiber.Router) {
 		return c.SendStatus(fiber.StatusUpgradeRequired)
 	})
 
-	router.Get("/", websocket.New(ws))
+	router.Get("/", websocket.New(func(c *websocket.Conn) {
+		ws(c, localNode)
+	}))
 }
 
-func ws(conn *websocket.Conn) {
+func ws(conn *websocket.Conn, local *pipes.LocalNode) {
 	tk := conn.Locals("tk").(*pipeshandler.ConnectionTokenClaims)
 
 	client := pipeshandler.AddClient(tk.ToClient(conn, time.Now().Add(pipeshandler.CurrentConfig.SessionDuration)))
@@ -77,7 +79,7 @@ func ws(conn *websocket.Conn) {
 		if !valid {
 			return
 		}
-		adapter.RemoveWS(tk.Account)
+		local.RemoveAdapterWS(tk.Account)
 		pipeshandler.CurrentConfig.ClientDisconnectHandler(client)
 
 		// Remove the connection from the cache
@@ -89,9 +91,9 @@ func ws(conn *websocket.Conn) {
 	}
 
 	// Add adapter for pipes
-	adapter.AdaptWS(adapter.Adapter{
+	local.AdaptWS(pipes.Adapter{
 		ID: tk.Account,
-		Receive: func(c *adapter.Context) error {
+		Receive: func(c *pipes.Context) error {
 
 			// Get the client
 			client, valid := pipeshandler.Get(tk.Account, tk.Session)
@@ -157,6 +159,7 @@ func ws(conn *websocket.Conn) {
 			Client: client,
 			Data:   message.Data,
 			Action: message.Action,
+			Node:   local,
 		}) {
 			pipeshandler.ReportClientError(client, "couldn't handle action", errors.New(message.Action))
 			return

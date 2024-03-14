@@ -8,14 +8,14 @@ import (
 	"time"
 
 	"github.com/Liphium/station/chatserver/caching"
+	"github.com/Liphium/station/chatserver/database"
+	"github.com/Liphium/station/chatserver/database/fetching"
 	account_routes "github.com/Liphium/station/chatserver/routes/account"
 	conversation_routes "github.com/Liphium/station/chatserver/routes/conversations"
 	"github.com/Liphium/station/chatserver/routes/ping"
-	"github.com/Liphium/station/chatserver/service"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/adapter"
 	"github.com/Liphium/station/pipeshandler"
 	pipesfroutes "github.com/Liphium/station/pipeshandler/routes"
 	"github.com/bytedance/sonic"
@@ -118,7 +118,6 @@ func encryptedRoutes(router fiber.Router) {
 }
 
 func setupPipesFiber(router fiber.Router, serverPublicKey *rsa.PublicKey) {
-	adapter.SetupCaching()
 	pipeshandler.Setup(pipeshandler.Config{
 		Secret:              []byte(integration.JwtSecret),
 		ExpectedConnections: 10_0_0_0,       // 10 thousand, but funny
@@ -190,7 +189,7 @@ func setupPipesFiber(router fiber.Router, serverPublicKey *rsa.PublicKey) {
 			pipeshandler.UpdateClient(client)
 
 			// Initialize the user and check if he needs to be disconnected
-			disconnect := !service.User(client)
+			disconnect := !initializeUser(client)
 			util.Log.Println("Setup finish")
 			if disconnect {
 				util.Log.Println("Something went wrong with setup: ", client.ID)
@@ -207,7 +206,7 @@ func setupPipesFiber(router fiber.Router, serverPublicKey *rsa.PublicKey) {
 		},
 	})
 	router.Route("/", func(router fiber.Router) {
-		pipesfroutes.SetupRoutes(router, false)
+		pipesfroutes.SetupRoutes(router, caching.Node, false)
 	})
 }
 
@@ -263,4 +262,43 @@ func EncryptionClientEncodingMiddleware(client *pipeshandler.Client, message []b
 	hash := sha256.Sum256(result)
 	util.Log.Println("hash: " + base64.StdEncoding.EncodeToString(hash[:]))
 	return result, err
+}
+
+func initializeUser(client *pipeshandler.Client) bool {
+	account := client.ID
+
+	// Check if the account is already in the database
+	var status fetching.Status
+	if database.DBConn.Where(&fetching.Status{ID: account}).Take(&status).Error != nil {
+
+		// Create a new status
+		if database.DBConn.Create(&fetching.Status{
+			ID:   account,
+			Data: "-", // Status is disabled
+			Node: integration.Nodes[integration.IdentifierChatNode].NodeId,
+		}).Error != nil {
+			return false
+		}
+	} else {
+
+		// Update the status
+		database.DBConn.Model(&fetching.Status{}).Where("id = ?", account).Update("node", util.NodeTo64(caching.Node.ID))
+	}
+
+	// Send current status
+	client.SendEvent(pipes.Event{
+		Name: "setup_st",
+		Data: map[string]interface{}{
+			"data": status.Data,
+			"node": status.Node,
+		},
+	})
+
+	// Send the setup complete event
+	client.SendEvent(pipes.Event{
+		Name: "setup_fin",
+		Data: map[string]interface{}{},
+	})
+
+	return true
 }

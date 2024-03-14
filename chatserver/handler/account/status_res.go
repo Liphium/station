@@ -4,7 +4,6 @@ import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/send"
 	"github.com/Liphium/station/pipeshandler/wshandler"
 )
 
@@ -38,7 +37,7 @@ func respondToStatus(message wshandler.Message) {
 	ids, nodes := caching.MembersToPipes(members)
 
 	// Send the subscription event
-	err = send.Pipe(send.ProtocolWS, pipes.Message{
+	err = caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
 		Channel: pipes.Conversation(ids, nodes),
 		Event:   statusEvent(status, data, ":a"),
 	})

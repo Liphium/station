@@ -1,10 +1,7 @@
 package wshandler
 
 import (
-	"time"
-
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/send"
 	"github.com/Liphium/station/pipeshandler"
 	pipeshutil "github.com/Liphium/station/pipeshandler/util"
 )
@@ -13,10 +10,19 @@ type Message struct {
 	Client *pipeshandler.Client   `json:"client"`
 	Action string                 `json:"action"` // The action to perform
 	Data   map[string]interface{} `json:"data"`
+	Node   *pipes.LocalNode       `json:"-"`
 }
 
 // Routes is a map of all the routes
-var Routes map[string]func(Message)
+var Routes map[string]map[string]func(Message)
+
+func RegisterHandler(local *pipes.LocalNode, action string, handler func(Message)) {
+	if Routes[local.ID] == nil {
+		Routes[local.ID] = make(map[string]func(Message))
+	}
+
+	Routes[local.ID][action] = handler
+}
 
 func Handle(message Message) bool {
 	defer func() {
@@ -26,7 +32,7 @@ func Handle(message Message) bool {
 	}()
 
 	// Check if the action exists
-	if Routes[message.Action] == nil {
+	if Routes[message.Node.ID] == nil || Routes[message.Node.ID][message.Action] == nil {
 		return false
 	}
 
@@ -45,28 +51,9 @@ func Route(action string, message Message) {
 		}
 	}()
 
-	Routes[message.Action](message)
+	Routes[message.Node.ID][message.Action](message)
 }
 
 func Initialize() {
-	Routes = make(map[string]func(Message))
-}
-
-func TestConnection() {
-	go func() {
-		for {
-			time.Sleep(time.Second * 5)
-
-			// Send ping
-			send.Pipe(send.ProtocolWS, pipes.Message{
-				Channel: pipes.BroadcastChannel([]string{"1", "3"}),
-				Event: pipes.Event{
-					Name: "ping",
-					Data: map[string]interface{}{
-						"node": pipes.CurrentNode.ID,
-					},
-				},
-			})
-		}
-	}()
+	Routes = make(map[string]map[string]func(Message))
 }

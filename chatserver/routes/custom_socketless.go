@@ -1,10 +1,9 @@
 package routes
 
 import (
+	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/receive"
-	"github.com/Liphium/station/pipes/send"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -22,11 +21,11 @@ func socketless(c *fiber.Ctx) error {
 	}
 
 	// Check token
-	if event.Token != pipes.CurrentNode.Token {
+	if event.Token != caching.Node.Token {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	receive.HandleMessage(send.ProtocolWS, event.Message)
+	caching.Node.HandleMessage(pipes.ProtocolWS, event.Message)
 
 	return integration.SuccessfulRequest(c)
 }

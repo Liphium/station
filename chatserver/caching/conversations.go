@@ -8,7 +8,6 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/util/localization"
-	"github.com/Liphium/station/pipes/adapter"
 	"github.com/dgraph-io/ristretto"
 )
 
@@ -172,6 +171,6 @@ func UpdateToken(token conversations.ConversationToken) error {
 }
 
 func DeleteToken(id, token string) {
-	adapter.RemoveWS("s-" + token)
+	Node.RemoveNodeWS("s-" + token)
 	conversationsCache.Del(id)
 }

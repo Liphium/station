@@ -8,7 +8,6 @@ import (
 	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/send"
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
 )
@@ -65,7 +64,7 @@ func SendSystemMessage(conversation string, content string, attachments []string
 	adapters, nodes := caching.MembersToPipes(members)
 
 	event := MessageEvent(message)
-	err = send.Pipe(send.ProtocolWS, pipes.Message{
+	err = caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
 		Channel: pipes.Conversation(adapters, nodes),
 		Event:   event,
 	})
@@ -105,7 +104,7 @@ func SendNotStoredSystemMessage(conversation string, content string, attachments
 	adapters, nodes := caching.MembersToPipes(members)
 
 	event := MessageEvent(message)
-	err = send.Pipe(send.ProtocolWS, pipes.Message{
+	err = caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
 		Channel: pipes.Conversation(adapters, nodes),
 		Event:   event,
 	})

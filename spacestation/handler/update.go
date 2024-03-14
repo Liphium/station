@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/send"
 	"github.com/Liphium/station/pipeshandler/wshandler"
 	"github.com/Liphium/station/spacestation/caching"
 	"github.com/Liphium/station/spacestation/util"
@@ -54,7 +53,7 @@ func SendStateUpdate(member string, room string, muted bool, deafened bool) bool
 	}
 
 	// Send to all
-	err := send.Pipe(send.ProtocolWS, pipes.Message{
+	err := caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
 		Local:   true,
 		Channel: pipes.BroadcastChannel(adapters),
 		Event: pipes.Event{

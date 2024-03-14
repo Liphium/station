@@ -1,8 +1,11 @@
 package caching
 
 import (
+	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/spacestation/util"
 )
+
+var Node *pipes.LocalNode
 
 func SetupMemory() {
 	setupRoomsCache()

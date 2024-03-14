@@ -7,8 +7,6 @@ import (
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/adapter"
-	"github.com/Liphium/station/pipes/send"
 	"github.com/Liphium/station/pipeshandler/wshandler"
 )
 
@@ -28,7 +26,7 @@ func subscribe(message wshandler.Message) {
 	}
 
 	// Update all node IDs
-	if database.DBConn.Model(&conversations.ConversationToken{}).Where("id IN ?", tokenIds).Update("node", util.NodeTo64(pipes.CurrentNode.ID)).Error != nil {
+	if database.DBConn.Model(&conversations.ConversationToken{}).Where("id IN ?", tokenIds).Update("node", util.NodeTo64(caching.Node.ID)).Error != nil {
 		wshandler.ErrorResponse(message, localization.ErrorServer)
 		return
 	}
@@ -39,9 +37,9 @@ func subscribe(message wshandler.Message) {
 	for _, token := range conversationTokens {
 
 		// Register adapter for the subscription
-		adapter.AdaptWS(adapter.Adapter{
+		caching.Node.AdaptWS(pipes.Adapter{
 			ID: "s-" + token.Token,
-			Receive: func(ctx *adapter.Context) error {
+			Receive: func(ctx *pipes.Context) error {
 				client := *message.Client
 				util.Log.Println(ctx.Adapter.ID, token.Token, client.ID)
 				err := client.SendEvent(*ctx.Event)
@@ -66,7 +64,7 @@ func subscribe(message wshandler.Message) {
 		}
 
 		// Send the subscription event
-		send.Pipe(send.ProtocolWS, pipes.Message{
+		caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
 			Channel: pipes.Conversation(memberIds, memberNodes),
 			Event: pipes.Event{
 				Name: "acc_st",

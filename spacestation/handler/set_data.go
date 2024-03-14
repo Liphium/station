@@ -2,7 +2,6 @@ package handler
 
 import (
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/send"
 	"github.com/Liphium/station/pipeshandler/wshandler"
 	"github.com/Liphium/station/spacestation/caching"
 )
@@ -37,7 +36,7 @@ func SendRoomData(id string) bool {
 	}
 
 	// Send to all
-	err := send.Pipe(send.ProtocolWS, pipes.Message{
+	err := caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
 		Channel: pipes.BroadcastChannel(adapters),
 		Local:   true,
 		Event:   event,

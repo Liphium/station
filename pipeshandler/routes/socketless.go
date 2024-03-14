@@ -2,8 +2,6 @@ package pipeshroutes
 
 import (
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/receive"
-	"github.com/Liphium/station/pipes/send"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -21,11 +19,12 @@ func socketless(c *fiber.Ctx) error {
 	}
 
 	// Check token
-	if event.Token != pipes.CurrentNode.Token {
+	local := c.Locals("local").(*pipes.LocalNode)
+	if event.Token != local.Token {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	receive.HandleMessage(send.ProtocolWS, event.Message)
+	local.HandleMessage(pipes.ProtocolWS, event.Message)
 
 	return c.JSON(fiber.Map{
 		"success": true,

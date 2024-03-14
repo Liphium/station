@@ -6,16 +6,32 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"log"
+	"sync"
 
-	"github.com/cornelk/hashmap"
+	"github.com/dgraph-io/ristretto"
 )
 
 type Node struct {
 	ID    string `json:"id"`
 	Token string `json:"token"`
-	WS    string `json:"ws,omitempty"`  // Websocket ip
-	UDP   string `json:"udp,omitempty"` // UDP ip
-	SL    string `json:"sl,omitempty"`  // Socketless pipe
+	WS    string `json:"ws,omitempty"` // Websocket ip
+	SL    string `json:"sl,omitempty"` // Socketless pipe
+
+	// Encryption
+	Cipher cipher.Block `json:"-"`
+}
+
+type LocalNode struct {
+	ID    string `json:"id"`
+	Token string `json:"token"`
+	WS    string `json:"ws,omitempty"` // Websocket ip
+	SL    string `json:"sl,omitempty"` // Socketless pipe
+
+	// Adapters
+	websocketCache    *ristretto.Cache                        `json:"-"`
+	nodeWSConnections sync.Map                                `json:"-"`
+	nodes             sync.Map                                `json:"-"`
+	Processors        map[string]func(*Message, string) Event `json:"-"`
 
 	// Encryption
 	Cipher cipher.Block `json:"-"`
@@ -23,11 +39,7 @@ type Node struct {
 
 var Log = log.New(log.Writer(), "pipes ", log.Flags())
 
-var nodes = hashmap.New[string, Node]()
-
-var CurrentNode Node
-
-func SetupCurrent(id string, token string) {
+func SetupCurrent(id string, token string) *LocalNode {
 
 	if len(token) < 32 {
 		panic("Token is too short (must be longer than 32 characters for AES-256 encryption)")
@@ -44,44 +56,42 @@ func SetupCurrent(id string, token string) {
 		panic(err)
 	}
 
-	CurrentNode = Node{
+	node := &LocalNode{
 		ID:     id,
 		Token:  token,
 		WS:     "",
-		UDP:    "",
 		SL:     "",
 		Cipher: cipher,
 	}
+	node.setupCaching()
+	node.setupWSStore()
+	node.nodes = sync.Map{}
+	node.Processors = make(map[string]func(*Message, string) Event)
+
+	return node
 }
 
-func SetupWS(ws string) {
-	CurrentNode.WS = ws
+func (n *LocalNode) SetupWS(ws string) {
+	n.WS = ws
 }
 
-func SetupUDP(udp string) {
-	CurrentNode.UDP = udp
+func (n *LocalNode) SetupSocketless(sl string) {
+	n.SL = sl
 }
 
-func SetupSocketless(sl string) {
-	CurrentNode.SL = sl
-}
-
-func GetNode(id string) *Node {
-
-	if id == CurrentNode.ID {
-		return &CurrentNode
-	}
+func (local *LocalNode) GetNode(id string) *Node {
 
 	// Get node
-	node, ok := nodes.Get(id)
+	obj, ok := local.nodes.Load(id)
 	if !ok {
 		return nil
 	}
+	node := obj.(Node)
 
 	return &node
 }
 
-func AddNode(node Node) {
+func (local *LocalNode) AddNode(node Node) {
 
 	// Create encryption cipher
 	tokenHash := sha256.Sum256([]byte(node.Token))
@@ -93,14 +103,26 @@ func AddNode(node Node) {
 	}
 
 	node.Cipher = cipher
-	nodes.Insert(node.ID, node)
+	local.nodes.Store(node.ID, node)
 }
 
-func DeleteNode(node string) {
-	nodes.Del(node)
+func (local *LocalNode) DeleteNode(node string) {
+	local.nodes.Delete(node)
 }
 
 // IterateConnections iterates over all connections. If the callback returns false, the iteration stops.
-func IterateNodes(callback func(string, Node) bool) {
-	nodes.Range(callback)
+func (local *LocalNode) IterateNodes(callback func(string, Node) bool) {
+	local.nodes.Range(func(key, value any) bool {
+		return callback(key.(string), value.(Node))
+	})
+}
+
+func (local *LocalNode) ToNode() Node {
+	return Node{
+		ID:     local.ID,
+		Token:  local.Token,
+		WS:     local.WS,
+		SL:     local.SL,
+		Cipher: local.Cipher,
+	}
 }

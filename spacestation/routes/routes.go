@@ -8,7 +8,6 @@ import (
 
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/adapter"
 	"github.com/Liphium/station/pipeshandler"
 	pipeshroutes "github.com/Liphium/station/pipeshandler/routes"
 	"github.com/Liphium/station/spacestation/caching"
@@ -36,7 +35,6 @@ func SetupRoutes(router fiber.Router) {
 }
 
 func setupPipesFiber(router fiber.Router) {
-	adapter.SetupCaching()
 	util.Log.Println("JWT Secret:", integration.JwtSecret)
 	pipeshandler.Setup(pipeshandler.Config{
 		Secret:              []byte(integration.JwtSecret),
@@ -113,7 +111,7 @@ func setupPipesFiber(router fiber.Router) {
 		ClientEncodingMiddleware: EncryptionClientEncodingMiddleware,
 	})
 	router.Route("/", func(router fiber.Router) {
-		pipeshroutes.SetupRoutes(router, false)
+		pipeshroutes.SetupRoutes(router, caching.Node, false)
 	})
 }
 

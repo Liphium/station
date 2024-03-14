@@ -3,7 +3,7 @@ package routes
 import (
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/receive"
+	"github.com/Liphium/station/spacestation/caching"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -22,10 +22,10 @@ func socketlessEvent(c *fiber.Ctx) error {
 	}
 
 	// Check token
-	if rq.Token != pipes.CurrentNode.Token {
+	if rq.Token != caching.Node.Token {
 		return integration.InvalidRequest(c, "invalid token")
 	}
 
-	receive.HandleMessage("ws", rq.Message)
+	caching.Node.HandleMessage("ws", rq.Message)
 	return nil
 }

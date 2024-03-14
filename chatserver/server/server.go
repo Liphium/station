@@ -1,4 +1,4 @@
-package chatserver_starter
+package chatserver
 
 import (
 	"fmt"
@@ -10,12 +10,10 @@ import (
 	"github.com/Liphium/station/chatserver/calls"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/handler"
-	"github.com/Liphium/station/chatserver/processors"
 	"github.com/Liphium/station/chatserver/routes"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/connection"
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -41,20 +39,21 @@ func Start(routine bool) {
 		JSONDecoder: sonic.Unmarshal,
 	})
 
-	nodeData := integration.Nodes[integration.IdentifierChatNode]
-	pipes.SetupCurrent(fmt.Sprintf("%d", nodeData.NodeId), nodeData.NodeToken)
-
 	// Query current node
 	_, _, currentApp, domain := integration.GetCurrent(integration.IdentifierChatNode)
 	currentNodeData := integration.Nodes[integration.IdentifierChatNode]
 	currentNodeData.AppId = currentApp
 	integration.Nodes[integration.IdentifierChatNode] = currentNodeData
 
+	nodeData := integration.Nodes[integration.IdentifierChatNode]
+	caching.Node = pipes.SetupCurrent(fmt.Sprintf("%d", nodeData.NodeId), nodeData.NodeToken)
+	util.Log.Println("NODE POINTER", caching.Node)
+
 	// Report online status
 	res := integration.SetOnline(integration.IdentifierChatNode)
 	parseNodes(res)
 
-	pipes.SetupSocketless(domain + "/adoption/socketless")
+	caching.Node.SetupSocketless(domain + "/adoption/socketless")
 
 	app.Use(logger.New())
 	app.Route("/", routes.Setup)
@@ -64,9 +63,6 @@ func Start(routine bool) {
 
 	// Create handlers
 	handler.Create()
-
-	// Initialize processors
-	processors.SetupProcessors()
 
 	// Check if test mode or production
 	var port int
@@ -80,14 +76,14 @@ func Start(routine bool) {
 	if protocol == "" {
 		protocol = "wss://"
 	}
-	pipes.SetupWS(protocol + domain + "/connect")
+	caching.Node.SetupWS(protocol + domain + "/connect")
 
 	// Connect to other nodes
-	pipes.IterateNodes(func(_ string, node pipes.Node) bool {
+	caching.Node.IterateNodes(func(_ string, node pipes.Node) bool {
 
 		util.Log.Println("Connecting to node " + node.WS)
 
-		if err := connection.ConnectWS(node); err != nil {
+		if err := caching.Node.ConnectToNodeWS(node); err != nil {
 			util.Log.Println(err.Error())
 		}
 		return true
@@ -124,7 +120,7 @@ func parseNodes(res map[string]interface{}) bool {
 		}
 
 		// Add node to pipes
-		pipes.AddNode(pipes.Node{
+		caching.Node.AddNode(pipes.Node{
 			ID:    fmt.Sprintf("%d", int64(n["id"].(float64))),
 			Token: n["token"].(string),
 			WS:    "ws://" + fmt.Sprintf("%s:%d", domain, port) + "/adoption",

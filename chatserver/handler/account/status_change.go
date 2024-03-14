@@ -1,11 +1,11 @@
 package account
 
 import (
+	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/fetching"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/send"
 	"github.com/Liphium/station/pipeshandler/wshandler"
 )
 
@@ -24,7 +24,7 @@ func changeStatus(message wshandler.Message) {
 	}
 
 	// Send to all clients
-	send.Client(message.Client.ID, pipes.Event{
+	caching.Node.SendClient(message.Client.ID, pipes.Event{
 		Name: "o:acc_st", // o: for own
 		Data: map[string]interface{}{
 			"st": status,

@@ -31,7 +31,7 @@ func (tk ConnectionTokenClaims) ToClient(conn *websocket.Conn, end time.Time) Cl
 }
 
 // Check the JWT token
-func CheckToken(token string) (*ConnectionTokenClaims, bool) {
+func CheckToken(token string, local *pipes.LocalNode) (*ConnectionTokenClaims, bool) {
 
 	// Check the jwt token
 	jwtToken, err := jwt.ParseWithClaims(token, &ConnectionTokenClaims{}, func(t *jwt.Token) (interface{}, error) {
@@ -47,7 +47,7 @@ func CheckToken(token string) (*ConnectionTokenClaims, bool) {
 	if claims, ok := jwtToken.Claims.(*ConnectionTokenClaims); ok && jwtToken.Valid {
 
 		// Validate the node id
-		if claims.Node != pipes.CurrentNode.ID {
+		if claims.Node != local.ID {
 			pipeshutil.Log.Println("invalid node")
 			return nil, false
 		}

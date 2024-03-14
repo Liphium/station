@@ -4,20 +4,19 @@ import (
 	"errors"
 
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/send"
 	"github.com/Liphium/station/pipeshandler/wshandler"
 	"github.com/Liphium/station/spacestation/caching"
 	"github.com/Liphium/station/spacestation/caching/games"
 )
 
 func SetupActions() {
-	wshandler.Routes["game_init"] = initGame
-	wshandler.Routes["game_event"] = gameEvent
-	wshandler.Routes["game_start"] = startGame
+	wshandler.RegisterHandler(caching.Node, "game_init", initGame)
+	wshandler.RegisterHandler(caching.Node, "game_event", gameEvent)
+	wshandler.RegisterHandler(caching.Node, "game_start", startGame)
 }
 
 func sendUpdateSession(adapters []string, session games.GameSession) error {
-	return send.Pipe(send.ProtocolWS, pipes.Message{
+	return caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
 		Channel: pipes.BroadcastChannel(adapters),
 		Local:   true,
 		Event: pipes.Event{
@@ -46,7 +45,7 @@ func sendSessionClose(room string, session string) bool {
 		i++
 	}
 
-	err := send.Pipe(send.ProtocolWS, pipes.Message{
+	err := caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
 		Channel: pipes.BroadcastChannel(adapters),
 		Local:   true,
 		Event: pipes.Event{

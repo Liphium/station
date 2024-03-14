@@ -10,7 +10,6 @@ import (
 
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/connection"
 	"github.com/Liphium/station/spacestation/caching"
 	"github.com/Liphium/station/spacestation/caching/games/launcher"
 	"github.com/Liphium/station/spacestation/handler"
@@ -38,8 +37,6 @@ func Start() {
 	server.InitLiveKit()
 
 	launcher.InitGames()
-	nodeData := integration.Nodes[integration.IdentifierSpaceNode]
-	pipes.SetupCurrent(fmt.Sprintf("%d", nodeData.NodeId), nodeData.NodeToken)
 	util.Log.Println("Starting..")
 
 	// Query current node AND JWT TOKEN
@@ -48,16 +45,20 @@ func Start() {
 	currentNodeData.AppId = currentApp
 	integration.Nodes[integration.IdentifierChatNode] = currentNodeData
 
+	nodeData := integration.Nodes[integration.IdentifierSpaceNode]
+	caching.Node = pipes.SetupCurrent(fmt.Sprintf("%d", nodeData.NodeId), nodeData.NodeToken)
+	util.Log.Println("NODE POINTER", caching.Node)
+
 	// Setup routes (called here because of the jwt secret)
 	app.Route("/", routes.SetupRoutes)
 
-	util.Log.Printf("Node %s on app %d\n", pipes.CurrentNode.ID, currentApp)
+	util.Log.Printf("Node %s on app %d\n", caching.Node.ID, currentApp)
 
 	protocol := os.Getenv("WEBSOCKET_PROTOCOL")
 	if protocol == "" {
 		protocol = "wss://"
 	}
-	pipes.SetupWS(protocol + domain + "/connect")
+	caching.Node.SetupWS(protocol + domain + "/connect")
 	handler.Initialize()
 
 	// Report online status
@@ -65,15 +66,12 @@ func Start() {
 	parseNodes(res)
 
 	// Check if test mode or production
-	args := strings.Split(domain, ":")
 	var err error
 	util.Port, err = strconv.Atoi(os.Getenv("SPACE_NODE_PORT"))
 	if err != nil {
 		util.Log.Println("Error: Couldn't parse port of current node")
 		return
 	}
-	util.UDPPort = util.Port + 1
-	pipes.SetupUDP(fmt.Sprintf("%s:%d", args[0], util.UDPPort))
 
 	// Test encryption
 	first := testEncryption()
@@ -116,11 +114,11 @@ func Start() {
 	defer caching.CloseCaches()
 
 	// Connect to other nodes
-	pipes.IterateNodes(func(_ string, node pipes.Node) bool {
+	caching.Node.IterateNodes(func(_ string, node pipes.Node) bool {
 
 		util.Log.Println("Connecting to node " + node.WS)
 
-		if err := connection.ConnectWS(node); err != nil {
+		if err := caching.Node.ConnectToNodeWS(node); err != nil {
 			util.Log.Println(err.Error())
 		}
 		return true
@@ -136,7 +134,7 @@ func Start() {
 // This function is used to test if the encryption is working properly and always different
 func testEncryption() []byte {
 
-	encrypted, err := connection.Encrypt(pipes.CurrentNode.ID, []byte("H"))
+	encrypted, err := caching.Node.Encrypt(caching.Node.ID, []byte("H"))
 	if err != nil {
 		util.Log.Println("Error: Couldn't encrypt message")
 		return nil
@@ -144,7 +142,7 @@ func testEncryption() []byte {
 
 	util.Log.Println("Encrypted message: " + base64.StdEncoding.EncodeToString(encrypted))
 
-	decrypted, err := connection.Decrypt(pipes.CurrentNode.ID, encrypted)
+	decrypted, err := caching.Node.Decrypt(caching.Node.ID, encrypted)
 	if err != nil {
 		util.Log.Println("Error: Couldn't decrypt message")
 		return nil
@@ -177,7 +175,7 @@ func parseNodes(res map[string]interface{}) bool {
 		}
 
 		// Add node to pipes
-		pipes.AddNode(pipes.Node{
+		caching.Node.AddNode(pipes.Node{
 			ID:    fmt.Sprintf("%d", int64(n["id"].(float64))),
 			Token: n["token"].(string),
 			WS:    "ws://" + fmt.Sprintf("%s:%d", domain, port) + "/adoption",

@@ -1,12 +1,26 @@
 package pipeshroutes
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/Liphium/station/pipes"
+	"github.com/gofiber/fiber/v2"
+)
 
-func SetupRoutes(router fiber.Router, shouldDoSocketless bool) {
-	router.Route("/gateway", gatewayRouter)  // gatewayRouter is a function in gateway.go
-	router.Route("/connect", adoptionRouter) // adoption is a function in adoption.go
+func SetupRoutes(router fiber.Router, local *pipes.LocalNode, shouldDoSocketless bool) {
+
+	// Inject middleware to add the local node to all requests
+	router.Use(func(c *fiber.Ctx) error {
+		c.Locals("local", local)
+		return c.Next()
+	})
+
+	router.Route("/gateway", func(router fiber.Router) {
+		gatewayRouter(router, local)
+	})
+	router.Route("/connect", func(router fiber.Router) {
+		adoptionRouter(router, local)
+	})
 
 	if shouldDoSocketless {
-		router.Post("/adoption/socketless", socketless) // socketless is a function in socketless.go
+		router.Post("/adoption/socketless", socketless)
 	}
 }

@@ -2,14 +2,12 @@ package pipeshroutes
 
 import (
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/connection"
-	"github.com/Liphium/station/pipes/receive"
 	"github.com/Liphium/station/pipeshandler"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
 )
 
-func adoptionRouter(router fiber.Router) {
+func adoptionRouter(router fiber.Router, local *pipes.LocalNode) {
 	router.Use("/", func(c *fiber.Ctx) error {
 		if websocket.IsWebSocketUpgrade(c) {
 
@@ -17,7 +15,7 @@ func adoptionRouter(router fiber.Router) {
 			token := c.Get("Sec-WebSocket-Protocol")
 
 			// Adopt node
-			node, err := receive.ReceiveWSAdoption(token)
+			node, err := local.ReceiveWSAdoption(token)
 			if err != nil {
 				return c.SendStatus(fiber.StatusBadRequest)
 			}
@@ -31,16 +29,18 @@ func adoptionRouter(router fiber.Router) {
 		return c.SendStatus(fiber.StatusUpgradeRequired)
 	})
 
-	router.Get("/", websocket.New(adoptionWs))
+	router.Get("/", websocket.New(func(c *websocket.Conn) {
+		adoptionWs(c, local)
+	}))
 }
 
-func adoptionWs(conn *websocket.Conn) {
+func adoptionWs(conn *websocket.Conn, local *pipes.LocalNode) {
 	node := conn.Locals("node").(pipes.Node)
 
 	defer func() {
 
 		// Disconnect node
-		connection.RemoveWS(node.ID)
+		local.RemoveNodeWS(node.ID)
 		pipeshandler.CurrentConfig.NodeDisconnectHandler(node)
 		conn.Close()
 	}()
@@ -55,7 +55,7 @@ func adoptionWs(conn *websocket.Conn) {
 		if mtype == websocket.TextMessage {
 
 			// Pass message to pipes
-			receive.ReceiveWS(msg)
+			local.ReceiveWS(msg)
 		}
 	}
 

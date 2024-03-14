@@ -10,7 +10,6 @@ import (
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipes/send"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -98,7 +97,7 @@ func sendMessage(c *fiber.Ctx) error {
 	adapters, nodes := caching.MembersToPipes(members)
 	event := MessageEvent(message)
 
-	send.Pipe(send.ProtocolWS, pipes.Message{
+	caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
 		Channel: pipes.Conversation(adapters, nodes),
 		Event:   event,
 	})

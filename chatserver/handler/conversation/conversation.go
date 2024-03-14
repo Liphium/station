@@ -3,18 +3,18 @@ package conversation
 import (
 	"time"
 
+	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/handler/conversation/space"
 	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
-	"github.com/Liphium/station/pipes/send"
 	"github.com/Liphium/station/pipeshandler/wshandler"
 )
 
 func SetupActions() {
 	space.SetupActions()
 
-	wshandler.Routes["conv_sub"] = subscribe
+	wshandler.RegisterHandler(caching.Node, "conv_sub", subscribe)
 
 	// Setup messages queue
 	setupMessageQueue()
@@ -46,7 +46,7 @@ func setupMessageQueue() {
 
 				// Send messages to the adapter
 				for _, message := range messages {
-					send.Client(task.Adapter, message_routes.MessageEvent(message))
+					caching.Node.SendClient(task.Adapter, message_routes.MessageEvent(message))
 					time.Sleep(3 * time.Millisecond) // Give TCP some time to send the message
 				}
 			}
