@@ -120,7 +120,14 @@ type ExtraClientData struct {
 }
 
 // Middleware for pipes-fiber to add encryption support
-func EncryptionDecodingMiddleware(client *pipeshandler.Client, bytes []byte) (pipeshandler.Message, error) {
+func EncryptionDecodingMiddleware(client *pipeshandler.Client, instance *pipeshandler.Instance, bytes []byte) (pipeshandler.Message, error) {
+
+	// Handle potential errors
+	defer func() {
+		if err := recover(); err != nil {
+			instance.ReportClientError(client, "encryption failure", errors.ErrUnsupported)
+		}
+	}()
 
 	// Decrypt the message using AES
 	key := client.Data.(ExtraClientData).Key
@@ -140,12 +147,12 @@ func EncryptionDecodingMiddleware(client *pipeshandler.Client, bytes []byte) (pi
 }
 
 // Middleware for pipes-fiber to add encryption support (in encoding)
-func EncryptionClientEncodingMiddleware(client *pipeshandler.Client, message []byte) ([]byte, error) {
+func EncryptionClientEncodingMiddleware(client *pipeshandler.Client, instance *pipeshandler.Instance, message []byte) ([]byte, error) {
 
-	// Handle potential errors (with casting in particular)
+	// Handle potential errors
 	defer func() {
 		if err := recover(); err != nil {
-			pipeshandler.ReportClientError(client, "encryption failure (probably casting)", errors.ErrUnsupported)
+			instance.ReportClientError(client, "encryption failure", errors.ErrUnsupported)
 		}
 	}()
 

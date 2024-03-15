@@ -158,7 +158,7 @@ func (instance *Instance) SendSession(id string, session string, msg []byte) boo
 
 func (instance *Instance) SendMessage(conn *websocket.Conn, client *Client, msg []byte) error {
 
-	msg, err := CurrentConfig.ClientEncodingMiddleware(client, msg)
+	msg, err := instance.Config.ClientEncodingMiddleware(client, instance, msg)
 	if err != nil {
 		return err
 	}

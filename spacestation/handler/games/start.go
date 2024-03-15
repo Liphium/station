@@ -1,35 +1,35 @@
 package games_actions
 
 import (
-	"github.com/Liphium/station/pipeshandler/wshandler"
+	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
 )
 
 // Action: game_start
-func startGame(message wshandler.Message) {
+func startGame(ctx pipeshandler.Context) {
 
-	if message.ValidateForm("session") {
-		wshandler.ErrorResponse(message, "invalid")
+	if ctx.ValidateForm("session") {
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
-	sessionId := message.Data["session"].(string)
+	sessionId := ctx.Data["session"].(string)
 	session, valid := caching.GetSession(sessionId)
 	if !valid {
-		wshandler.ErrorResponse(message, "invalid")
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
-	if session.Creator != message.Client.ID {
-		wshandler.ErrorResponse(message, "invalid")
+	if session.Creator != ctx.Client.ID {
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
 	valid = caching.StartGameSession(sessionId)
 	if !valid {
-		wshandler.ErrorResponse(message, "no.start")
+		pipeshandler.ErrorResponse(ctx, "no.start")
 		return
 	}
 
-	wshandler.SuccessResponse(message)
+	pipeshandler.SuccessResponse(ctx)
 }

@@ -1,12 +1,9 @@
 package account
 
-import (
-	"github.com/Liphium/station/chatserver/caching"
-	"github.com/Liphium/station/pipeshandler/wshandler"
-)
+import "github.com/Liphium/station/chatserver/caching"
 
 func SetupActions() {
-	wshandler.RegisterHandler(caching.Node, "st_ch", changeStatus)
-	wshandler.RegisterHandler(caching.Node, "st_send", sendStatus)
-	wshandler.RegisterHandler(caching.Node, "st_res", respondToStatus)
+	caching.Instance.RegisterHandler("st_ch", changeStatus)
+	caching.Instance.RegisterHandler("st_send", sendStatus)
+	caching.Instance.RegisterHandler("st_res", respondToStatus)
 }

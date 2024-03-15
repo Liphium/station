@@ -9,7 +9,6 @@ import (
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 	pipeshutil "github.com/Liphium/station/pipeshandler/util"
-	"github.com/Liphium/station/pipeshandler/wshandler"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
 )
@@ -38,7 +37,7 @@ func gatewayRouter(router fiber.Router, localNode *pipes.LocalNode, instance *pi
 			}
 
 			// Check if the token is valid
-			tk, ok := pipeshandler.CheckToken(token, localNode)
+			tk, ok := instance.CheckToken(token, localNode)
 			if !ok {
 				return c.SendStatus(fiber.StatusBadRequest)
 			}
@@ -49,7 +48,7 @@ func gatewayRouter(router fiber.Router, localNode *pipes.LocalNode, instance *pi
 			}
 
 			// Ask the node if the connection should be accepted
-			if pipeshandler.CurrentConfig.TokenValidateHandler(tk, attachments) {
+			if instance.Config.TokenValidateHandler(tk, attachments) {
 				return c.SendStatus(fiber.StatusBadRequest)
 			}
 
@@ -71,7 +70,7 @@ func gatewayRouter(router fiber.Router, localNode *pipes.LocalNode, instance *pi
 func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Instance) {
 	tk := conn.Locals("tk").(*pipeshandler.ConnectionTokenClaims)
 
-	client := instance.AddClient(tk.ToClient(conn, time.Now().Add(pipeshandler.CurrentConfig.SessionDuration)))
+	client := instance.AddClient(tk.ToClient(conn, time.Now().Add(instance.Config.SessionDuration)))
 	defer func() {
 
 		// Send callback to app
@@ -80,13 +79,13 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 			return
 		}
 		local.RemoveAdapterWS(tk.Account)
-		pipeshandler.CurrentConfig.ClientDisconnectHandler(client)
+		instance.Config.ClientDisconnectHandler(client)
 
 		// Remove the connection from the cache
 		instance.Remove(tk.Account, tk.Session)
 	}()
 
-	if pipeshandler.CurrentConfig.ClientConnectHandler(client, conn.Locals("attached").(string)) {
+	if instance.Config.ClientConnectHandler(client, conn.Locals("attached").(string)) {
 		return
 	}
 
@@ -98,14 +97,14 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 			// Get the client
 			client, valid := instance.Get(tk.Account, tk.Session)
 			if !valid {
-				pipeshandler.ReportGeneralError("couldn't get client", fmt.Errorf("%s (%s)", tk.Account, tk.Session))
+				instance.ReportGeneralError("couldn't get client", fmt.Errorf("%s (%s)", tk.Account, tk.Session))
 				return errors.New("couldn't get client")
 			}
 
 			// Send message encoded with client encoding middleware
-			msg, err := pipeshandler.CurrentConfig.ClientEncodingMiddleware(client, c.Message)
+			msg, err := instance.Config.ClientEncodingMiddleware(client, instance, c.Message)
 			if err != nil {
-				pipeshandler.ReportClientError(client, "couldn't encode received message", err)
+				instance.ReportClientError(client, "couldn't encode received message", err)
 				return err
 			}
 
@@ -115,7 +114,7 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 		},
 	})
 
-	if pipeshandler.CurrentConfig.ClientEnterNetworkHandler(client, conn.Locals("attached").(string)) {
+	if instance.Config.ClientEnterNetworkHandler(client, conn.Locals("attached").(string)) {
 		return
 	}
 
@@ -128,25 +127,25 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 			// Get the client for error reporting purposes
 			client, valid := instance.Get(tk.Account, tk.Session)
 			if !valid {
-				pipeshandler.ReportGeneralError("couldn't get client", fmt.Errorf("%s (%s)", tk.Account, tk.Session))
+				instance.ReportGeneralError("couldn't get client", fmt.Errorf("%s (%s)", tk.Account, tk.Session))
 				return
 			}
 
-			pipeshandler.ReportClientError(client, "couldn't read message", err)
+			instance.ReportClientError(client, "couldn't read message", err)
 			break
 		}
 
 		// Get the client
 		client, valid := instance.Get(tk.Account, tk.Session)
 		if !valid {
-			pipeshandler.ReportGeneralError("couldn't get client", fmt.Errorf("%s (%s)", tk.Account, tk.Session))
+			instance.ReportGeneralError("couldn't get client", fmt.Errorf("%s (%s)", tk.Account, tk.Session))
 			return
 		}
 
 		// Unmarshal the action
-		message, err := pipeshandler.CurrentConfig.DecodingMiddleware(client, msg)
+		message, err := instance.Config.DecodingMiddleware(client, instance, msg)
 		if err != nil {
-			pipeshandler.ReportClientError(client, "couldn't decode message", err)
+			instance.ReportClientError(client, "couldn't decode message", err)
 			return
 		}
 
@@ -155,13 +154,13 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 		}
 
 		// Handle the action
-		if !wshandler.Handle(wshandler.Message{
+		if !instance.Handle(pipeshandler.Context{
 			Client: client,
 			Data:   message.Data,
 			Action: message.Action,
 			Node:   local,
 		}) {
-			pipeshandler.ReportClientError(client, "couldn't handle action", errors.New(message.Action))
+			instance.ReportClientError(client, "couldn't handle action", errors.New(message.Action))
 			return
 		}
 	}

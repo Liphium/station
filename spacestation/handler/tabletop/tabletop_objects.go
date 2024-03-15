@@ -2,22 +2,22 @@ package tabletop_handlers
 
 import (
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipeshandler/wshandler"
+	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
 	"github.com/Liphium/station/spacestation/util"
 )
 
 // Action: tobj_create
-func createObject(message wshandler.Message) {
+func createObject(message pipeshandler.Context) {
 
 	if message.ValidateForm("x", "y", "w", "h", "r", "type", "data") {
-		wshandler.ErrorResponse(message, "invalid")
+		pipeshandler.ErrorResponse(message, "invalid")
 		return
 	}
 
 	connection, valid := caching.GetConnection(message.Client.ID)
 	if !valid {
-		wshandler.ErrorResponse(message, "invalid")
+		pipeshandler.ErrorResponse(message, "invalid")
 		return
 	}
 
@@ -41,7 +41,7 @@ func createObject(message wshandler.Message) {
 	}
 	err := caching.AddObjectToTable(message.Client.Session, object)
 	if err != nil {
-		wshandler.ErrorResponse(message, "server.error")
+		pipeshandler.ErrorResponse(message, "server.error")
 		return
 	}
 
@@ -61,185 +61,185 @@ func createObject(message wshandler.Message) {
 		},
 	})
 	if !valid {
-		wshandler.ErrorResponse(message, "server.error")
+		pipeshandler.ErrorResponse(message, "server.error")
 		return
 	}
 
-	wshandler.NormalResponse(message, map[string]interface{}{
+	pipeshandler.NormalResponse(message, map[string]interface{}{
 		"success": true,
 		"id":      object.ID,
 	})
 }
 
 // Action: tobj_delete
-func deleteObject(message wshandler.Message) {
+func deleteObject(ctx pipeshandler.Context) {
 
-	if message.ValidateForm("id") {
-		wshandler.ErrorResponse(message, "invalid")
+	if ctx.ValidateForm("id") {
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
-	err := caching.RemoveObjectFromTable(message.Client.Session, message.Data["id"].(string))
+	err := caching.RemoveObjectFromTable(ctx.Client.Session, ctx.Data["id"].(string))
 	if err != nil {
-		wshandler.ErrorResponse(message, "server.error")
+		pipeshandler.ErrorResponse(ctx, "server.error")
 		return
 	}
 
 	// Notify other clients
-	valid := SendEventToMembers(message.Client.Session, pipes.Event{
+	valid := SendEventToMembers(ctx.Client.Session, pipes.Event{
 		Name: "tobj_deleted",
 		Data: map[string]interface{}{
-			"id": message.Data["id"].(string),
+			"id": ctx.Data["id"].(string),
 		},
 	})
 	if !valid {
-		wshandler.ErrorResponse(message, "server.error")
+		pipeshandler.ErrorResponse(ctx, "server.error")
 		return
 	}
 
-	wshandler.SuccessResponse(message)
+	pipeshandler.SuccessResponse(ctx)
 }
 
 // Action: tobj_select
-func selectObject(message wshandler.Message) {
+func selectObject(ctx pipeshandler.Context) {
 
-	if message.ValidateForm("id") {
-		wshandler.ErrorResponse(message, "invalid")
+	if ctx.ValidateForm("id") {
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
-	connection, valid := caching.GetConnection(message.Client.ID)
+	connection, valid := caching.GetConnection(ctx.Client.ID)
 	if !valid {
-		wshandler.ErrorResponse(message, "invalid")
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
 	// Grab hold of it
-	err := caching.SelectTableObject(message.Client.Session, message.Data["id"].(string), connection.ClientID)
+	err := caching.SelectTableObject(ctx.Client.Session, ctx.Data["id"].(string), connection.ClientID)
 	if err != nil {
-		wshandler.ErrorResponse(message, util.ErrorTabletopInvalidAction)
+		pipeshandler.ErrorResponse(ctx, util.ErrorTabletopInvalidAction)
 		return
 	}
 
-	wshandler.SuccessResponse(message)
+	pipeshandler.SuccessResponse(ctx)
 }
 
 // Action: tobj_modify
-func modifyObject(message wshandler.Message) {
+func modifyObject(ctx pipeshandler.Context) {
 
-	if message.ValidateForm("id", "data") {
-		wshandler.ErrorResponse(message, "invalid")
+	if ctx.ValidateForm("id", "data") {
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
-	connection, valid := caching.GetConnection(message.Client.ID)
+	connection, valid := caching.GetConnection(ctx.Client.ID)
 	if !valid {
-		wshandler.ErrorResponse(message, "invalid")
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
 	// Check if the object is held by the client
-	obj, valid := caching.GetTableObject(message.Client.Session, message.Data["id"].(string))
+	obj, valid := caching.GetTableObject(ctx.Client.Session, ctx.Data["id"].(string))
 	if !valid {
-		wshandler.ErrorResponse(message, "invalid")
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 	if obj.Holder != connection.ClientID {
-		wshandler.ErrorResponse(message, util.ErrorTabletopInvalidAction)
+		pipeshandler.ErrorResponse(ctx, util.ErrorTabletopInvalidAction)
 		return
 	}
 
-	err := caching.ModifyTableObject(message.Client.Session, message.Data["id"].(string), message.Data["data"].(string))
+	err := caching.ModifyTableObject(ctx.Client.Session, ctx.Data["id"].(string), ctx.Data["data"].(string))
 	if err != nil {
-		wshandler.ErrorResponse(message, "server.error")
+		pipeshandler.ErrorResponse(ctx, "server.error")
 		return
 	}
 
 	// Notify other clients
-	valid = SendEventToMembers(message.Client.Session, pipes.Event{
+	valid = SendEventToMembers(ctx.Client.Session, pipes.Event{
 		Name: "tobj_modified",
 		Data: map[string]interface{}{
-			"id":   message.Data["id"].(string),
-			"data": message.Data["data"].(string),
+			"id":   ctx.Data["id"].(string),
+			"data": ctx.Data["data"].(string),
 		},
 	})
 	if !valid {
-		wshandler.ErrorResponse(message, "server.error")
+		pipeshandler.ErrorResponse(ctx, "server.error")
 		return
 	}
 
-	wshandler.SuccessResponse(message)
+	pipeshandler.SuccessResponse(ctx)
 }
 
 // Action: tobj_move
-func moveObject(message wshandler.Message) {
+func moveObject(ctx pipeshandler.Context) {
 
-	if message.ValidateForm("id", "x", "y") {
-		wshandler.ErrorResponse(message, "invalid")
+	if ctx.ValidateForm("id", "x", "y") {
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
-	x := message.Data["x"].(float64)
-	y := message.Data["y"].(float64)
+	x := ctx.Data["x"].(float64)
+	y := ctx.Data["y"].(float64)
 
-	err := caching.MoveTableObject(message.Client.Session, message.Data["id"].(string), x, y)
+	err := caching.MoveTableObject(ctx.Client.Session, ctx.Data["id"].(string), x, y)
 	if err != nil {
-		wshandler.ErrorResponse(message, "server.error")
+		pipeshandler.ErrorResponse(ctx, "server.error")
 		return
 	}
 
 	// Notify other clients
-	valid := SendEventToMembers(message.Client.Session, pipes.Event{
+	valid := SendEventToMembers(ctx.Client.Session, pipes.Event{
 		Name: "tobj_moved",
 		Data: map[string]interface{}{
-			"id": message.Data["id"].(string),
+			"id": ctx.Data["id"].(string),
 			"x":  x,
 			"y":  y,
 		},
 	})
 	if !valid {
-		wshandler.ErrorResponse(message, "server.error")
+		pipeshandler.ErrorResponse(ctx, "server.error")
 		return
 	}
 
-	wshandler.SuccessResponse(message)
+	pipeshandler.SuccessResponse(ctx)
 }
 
 // Action: tobj_rotate
-func rotateObject(message wshandler.Message) {
+func rotateObject(ctx pipeshandler.Context) {
 
-	if message.ValidateForm("id", "r") {
-		wshandler.ErrorResponse(message, "invalid")
+	if ctx.ValidateForm("id", "r") {
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
-	connection, valid := caching.GetConnection(message.Client.ID)
+	connection, valid := caching.GetConnection(ctx.Client.ID)
 	if !valid {
-		wshandler.ErrorResponse(message, "invalid")
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
-	rotation := message.Data["r"].(float64)
+	rotation := ctx.Data["r"].(float64)
 
-	err := caching.RotateTableObject(message.Client.Session, message.Data["id"].(string), rotation)
+	err := caching.RotateTableObject(ctx.Client.Session, ctx.Data["id"].(string), rotation)
 	if err != nil {
-		wshandler.ErrorResponse(message, "server.error")
+		pipeshandler.ErrorResponse(ctx, "server.error")
 		return
 	}
 
 	// Notify other clients
-	valid = SendEventToMembers(message.Client.Session, pipes.Event{
+	valid = SendEventToMembers(ctx.Client.Session, pipes.Event{
 		Name: "tobj_rotated",
 		Data: map[string]interface{}{
-			"id": message.Data["id"].(string),
+			"id": ctx.Data["id"].(string),
 			"s":  connection.ClientID,
 			"r":  rotation,
 		},
 	})
 	if !valid {
-		wshandler.ErrorResponse(message, "server.error")
+		pipeshandler.ErrorResponse(ctx, "server.error")
 		return
 	}
 
-	wshandler.SuccessResponse(message)
+	pipeshandler.SuccessResponse(ctx)
 }

@@ -4,11 +4,11 @@ import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
-	"github.com/Liphium/station/pipeshandler/wshandler"
+	"github.com/Liphium/station/pipeshandler"
 )
 
 // Action: spc_start
-func start(message wshandler.Message) {
+func start(ctx pipeshandler.Context) {
 
 	/*
 		TODO: Re-enable
@@ -19,14 +19,14 @@ func start(message wshandler.Message) {
 	*/
 
 	// Create space
-	roomId, appToken, valid := caching.CreateSpace(message.Client.ID, integration.ClusterID)
+	roomId, appToken, valid := caching.CreateSpace(ctx.Client.ID, integration.ClusterID)
 	if !valid {
-		wshandler.ErrorResponse(message, localization.ErrorServer)
+		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
 		return
 	}
 
 	// Send space info
-	wshandler.NormalResponse(message, map[string]interface{}{
+	pipeshandler.NormalResponse(ctx, map[string]interface{}{
 		"success": true,
 		"id":      roomId,
 		"token":   appToken,

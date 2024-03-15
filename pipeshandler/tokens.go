@@ -31,11 +31,11 @@ func (tk ConnectionTokenClaims) ToClient(conn *websocket.Conn, end time.Time) Cl
 }
 
 // Check the JWT token
-func CheckToken(token string, local *pipes.LocalNode) (*ConnectionTokenClaims, bool) {
+func (instance *Instance) CheckToken(token string, local *pipes.LocalNode) (*ConnectionTokenClaims, bool) {
 
 	// Check the jwt token
 	jwtToken, err := jwt.ParseWithClaims(token, &ConnectionTokenClaims{}, func(t *jwt.Token) (interface{}, error) {
-		return []byte(CurrentConfig.Secret), nil
+		return []byte(instance.Config.Secret), nil
 	})
 
 	if err != nil {

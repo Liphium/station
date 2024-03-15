@@ -2,49 +2,49 @@ package tabletop_handlers
 
 import (
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipeshandler/wshandler"
+	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
 	"github.com/Liphium/station/spacestation/util"
 )
 
 // Action: table_join
-func joinTable(message wshandler.Message) {
+func joinTable(ctx pipeshandler.Context) {
 
-	err := caching.JoinTable(message.Client.Session, message.Client.ID)
+	err := caching.JoinTable(ctx.Client.Session, ctx.Client.ID)
 	if err != nil {
-		util.Log.Println("Couldn't join table of room", message.Client.Session, ":", err.Error())
-		wshandler.ErrorResponse(message, "server.error")
+		util.Log.Println("Couldn't join table of room", ctx.Client.Session, ":", err.Error())
+		pipeshandler.ErrorResponse(ctx, "server.error")
 		return
 	}
 
-	wshandler.SuccessResponse(message)
+	pipeshandler.SuccessResponse(ctx)
 
 	// Send all the objects
-	objects, err := caching.TableObjects(message.Client.Session)
+	objects, err := caching.TableObjects(ctx.Client.Session)
 	if err != nil {
-		util.Log.Println("Couldn't get objects of room", message.Client.Session, ":", err.Error())
+		util.Log.Println("Couldn't get objects of room", ctx.Client.Session, ":", err.Error())
 		return
 	}
 
-	err = caching.Instance.SendEvent(message.Client, pipes.Event{
+	err = caching.Instance.SendEvent(ctx.Client, pipes.Event{
 		Name: "table_obj",
 		Data: map[string]interface{}{
 			"obj": objects,
 		},
 	})
 	if err != nil {
-		util.Log.Println("Couldn't send objects of room through event", message.Client.Session, ":", err.Error())
+		util.Log.Println("Couldn't send objects of room through event", ctx.Client.Session, ":", err.Error())
 	}
 }
 
 // Action: table_leave
-func leaveTable(message wshandler.Message) {
-	err := caching.LeaveTable(message.Client.Session, message.Client.ID)
+func leaveTable(ctx pipeshandler.Context) {
+	err := caching.LeaveTable(ctx.Client.Session, ctx.Client.ID)
 	if err != nil {
-		util.Log.Println("Couldn't leave table of room", message.Client.Session, ":", err.Error())
-		wshandler.ErrorResponse(message, "server.error")
+		util.Log.Println("Couldn't leave table of room", ctx.Client.Session, ":", err.Error())
+		pipeshandler.ErrorResponse(ctx, "server.error")
 		return
 	}
 
-	wshandler.SuccessResponse(message)
+	pipeshandler.SuccessResponse(ctx)
 }

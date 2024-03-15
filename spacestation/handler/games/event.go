@@ -1,40 +1,40 @@
 package games_actions
 
 import (
-	"github.com/Liphium/station/pipeshandler/wshandler"
+	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
 	"github.com/Liphium/station/spacestation/caching/games"
 )
 
 // Action: game_event
-func gameEvent(message wshandler.Message) {
+func gameEvent(ctx pipeshandler.Context) {
 
-	if message.ValidateForm("session", "name", "data") {
-		wshandler.ErrorResponse(message, "invalid")
+	if ctx.ValidateForm("session", "name", "data") {
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
-	sessionId := message.Data["session"].(string)
-	conn, valid := caching.GetConnection(message.Client.ID)
+	sessionId := ctx.Data["session"].(string)
+	conn, valid := caching.GetConnection(ctx.Client.ID)
 	if !valid {
-		wshandler.ErrorResponse(message, "invalid")
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
 	if conn.CurrentSession != sessionId {
-		wshandler.ErrorResponse(message, "invalid")
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
 	valid = caching.ForwardGameEvent(sessionId, games.EventContext{
-		Client: message.Client,
-		Name:   message.Data["name"].(string),
-		Data:   message.Data["data"],
+		Client: ctx.Client,
+		Name:   ctx.Data["name"].(string),
+		Data:   ctx.Data["data"],
 	})
 	if !valid {
-		wshandler.ErrorResponse(message, "invalid")
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
-	wshandler.SuccessResponse(message)
+	pipeshandler.SuccessResponse(ctx)
 }

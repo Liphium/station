@@ -9,14 +9,11 @@ import (
 	"github.com/dgraph-io/ristretto"
 )
 
-var CurrentConfig = Config{
-	ExpectedConnections: 1000,
-}
-
 type Instance struct {
 	Config           Config
 	connectionsCache *ristretto.Cache // ID:Session -> Client
 	sessionsCache    *ristretto.Cache // ID -> Session list
+	routes           map[string]func(Context)
 }
 
 // ! If the functions aren't implemented pipesfiber will panic
@@ -35,8 +32,8 @@ type Config struct {
 	ClientEnterNetworkHandler func(client *Client, attachments string) bool                // Called after pipes adapter is registered, returns if the client should be disconnected (true = disconnect)
 
 	// Codec middleware
-	ClientEncodingMiddleware func(client *Client, message []byte) ([]byte, error)
-	DecodingMiddleware       func(client *Client, message []byte) (Message, error)
+	ClientEncodingMiddleware func(client *Client, instance *Instance, message []byte) ([]byte, error)
+	DecodingMiddleware       func(client *Client, instance *Instance, message []byte) (Message, error)
 
 	// Error handler
 	ErrorHandler func(err error)
@@ -67,21 +64,22 @@ func Setup(config Config) *Instance {
 		Config: config,
 	}
 	instance.SetupConnectionsCache(config.ExpectedConnections)
+	instance.routes = make(map[string]func(Context))
 	return instance
 }
 
-func ReportGeneralError(context string, err error) {
-	if CurrentConfig.ErrorHandler == nil {
+func (instance *Instance) ReportGeneralError(context string, err error) {
+	if instance.Config.ErrorHandler == nil {
 		return
 	}
 
-	CurrentConfig.ErrorHandler(fmt.Errorf("general: %s: %s", context, err.Error()))
+	instance.Config.ErrorHandler(fmt.Errorf("general: %s: %s", context, err.Error()))
 }
 
-func ReportClientError(client *Client, context string, err error) {
-	if CurrentConfig.ErrorHandler == nil {
+func (instance *Instance) ReportClientError(client *Client, context string, err error) {
+	if instance.Config.ErrorHandler == nil {
 		return
 	}
 
-	CurrentConfig.ErrorHandler(fmt.Errorf("client %s: %s: %s", client.ID, context, err.Error()))
+	instance.Config.ErrorHandler(fmt.Errorf("client %s: %s: %s", client.ID, context, err.Error()))
 }

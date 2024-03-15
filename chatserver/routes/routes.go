@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
@@ -37,7 +36,7 @@ func Setup(router fiber.Router) {
 	router.Post("/ping", ping.Pong)
 
 	// Pipes fiber doesn't need(/support) encrypted routes (it actually does for socketless, which is why we now have a seperate )
-	setupPipesFiber(router, integration.NodePublicKey)
+	setupPipesFiber(router)
 
 	router.Route("/", encryptedRoutes)
 }
@@ -117,8 +116,8 @@ func encryptedRoutes(router fiber.Router) {
 	router.Route("/account", account_routes.SetupRoutes)
 }
 
-func setupPipesFiber(router fiber.Router, serverPublicKey *rsa.PublicKey) {
-	pipeshandler.Setup(pipeshandler.Config{
+func setupPipesFiber(router fiber.Router) {
+	caching.Instance = pipeshandler.Setup(pipeshandler.Config{
 		Secret:              []byte(integration.JwtSecret),
 		ExpectedConnections: 10_0_0_0,       // 10 thousand, but funny
 		SessionDuration:     time.Hour * 24, // This is kinda important
@@ -216,7 +215,14 @@ type ExtraClientData struct {
 }
 
 // Middleware for pipes-fiber to add encryption support
-func EncryptionDecodingMiddleware(client *pipeshandler.Client, bytes []byte) (pipeshandler.Message, error) {
+func EncryptionDecodingMiddleware(client *pipeshandler.Client, instance *pipeshandler.Instance, bytes []byte) (pipeshandler.Message, error) {
+
+	// Handle potential errors
+	defer func() {
+		if err := recover(); err != nil {
+			instance.ReportClientError(client, "encryption failure", errors.ErrUnsupported)
+		}
+	}()
 
 	util.Log.Println("DECRYPTING")
 
@@ -241,12 +247,12 @@ func EncryptionDecodingMiddleware(client *pipeshandler.Client, bytes []byte) (pi
 }
 
 // Middleware for pipes-fiber to add encryption support (in encoding)
-func EncryptionClientEncodingMiddleware(client *pipeshandler.Client, message []byte) ([]byte, error) {
+func EncryptionClientEncodingMiddleware(client *pipeshandler.Client, instance *pipeshandler.Instance, message []byte) ([]byte, error) {
 
 	// Handle potential errors (with casting in particular)
 	defer func() {
 		if err := recover(); err != nil {
-			pipeshandler.ReportClientError(client, "encryption failure (probably casting)", errors.ErrUnsupported)
+			instance.ReportClientError(client, "encryption failure", errors.ErrUnsupported)
 		}
 	}()
 

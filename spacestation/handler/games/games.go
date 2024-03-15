@@ -4,15 +4,14 @@ import (
 	"errors"
 
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipeshandler/wshandler"
 	"github.com/Liphium/station/spacestation/caching"
 	"github.com/Liphium/station/spacestation/caching/games"
 )
 
 func SetupActions() {
-	wshandler.RegisterHandler(caching.Node, "game_init", initGame)
-	wshandler.RegisterHandler(caching.Node, "game_event", gameEvent)
-	wshandler.RegisterHandler(caching.Node, "game_start", startGame)
+	caching.Instance.RegisterHandler("game_init", initGame)
+	caching.Instance.RegisterHandler("game_event", gameEvent)
+	caching.Instance.RegisterHandler("game_start", startGame)
 }
 
 func sendUpdateSession(adapters []string, session games.GameSession) error {

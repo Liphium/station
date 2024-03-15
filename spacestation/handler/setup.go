@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/Liphium/station/main/integration"
-	"github.com/Liphium/station/pipeshandler/wshandler"
+	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
 	"github.com/Liphium/station/spacestation/server"
 	"github.com/Liphium/station/spacestation/util"
@@ -14,34 +14,34 @@ import (
 )
 
 // Action: setup
-func setup(message wshandler.Message) {
+func setup(ctx pipeshandler.Context) {
 
-	if message.ValidateForm("data") {
-		wshandler.ErrorResponse(message, "invalid")
+	if ctx.ValidateForm("data") {
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
-	data := message.Data["data"].(string)
+	data := ctx.Data["data"].(string)
 
 	// Generate new connection
-	connection := caching.EmptyConnection(message.Client.ID, message.Client.Session)
+	connection := caching.EmptyConnection(ctx.Client.ID, ctx.Client.Session)
 
 	// Insert data
-	if !caching.SetMemberData(message.Client.Session, message.Client.ID, connection.ClientID, data) {
-		wshandler.ErrorResponse(message, "invalid")
+	if !caching.SetMemberData(ctx.Client.Session, ctx.Client.ID, connection.ClientID, data) {
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
-	if !SendRoomData(message.Client.Session) {
-		wshandler.ErrorResponse(message, integration.ErrorServer)
+	if !SendRoomData(ctx.Client.Session) {
+		pipeshandler.ErrorResponse(ctx, integration.ErrorServer)
 		return
 	}
 
 	// Check if livekit room already exists
 	rooms, err := server.RoomClient.ListRooms(context.Background(), &livekit.ListRoomsRequest{
-		Names: []string{message.Client.Session},
+		Names: []string{ctx.Client.Session},
 	})
 	if err != nil {
-		wshandler.ErrorResponse(message, integration.ErrorServer)
+		pipeshandler.ErrorResponse(ctx, integration.ErrorServer)
 		return
 	}
 
@@ -51,18 +51,18 @@ func setup(message wshandler.Message) {
 		token := server.RoomClient.CreateToken()
 		token.AddGrant(&auth.VideoGrant{
 			RoomJoin:          true,
-			Room:              message.Client.Session,
+			Room:              ctx.Client.Session,
 			CanPublishSources: []string{"microphone", "camera"},
 		})
 		token.SetIdentity(connection.ClientID)
 
 		jwtToken, err := token.ToJWT()
 		if err != nil {
-			wshandler.ErrorResponse(message, integration.ErrorServer)
+			pipeshandler.ErrorResponse(ctx, integration.ErrorServer)
 			return
 		}
 
-		wshandler.NormalResponse(message, map[string]interface{}{
+		pipeshandler.NormalResponse(ctx, map[string]interface{}{
 			"success": true,
 			"id":      connection.ClientID,
 			"key":     connection.KeyBase64(),
@@ -73,15 +73,15 @@ func setup(message wshandler.Message) {
 		return
 	}
 
-	util.Log.Println("creating new room for", message.Client.Session)
+	util.Log.Println("creating new room for", ctx.Client.Session)
 
 	_, err = server.RoomClient.CreateRoom(context.Background(), &livekit.CreateRoomRequest{
-		Name:            message.Client.Session,
+		Name:            ctx.Client.Session,
 		EmptyTimeout:    120,
 		MaxParticipants: 100,
 	})
 	if err != nil {
-		wshandler.ErrorResponse(message, integration.ErrorServer)
+		pipeshandler.ErrorResponse(ctx, integration.ErrorServer)
 		return
 	}
 
@@ -89,16 +89,16 @@ func setup(message wshandler.Message) {
 	token := server.RoomClient.CreateToken()
 	token.AddGrant(&auth.VideoGrant{
 		RoomJoin: true,
-		Room:     message.Client.Session,
+		Room:     ctx.Client.Session,
 	})
 	token.SetIdentity(connection.ClientID)
 	jwtToken, err := token.ToJWT()
 	if err != nil {
-		wshandler.ErrorResponse(message, integration.ErrorServer)
+		pipeshandler.ErrorResponse(ctx, integration.ErrorServer)
 		return
 	}
 
-	wshandler.NormalResponse(message, map[string]interface{}{
+	pipeshandler.NormalResponse(ctx, map[string]interface{}{
 		"success": true,
 		"id":      connection.ClientID,
 		"key":     connection.KeyBase64(),

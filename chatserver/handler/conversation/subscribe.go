@@ -7,31 +7,31 @@ import (
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipeshandler/wshandler"
+	"github.com/Liphium/station/pipeshandler"
 )
 
 // Action: conv_sub
-func subscribe(message wshandler.Message) {
+func subscribe(ctx pipeshandler.Context) {
 
-	if message.ValidateForm("tokens", "status", "date") {
-		wshandler.ErrorResponse(message, localization.InvalidRequest)
+	if ctx.ValidateForm("tokens", "status", "date") {
+		pipeshandler.ErrorResponse(ctx, localization.InvalidRequest)
 		return
 	}
 
-	date := int64(message.Data["date"].(float64))
-	conversationTokens, tokenIds, members, missingTokens, ok := PrepareConversationTokensWithLookup(message, true)
+	date := int64(ctx.Data["date"].(float64))
+	conversationTokens, tokenIds, members, missingTokens, ok := PrepareConversationTokensWithLookup(ctx, true)
 	if !ok {
-		wshandler.ErrorResponse(message, localization.InvalidRequest)
+		pipeshandler.ErrorResponse(ctx, localization.InvalidRequest)
 		return
 	}
 
 	// Update all node IDs
 	if database.DBConn.Model(&conversations.ConversationToken{}).Where("id IN ?", tokenIds).Update("node", util.NodeTo64(caching.Node.ID)).Error != nil {
-		wshandler.ErrorResponse(message, localization.ErrorServer)
+		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
 		return
 	}
 
-	statusMessage := message.Data["status"].(string)
+	statusctx := ctx.Data["status"].(string)
 	readDates := make(map[string]int64, len(conversationTokens))
 	adapters := make([]string, len(conversationTokens))
 	for _, token := range conversationTokens {
@@ -39,10 +39,10 @@ func subscribe(message wshandler.Message) {
 		// Register adapter for the subscription
 		caching.Node.AdaptWS(pipes.Adapter{
 			ID: "s-" + token.Token,
-			Receive: func(ctx *pipes.Context) error {
-				client := *message.Client
-				util.Log.Println(ctx.Adapter.ID, token.Token, client.ID)
-				err := caching.Instance.SendEvent(message.Client, *ctx.Event)
+			Receive: func(context *pipes.Context) error {
+				client := *ctx.Client
+				util.Log.Println(context.Adapter.ID, token.Token, client.ID)
+				err := caching.Instance.SendEvent(ctx.Client, *context.Event)
 				if err != nil {
 					util.Log.Println("COULDN'T SEND:", err.Error())
 				}
@@ -69,7 +69,7 @@ func subscribe(message wshandler.Message) {
 			Event: pipes.Event{
 				Name: "acc_st",
 				Data: map[string]interface{}{
-					"st": statusMessage,
+					"st": statusctx,
 					"d":  "",
 				},
 			},
@@ -80,9 +80,9 @@ func subscribe(message wshandler.Message) {
 	}
 
 	// Insert adapters into cache (to be deleted when disconnecting)
-	caching.InsertAdapters(message.Client.ID, adapters)
+	caching.InsertAdapters(ctx.Client.ID, adapters)
 
-	wshandler.NormalResponse(message, map[string]interface{}{
+	pipeshandler.NormalResponse(ctx, map[string]interface{}{
 		"success": true,
 		"read":    readDates,
 		"missing": missingTokens,
@@ -90,14 +90,14 @@ func subscribe(message wshandler.Message) {
 }
 
 // Returns: conversationTokens, tokenIds, members, missingTokens, success (bool)
-func PrepareConversationTokens(message wshandler.Message) ([]conversations.ConversationToken, []string, map[string][]caching.StoredMember, []string, bool) {
-	return PrepareConversationTokensWithLookup(message, false)
+func PrepareConversationTokens(ctx pipeshandler.Context) ([]conversations.ConversationToken, []string, map[string][]caching.StoredMember, []string, bool) {
+	return PrepareConversationTokensWithLookup(ctx, false)
 }
 
 // Returns: conversationTokens, tokenIds, members, missingTokens, success (bool)
-func PrepareConversationTokensWithLookup(message wshandler.Message, lookup bool) ([]conversations.ConversationToken, []string, map[string][]caching.StoredMember, []string, bool) {
+func PrepareConversationTokensWithLookup(ctx pipeshandler.Context, lookup bool) ([]conversations.ConversationToken, []string, map[string][]caching.StoredMember, []string, bool) {
 
-	tokensUnparsed := message.Data["tokens"].([]interface{})
+	tokensUnparsed := ctx.Data["tokens"].([]interface{})
 	tokens := make([]conversations.SentConversationToken, len(tokensUnparsed))
 	for i, token := range tokensUnparsed {
 		unparsed := token.(map[string]interface{})
@@ -108,7 +108,7 @@ func PrepareConversationTokensWithLookup(message wshandler.Message, lookup bool)
 	}
 
 	if len(tokens) > 500 {
-		wshandler.ErrorResponse(message, localization.InvalidRequest)
+		pipeshandler.ErrorResponse(ctx, localization.InvalidRequest)
 		return nil, nil, nil, nil, false
 	}
 
@@ -121,7 +121,7 @@ func PrepareConversationTokensWithLookup(message wshandler.Message, lookup bool)
 		conversationTokens, missingTokens, err = caching.ValidateTokens(&tokens)
 	}
 	if err != nil {
-		wshandler.ErrorResponse(message, localization.ErrorServer)
+		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
 		return nil, nil, nil, nil, false
 	}
 
@@ -134,7 +134,7 @@ func PrepareConversationTokensWithLookup(message wshandler.Message, lookup bool)
 
 	members, err := caching.LoadMembersArray(conversationIds)
 	if err != nil {
-		wshandler.ErrorResponse(message, localization.ErrorServer)
+		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
 		return nil, nil, nil, nil, false
 	}
 

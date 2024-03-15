@@ -3,25 +3,25 @@ package space
 import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/util/localization"
-	"github.com/Liphium/station/pipeshandler/wshandler"
+	"github.com/Liphium/station/pipeshandler"
 )
 
 // Action: spc_leave
-func leaveCall(message wshandler.Message) {
+func leaveCall(ctx pipeshandler.Context) {
 
 	// Check if in space
-	if !caching.IsInSpace(message.Client.ID) {
-		wshandler.ErrorResponse(message, "not.in.space")
+	if !caching.IsInSpace(ctx.Client.ID) {
+		pipeshandler.ErrorResponse(ctx, "not.in.space")
 		return
 	}
 
 	// Leave space
-	valid := caching.LeaveSpace(message.Client.ID)
+	valid := caching.LeaveSpace(ctx.Client.ID)
 	if !valid {
-		wshandler.ErrorResponse(message, localization.ErrorServer)
+		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
 		return
 	}
 
 	// Send success
-	wshandler.SuccessResponse(message)
+	pipeshandler.SuccessResponse(ctx)
 }

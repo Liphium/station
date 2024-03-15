@@ -8,13 +8,12 @@ import (
 	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/handler/conversation/space"
 	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
-	"github.com/Liphium/station/pipeshandler/wshandler"
 )
 
 func SetupActions() {
 	space.SetupActions()
 
-	wshandler.RegisterHandler(caching.Node, "conv_sub", subscribe)
+	caching.Instance.RegisterHandler("conv_sub", subscribe)
 
 	// Setup messages queue
 	setupMessageQueue()

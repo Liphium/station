@@ -2,31 +2,31 @@ package handler
 
 import (
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipeshandler/wshandler"
+	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
 )
 
 // Action: set_data
-func setData(message wshandler.Message) {
+func setData(ctx pipeshandler.Context) {
 
-	if message.ValidateForm("data") {
-		wshandler.ErrorResponse(message, "invalid")
+	if ctx.ValidateForm("data") {
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
 	// Set data
-	valid := caching.SetRoomData(message.Client.Session, message.Data["data"].(string))
+	valid := caching.SetRoomData(ctx.Client.Session, ctx.Data["data"].(string))
 	if !valid {
-		wshandler.ErrorResponse(message, "invalid")
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
-	if !SendRoomData(message.Client.Session) {
-		wshandler.ErrorResponse(message, "invalid")
+	if !SendRoomData(ctx.Client.Session) {
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
-	wshandler.SuccessResponse(message)
+	pipeshandler.SuccessResponse(ctx)
 }
 
 func SendRoomData(id string) bool {

@@ -8,27 +8,27 @@ import (
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipeshandler/wshandler"
+	"github.com/Liphium/station/pipeshandler"
 )
 
 // Action: st_send
-func sendStatus(message wshandler.Message) {
+func sendStatus(ctx pipeshandler.Context) {
 
-	if message.ValidateForm("tokens", "status", "data") {
-		wshandler.ErrorResponse(message, localization.InvalidRequest)
+	if ctx.ValidateForm("tokens", "status", "data") {
+		pipeshandler.ErrorResponse(ctx, localization.InvalidRequest)
 		return
 	}
 
 	// Save in database
-	statusMessage := message.Data["status"].(string)
-	data := message.Data["data"].(string)
-	if err := database.DBConn.Model(&fetching.Status{}).Where("id = ?", message.Client.ID).Update("data", statusMessage).Error; err != nil {
-		wshandler.ErrorResponse(message, localization.ErrorServer)
+	statusMessage := ctx.Data["status"].(string)
+	data := ctx.Data["data"].(string)
+	if err := database.DBConn.Model(&fetching.Status{}).Where("id = ?", ctx.Client.ID).Update("data", statusMessage).Error; err != nil {
+		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
 		return
 	}
 
 	// Send to other people
-	conversationTokens, _, members, _, ok := conversation.PrepareConversationTokens(message)
+	conversationTokens, _, members, _, ok := conversation.PrepareConversationTokens(ctx)
 	if !ok {
 		return
 	}
@@ -55,7 +55,7 @@ func sendStatus(message wshandler.Message) {
 		})
 	}
 
-	wshandler.SuccessResponse(message)
+	pipeshandler.SuccessResponse(ctx)
 }
 
 func statusEvent(st string, data string, suffix string) pipes.Event {

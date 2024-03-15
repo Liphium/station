@@ -2,29 +2,29 @@ package tabletop_handlers
 
 import (
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipeshandler/wshandler"
+	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
 )
 
 // Action: tc_move
-func moveCursor(message wshandler.Message) {
+func moveCursor(ctx pipeshandler.Context) {
 
-	if message.ValidateForm("x", "y") {
-		wshandler.ErrorResponse(message, "invalid")
+	if ctx.ValidateForm("x", "y") {
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
-	connection, valid := caching.GetConnection(message.Client.ID)
+	connection, valid := caching.GetConnection(ctx.Client.ID)
 	if !valid {
-		wshandler.ErrorResponse(message, "invalid")
+		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
 
-	x := message.Data["x"].(float64)
-	y := message.Data["y"].(float64)
+	x := ctx.Data["x"].(float64)
+	y := ctx.Data["y"].(float64)
 
 	// Notify other clients
-	valid = SendEventToMembers(message.Client.Session, pipes.Event{
+	valid = SendEventToMembers(ctx.Client.Session, pipes.Event{
 		Name: "tc_moved",
 		Data: map[string]interface{}{
 			"c": connection.ClientID,
@@ -33,9 +33,9 @@ func moveCursor(message wshandler.Message) {
 		},
 	})
 	if !valid {
-		wshandler.ErrorResponse(message, "server.error")
+		pipeshandler.ErrorResponse(ctx, "server.error")
 		return
 	}
 
-	wshandler.SuccessResponse(message)
+	pipeshandler.SuccessResponse(ctx)
 }
