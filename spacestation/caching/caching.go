@@ -2,9 +2,11 @@ package caching
 
 import (
 	"github.com/Liphium/station/pipes"
+	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/util"
 )
 
+var Instance *pipeshandler.Instance
 var Node *pipes.LocalNode
 
 func SetupMemory() {

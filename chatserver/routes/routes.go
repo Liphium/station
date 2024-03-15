@@ -186,7 +186,7 @@ func setupPipesFiber(router fiber.Router, serverPublicKey *rsa.PublicKey) {
 
 			// Set AES key in client data
 			client.Data = ExtraClientData{aesKey}
-			pipeshandler.UpdateClient(client)
+			caching.Instance.UpdateClient(client)
 
 			// Initialize the user and check if he needs to be disconnected
 			disconnect := !initializeUser(client)
@@ -206,7 +206,7 @@ func setupPipesFiber(router fiber.Router, serverPublicKey *rsa.PublicKey) {
 		},
 	})
 	router.Route("/", func(router fiber.Router) {
-		pipesfroutes.SetupRoutes(router, caching.Node, false)
+		pipesfroutes.SetupRoutes(router, caching.Node, caching.Instance, false)
 	})
 }
 
@@ -286,7 +286,7 @@ func initializeUser(client *pipeshandler.Client) bool {
 	}
 
 	// Send current status
-	client.SendEvent(pipes.Event{
+	caching.Instance.SendEvent(client, pipes.Event{
 		Name: "setup_st",
 		Data: map[string]interface{}{
 			"data": status.Data,
@@ -295,7 +295,7 @@ func initializeUser(client *pipeshandler.Client) bool {
 	})
 
 	// Send the setup complete event
-	client.SendEvent(pipes.Event{
+	caching.Instance.SendEvent(client, pipes.Event{
 		Name: "setup_fin",
 		Data: map[string]interface{}{},
 	})

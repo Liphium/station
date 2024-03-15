@@ -14,7 +14,7 @@ import (
 	"github.com/gofiber/websocket/v2"
 )
 
-func gatewayRouter(router fiber.Router, localNode *pipes.LocalNode) {
+func gatewayRouter(router fiber.Router, localNode *pipes.LocalNode, instance *pipeshandler.Instance) {
 
 	// Inject a middleware to check if the request is a websocket upgrade request
 	router.Use("/", func(c *fiber.Ctx) error {
@@ -44,7 +44,7 @@ func gatewayRouter(router fiber.Router, localNode *pipes.LocalNode) {
 			}
 
 			// Make sure the session isn't already connected
-			if pipeshandler.ExistsConnection(tk.Account, tk.Session) {
+			if instance.ExistsConnection(tk.Account, tk.Session) {
 				return c.SendStatus(fiber.StatusConflict)
 			}
 
@@ -64,18 +64,18 @@ func gatewayRouter(router fiber.Router, localNode *pipes.LocalNode) {
 	})
 
 	router.Get("/", websocket.New(func(c *websocket.Conn) {
-		ws(c, localNode)
+		ws(c, localNode, instance)
 	}))
 }
 
-func ws(conn *websocket.Conn, local *pipes.LocalNode) {
+func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Instance) {
 	tk := conn.Locals("tk").(*pipeshandler.ConnectionTokenClaims)
 
-	client := pipeshandler.AddClient(tk.ToClient(conn, time.Now().Add(pipeshandler.CurrentConfig.SessionDuration)))
+	client := instance.AddClient(tk.ToClient(conn, time.Now().Add(pipeshandler.CurrentConfig.SessionDuration)))
 	defer func() {
 
 		// Send callback to app
-		client, valid := pipeshandler.Get(tk.Account, tk.Session)
+		client, valid := instance.Get(tk.Account, tk.Session)
 		if !valid {
 			return
 		}
@@ -83,7 +83,7 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode) {
 		pipeshandler.CurrentConfig.ClientDisconnectHandler(client)
 
 		// Remove the connection from the cache
-		pipeshandler.Remove(tk.Account, tk.Session)
+		instance.Remove(tk.Account, tk.Session)
 	}()
 
 	if pipeshandler.CurrentConfig.ClientConnectHandler(client, conn.Locals("attached").(string)) {
@@ -96,7 +96,7 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode) {
 		Receive: func(c *pipes.Context) error {
 
 			// Get the client
-			client, valid := pipeshandler.Get(tk.Account, tk.Session)
+			client, valid := instance.Get(tk.Account, tk.Session)
 			if !valid {
 				pipeshandler.ReportGeneralError("couldn't get client", fmt.Errorf("%s (%s)", tk.Account, tk.Session))
 				return errors.New("couldn't get client")
@@ -126,7 +126,7 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode) {
 		if err != nil {
 
 			// Get the client for error reporting purposes
-			client, valid := pipeshandler.Get(tk.Account, tk.Session)
+			client, valid := instance.Get(tk.Account, tk.Session)
 			if !valid {
 				pipeshandler.ReportGeneralError("couldn't get client", fmt.Errorf("%s (%s)", tk.Account, tk.Session))
 				return
@@ -137,7 +137,7 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode) {
 		}
 
 		// Get the client
-		client, valid := pipeshandler.Get(tk.Account, tk.Session)
+		client, valid := instance.Get(tk.Account, tk.Session)
 		if !valid {
 			pipeshandler.ReportGeneralError("couldn't get client", fmt.Errorf("%s (%s)", tk.Account, tk.Session))
 			return

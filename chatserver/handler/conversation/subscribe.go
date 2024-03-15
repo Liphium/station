@@ -42,7 +42,7 @@ func subscribe(message wshandler.Message) {
 			Receive: func(ctx *pipes.Context) error {
 				client := *message.Client
 				util.Log.Println(ctx.Adapter.ID, token.Token, client.ID)
-				err := client.SendEvent(*ctx.Event)
+				err := caching.Instance.SendEvent(message.Client, *ctx.Event)
 				if err != nil {
 					util.Log.Println("COULDN'T SEND:", err.Error())
 				}

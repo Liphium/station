@@ -1,4 +1,4 @@
-package chatserver
+package chatserver_starter
 
 import (
 	"fmt"
@@ -47,11 +47,12 @@ func Start(routine bool) {
 
 	nodeData := integration.Nodes[integration.IdentifierChatNode]
 	caching.Node = pipes.SetupCurrent(fmt.Sprintf("%d", nodeData.NodeId), nodeData.NodeToken)
-	util.Log.Println("NODE POINTER", caching.Node)
 
 	// Report online status
 	res := integration.SetOnline(integration.IdentifierChatNode)
 	parseNodes(res)
+
+	util.Log.Printf("Node %s on app %d\n", caching.Node.ID, currentApp)
 
 	caching.Node.SetupSocketless(domain + "/adoption/socketless")
 

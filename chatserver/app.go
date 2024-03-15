@@ -1,9 +1,9 @@
 package main
 
 import (
-	chatserver "github.com/Liphium/station/chatserver/server"
+	chatserver_starter "github.com/Liphium/station/chatserver/starter"
 )
 
 func main() {
-	chatserver.Start(false)
+	chatserver_starter.Start(false)
 }

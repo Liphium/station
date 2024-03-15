@@ -20,7 +20,7 @@ type Client struct {
 	Mutex   *sync.Mutex
 }
 
-func (c *Client) SendEvent(event pipes.Event) error {
+func (instance *Instance) SendEvent(c *Client, event pipes.Event) error {
 
 	msg, err := sonic.Marshal(event)
 	if err != nil {
@@ -32,7 +32,7 @@ func (c *Client) SendEvent(event pipes.Event) error {
 	}
 
 	c.Mutex.Lock()
-	err = SendMessage(c.Conn, c, msg)
+	err = instance.SendMessage(c.Conn, c, msg)
 	c.Mutex.Unlock()
 	return err
 }
@@ -41,17 +41,10 @@ func (c *Client) IsExpired() bool {
 	return c.End.Before(time.Now())
 }
 
-// ! Cost 1 for all caches
-// ID:Session -> Client
-var connectionsCache *ristretto.Cache
-
-// ID -> Session list
-var sessionsCache *ristretto.Cache
-
-func SetupConnectionsCache(expected int64) {
+func (instance *Instance) SetupConnectionsCache(expected int64) {
 
 	var err error
-	connectionsCache, err = ristretto.NewCache(&ristretto.Config{
+	instance.connectionsCache, err = ristretto.NewCache(&ristretto.Config{
 		NumCounters: expected * 10, // pass in expected items
 		MaxCost:     1 << 30,       // maximum cost of cache is 1GB
 		BufferItems: 64,            // Some random number, check docs
@@ -61,7 +54,7 @@ func SetupConnectionsCache(expected int64) {
 		panic(err)
 	}
 
-	sessionsCache, err = ristretto.NewCache(&ristretto.Config{
+	instance.sessionsCache, err = ristretto.NewCache(&ristretto.Config{
 		NumCounters: expected * 10, // pass in expected items
 		MaxCost:     1 << 30,       // maximum cost of cache is 1GB
 		BufferItems: 64,            // Some random number, check docs
@@ -77,25 +70,25 @@ func getKey(id string, session string) string {
 	return id + ":" + session
 }
 
-func AddClient(client Client) *Client {
+func (instance *Instance) AddClient(client Client) *Client {
 
-	_, add := connectionsCache.Get(getKey(client.ID, client.Session))
-	connectionsCache.Set(getKey(client.ID, client.Session), client, 1)
+	_, add := instance.connectionsCache.Get(getKey(client.ID, client.Session))
+	instance.connectionsCache.Set(getKey(client.ID, client.Session), client, 1)
 
 	if add {
-		addSession(client.ID, client.Session)
+		instance.addSession(client.ID, client.Session)
 	}
 
 	return &client
 }
 
-func UpdateClient(client *Client) {
-	connectionsCache.Set(getKey(client.ID, client.Session), *client, 1)
-	connectionsCache.Wait()
+func (instance *Instance) UpdateClient(client *Client) {
+	instance.connectionsCache.Set(getKey(client.ID, client.Session), *client, 1)
+	instance.connectionsCache.Wait()
 }
 
-func GetSessions(id string) []string {
-	sessions, valid := sessionsCache.Get(id)
+func (instance *Instance) GetSessions(id string) []string {
+	sessions, valid := instance.sessionsCache.Get(id)
 	if valid {
 		return sessions.([]string)
 	}
@@ -103,67 +96,67 @@ func GetSessions(id string) []string {
 	return []string{}
 }
 
-func addSession(id string, session string) {
+func (instance *Instance) addSession(id string, session string) {
 
-	sessions, valid := sessionsCache.Get(id)
+	sessions, valid := instance.sessionsCache.Get(id)
 	if valid {
-		sessionsCache.Set(id, append(sessions.([]string), session), 1)
+		instance.sessionsCache.Set(id, append(sessions.([]string), session), 1)
 	} else {
-		sessionsCache.Set(id, []string{session}, 1)
+		instance.sessionsCache.Set(id, []string{session}, 1)
 	}
 }
 
-func removeSession(id string, session string) {
+func (instance *Instance) removeSession(id string, session string) {
 
-	sessions, valid := sessionsCache.Get(id)
+	sessions, valid := instance.sessionsCache.Get(id)
 	if valid {
 
 		if len(sessions.([]string)) == 1 {
-			sessionsCache.Del(id)
+			instance.sessionsCache.Del(id)
 			return
 		}
 
-		sessionsCache.Set(id, pipeshutil.RemoveString(sessions.([]string), session), 1)
+		instance.sessionsCache.Set(id, pipeshutil.RemoveString(sessions.([]string), session), 1)
 	}
 }
 
-func Remove(id string, session string) {
-	client, valid := Get(id, session)
+func (instance *Instance) Remove(id string, session string) {
+	client, valid := instance.Get(id, session)
 	if valid {
 		client.Conn.Close()
 	}
-	connectionsCache.Del(getKey(id, session))
-	removeSession(id, session)
+	instance.connectionsCache.Del(getKey(id, session))
+	instance.removeSession(id, session)
 }
 
-func Send(id string, msg []byte) {
-	sessions, ok := sessionsCache.Get(id)
+func (instance *Instance) Send(id string, msg []byte) {
+	sessions, ok := instance.sessionsCache.Get(id)
 
 	if !ok {
 		return
 	}
 
 	for _, session := range sessions.([]string) {
-		client, valid := Get(id, session)
+		client, valid := instance.Get(id, session)
 		if !valid {
 			continue
 		}
 
-		SendMessage(client.Conn, client, msg)
+		instance.SendMessage(client.Conn, client, msg)
 	}
 }
 
-func SendSession(id string, session string, msg []byte) bool {
-	client, valid := Get(id, session)
+func (instance *Instance) SendSession(id string, session string, msg []byte) bool {
+	client, valid := instance.Get(id, session)
 	if !valid {
 		return false
 	}
 
-	SendMessage(client.Conn, client, msg)
+	instance.SendMessage(client.Conn, client, msg)
 	return true
 }
 
-func SendMessage(conn *websocket.Conn, client *Client, msg []byte) error {
+func (instance *Instance) SendMessage(conn *websocket.Conn, client *Client, msg []byte) error {
 
 	msg, err := CurrentConfig.ClientEncodingMiddleware(client, msg)
 	if err != nil {
@@ -173,8 +166,8 @@ func SendMessage(conn *websocket.Conn, client *Client, msg []byte) error {
 	return conn.WriteMessage(websocket.BinaryMessage, msg)
 }
 
-func ExistsConnection(id string, session string) bool {
-	_, ok := connectionsCache.Get(getKey(id, session))
+func (instance *Instance) ExistsConnection(id string, session string) bool {
+	_, ok := instance.connectionsCache.Get(getKey(id, session))
 	if !ok {
 		return false
 	}
@@ -182,8 +175,8 @@ func ExistsConnection(id string, session string) bool {
 	return ok
 }
 
-func Get(id string, session string) (*Client, bool) {
-	client, valid := connectionsCache.Get(getKey(id, session))
+func (instance *Instance) Get(id string, session string) (*Client, bool) {
+	client, valid := instance.connectionsCache.Get(getKey(id, session))
 	if !valid {
 		return &Client{}, false
 	}
@@ -192,8 +185,8 @@ func Get(id string, session string) (*Client, bool) {
 	return &cl, true
 }
 
-func GetConnections(id string) int {
-	clients, ok := sessionsCache.Get(id)
+func (instance *Instance) GetConnections(id string) int {
+	clients, ok := instance.sessionsCache.Get(id)
 	if !ok {
 		return 0
 	}

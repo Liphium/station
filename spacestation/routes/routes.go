@@ -35,8 +35,7 @@ func SetupRoutes(router fiber.Router) {
 }
 
 func setupPipesFiber(router fiber.Router) {
-	util.Log.Println("JWT Secret:", integration.JwtSecret)
-	pipeshandler.Setup(pipeshandler.Config{
+	caching.Instance = pipeshandler.Setup(pipeshandler.Config{
 		Secret:              []byte(integration.JwtSecret),
 		ExpectedConnections: 10_0_0_0,       // 10 thousand, but funny
 		SessionDuration:     time.Hour * 24, // This is kinda important
@@ -92,7 +91,7 @@ func setupPipesFiber(router fiber.Router) {
 
 			// Set AES key in client data
 			client.Data = ExtraClientData{aesKey}
-			pipeshandler.UpdateClient(client)
+			caching.Instance.UpdateClient(client)
 
 			if integration.Testing {
 				util.Log.Println("Client connected:", client.ID)
@@ -111,7 +110,7 @@ func setupPipesFiber(router fiber.Router) {
 		ClientEncodingMiddleware: EncryptionClientEncodingMiddleware,
 	})
 	router.Route("/", func(router fiber.Router) {
-		pipeshroutes.SetupRoutes(router, caching.Node, false)
+		pipeshroutes.SetupRoutes(router, caching.Node, caching.Instance, false)
 	})
 }
 

@@ -26,7 +26,7 @@ func joinTable(message wshandler.Message) {
 		return
 	}
 
-	err = message.Client.SendEvent(pipes.Event{
+	err = caching.Instance.SendEvent(message.Client, pipes.Event{
 		Name: "table_obj",
 		Data: map[string]interface{}{
 			"obj": objects,

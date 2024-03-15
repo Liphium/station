@@ -40,14 +40,14 @@ func Start() {
 	util.Log.Println("Starting..")
 
 	// Query current node AND JWT TOKEN
-	_, _, currentApp, domain := integration.GetCurrent(integration.IdentifierChatNode)
-	currentNodeData := integration.Nodes[integration.IdentifierChatNode]
+	_, _, currentApp, domain := integration.GetCurrent(integration.IdentifierSpaceNode)
+	currentNodeData := integration.Nodes[integration.IdentifierSpaceNode]
 	currentNodeData.AppId = currentApp
-	integration.Nodes[integration.IdentifierChatNode] = currentNodeData
+	integration.Nodes[integration.IdentifierSpaceNode] = currentNodeData
 
 	nodeData := integration.Nodes[integration.IdentifierSpaceNode]
 	caching.Node = pipes.SetupCurrent(fmt.Sprintf("%d", nodeData.NodeId), nodeData.NodeToken)
-	util.Log.Println("NODE POINTER", caching.Node)
+	util.Log.Println("NODE", caching.Node.ID)
 
 	// Setup routes (called here because of the jwt secret)
 	app.Route("/", routes.SetupRoutes)

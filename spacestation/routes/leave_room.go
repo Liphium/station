@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/Liphium/station/main/integration"
-	"github.com/Liphium/station/pipeshandler"
+	"github.com/Liphium/station/spacestation/caching"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -18,7 +18,7 @@ func leaveRoom(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "invalid request body, err: "+err.Error())
 	}
 
-	connections := pipeshandler.GetSessions(req.Connection)
+	connections := caching.Instance.GetSessions(req.Connection)
 	if len(connections) == 0 {
 		return c.JSON(fiber.Map{
 			"success": true,
@@ -26,7 +26,7 @@ func leaveRoom(c *fiber.Ctx) error {
 	}
 
 	for _, conn := range connections {
-		connection, valid := pipeshandler.Get(req.Connection, conn)
+		connection, valid := caching.Instance.Get(req.Connection, conn)
 		if !valid {
 			continue
 		}

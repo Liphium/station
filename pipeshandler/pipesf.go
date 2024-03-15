@@ -6,10 +6,17 @@ import (
 
 	"github.com/Liphium/station/pipes"
 	"github.com/bytedance/sonic"
+	"github.com/dgraph-io/ristretto"
 )
 
 var CurrentConfig = Config{
 	ExpectedConnections: 1000,
+}
+
+type Instance struct {
+	Config           Config
+	connectionsCache *ristretto.Cache // ID:Session -> Client
+	sessionsCache    *ristretto.Cache // ID -> Session list
 }
 
 // ! If the functions aren't implemented pipesfiber will panic
@@ -55,9 +62,12 @@ func DefaultDecodingMiddleware(client *Client, bytes []byte) (Message, error) {
 	return message, nil
 }
 
-func Setup(config Config) {
-	CurrentConfig = config
-	SetupConnectionsCache(config.ExpectedConnections)
+func Setup(config Config) *Instance {
+	instance := &Instance{
+		Config: config,
+	}
+	instance.SetupConnectionsCache(config.ExpectedConnections)
+	return instance
 }
 
 func ReportGeneralError(context string, err error) {

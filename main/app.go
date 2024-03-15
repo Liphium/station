@@ -9,7 +9,7 @@ import (
 	"github.com/Liphium/station/backend/entities/node"
 	backend_starter "github.com/Liphium/station/backend/starter"
 	"github.com/Liphium/station/backend/util/auth"
-	chatserver "github.com/Liphium/station/chatserver/server"
+	chatserver_starter "github.com/Liphium/station/chatserver/starter"
 	"github.com/Liphium/station/main/integration"
 	spacestation_starter "github.com/Liphium/station/spacestation/starter"
 )
@@ -111,7 +111,7 @@ func main() {
 
 	// Start chat server
 	printWithPrefix("Starting chat server..")
-	chatserver.Start(true)
+	chatserver_starter.Start(true)
 
 	// Start space station
 	printWithPrefix("Starting space station..")

@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/websocket/v2"
 )
 
-func adoptionRouter(router fiber.Router, local *pipes.LocalNode) {
+func adoptionRouter(router fiber.Router, local *pipes.LocalNode, instance *pipeshandler.Instance) {
 	router.Use("/", func(c *fiber.Ctx) error {
 		if websocket.IsWebSocketUpgrade(c) {
 
@@ -30,18 +30,18 @@ func adoptionRouter(router fiber.Router, local *pipes.LocalNode) {
 	})
 
 	router.Get("/", websocket.New(func(c *websocket.Conn) {
-		adoptionWs(c, local)
+		adoptionWs(c, local, instance)
 	}))
 }
 
-func adoptionWs(conn *websocket.Conn, local *pipes.LocalNode) {
+func adoptionWs(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Instance) {
 	node := conn.Locals("node").(pipes.Node)
 
 	defer func() {
 
 		// Disconnect node
 		local.RemoveNodeWS(node.ID)
-		pipeshandler.CurrentConfig.NodeDisconnectHandler(node)
+		instance.Config.NodeDisconnectHandler(node)
 		conn.Close()
 	}()
 
