@@ -12,9 +12,16 @@ import (
 	chatserver_starter "github.com/Liphium/station/chatserver/starter"
 	"github.com/Liphium/station/main/integration"
 	spacestation_starter "github.com/Liphium/station/spacestation/starter"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+
+	if godotenv.Load() != nil {
+		printWithPrefix("No .env file found")
+		return
+	}
+
 	printWithPrefix("Starting Liphium station..")
 	printWithPrefix("Starting backend..")
 
