@@ -46,19 +46,19 @@ func Start() {
 	integration.Nodes[integration.IdentifierSpaceNode] = currentNodeData
 
 	nodeData := integration.Nodes[integration.IdentifierSpaceNode]
-	caching.Node = pipes.SetupCurrent(fmt.Sprintf("%d", nodeData.NodeId), nodeData.NodeToken)
-	util.Log.Println("NODE", caching.Node.ID)
+	caching.SSNode = pipes.SetupCurrent(fmt.Sprintf("%d", nodeData.NodeId), nodeData.NodeToken)
+	util.Log.Println("NODE", caching.SSNode.ID)
 
 	// Setup routes (called here because of the jwt secret)
 	app.Route("/", routes.SetupRoutes)
 
-	util.Log.Printf("Node %s on app %d\n", caching.Node.ID, currentApp)
+	util.Log.Printf("Node %s on app %d\n", caching.SSNode.ID, currentApp)
 
 	protocol := os.Getenv("WEBSOCKET_PROTOCOL")
 	if protocol == "" {
 		protocol = "wss://"
 	}
-	caching.Node.SetupWS(protocol + domain + "/connect")
+	caching.SSNode.SetupWS(protocol + domain + "/connect")
 	handler.Initialize()
 
 	// Report online status
@@ -114,11 +114,11 @@ func Start() {
 	defer caching.CloseCaches()
 
 	// Connect to other nodes
-	caching.Node.IterateNodes(func(_ string, node pipes.Node) bool {
+	caching.SSNode.IterateNodes(func(_ string, node pipes.Node) bool {
 
 		util.Log.Println("Connecting to node " + node.WS)
 
-		if err := caching.Node.ConnectToNodeWS(node); err != nil {
+		if err := caching.SSNode.ConnectToNodeWS(node); err != nil {
 			util.Log.Println(err.Error())
 		}
 		return true
@@ -134,7 +134,7 @@ func Start() {
 // This function is used to test if the encryption is working properly and always different
 func testEncryption() []byte {
 
-	encrypted, err := caching.Node.Encrypt(caching.Node.ID, []byte("H"))
+	encrypted, err := caching.SSNode.Encrypt(caching.SSNode.ID, []byte("H"))
 	if err != nil {
 		util.Log.Println("Error: Couldn't encrypt message")
 		return nil
@@ -142,7 +142,7 @@ func testEncryption() []byte {
 
 	util.Log.Println("Encrypted message: " + base64.StdEncoding.EncodeToString(encrypted))
 
-	decrypted, err := caching.Node.Decrypt(caching.Node.ID, encrypted)
+	decrypted, err := caching.SSNode.Decrypt(caching.SSNode.ID, encrypted)
 	if err != nil {
 		util.Log.Println("Error: Couldn't decrypt message")
 		return nil
@@ -175,7 +175,7 @@ func parseNodes(res map[string]interface{}) bool {
 		}
 
 		// Add node to pipes
-		caching.Node.AddNode(pipes.Node{
+		caching.SSNode.AddNode(pipes.Node{
 			ID:    fmt.Sprintf("%d", int64(n["id"].(float64))),
 			Token: n["token"].(string),
 			WS:    "ws://" + fmt.Sprintf("%s:%d", domain, port) + "/adoption",

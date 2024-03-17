@@ -22,10 +22,10 @@ func socketlessEvent(c *fiber.Ctx) error {
 	}
 
 	// Check token
-	if rq.Token != caching.Node.Token {
+	if rq.Token != caching.SSNode.Token {
 		return integration.InvalidRequest(c, "invalid token")
 	}
 
-	caching.Node.HandleMessage("ws", rq.Message)
+	caching.SSNode.HandleMessage("ws", rq.Message)
 	return nil
 }

@@ -49,7 +49,7 @@ func sendStatus(ctx pipeshandler.Context) {
 		util.Log.Printf("Sending to %d members", len(memberIds))
 
 		// Send the subscription event
-		caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
+		caching.CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
 			Channel: pipes.Conversation(memberIds, memberNodes),
 			Event:   statusEvent(statusMessage, data, ""),
 		})

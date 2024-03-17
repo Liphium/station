@@ -109,8 +109,12 @@ require (
 	golang.org/x/sys v0.18.0 // indirect
 )
 
-replace github.com/Liphium/station/main => ../main
+replace github.com/Liphium/station/pipes => ../pipes
 
 replace github.com/Liphium/station/pipeshandler => ../pipeshandler
 
-replace github.com/Liphium/station/pipes => ../pipes
+replace github.com/Liphium/station/chatserver => ../chatserver
+
+replace github.com/Liphium/station/spacestation => ../spacestation
+
+replace github.com/Liphium/station/backend => ../backend

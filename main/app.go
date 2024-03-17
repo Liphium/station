@@ -18,15 +18,20 @@ func main() {
 	printWithPrefix("Starting Liphium station..")
 	printWithPrefix("Starting backend..")
 
-	pub, priv, err := backend_starter.GenerateKeyPair()
-	if err != nil {
-		printWithPrefix("Error generating key pair: " + err.Error())
+	// Set environment variables
+	if os.Getenv("TC_PUBLIC_KEY") == "" {
+		pub, priv, err := backend_starter.GenerateKeyPair()
+		if err != nil {
+			printWithPrefix("Error generating key pair: " + err.Error())
+			return
+		}
+
+		printWithPrefix("Please set the following environment variables in your .env file:")
+		printWithPrefix("TC_PUBLIC_KEY=" + pub)
+		printWithPrefix("TC_PRIVATE_KEY=" + priv)
+
 		return
 	}
-
-	// Set environment variables
-	os.Setenv("TC_PUBLIC_KEY", pub)
-	os.Setenv("TC_PRIVATE_KEY", priv)
 
 	// Start backend
 	backend_starter.Startup(true)

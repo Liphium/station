@@ -21,11 +21,11 @@ func socketless(c *fiber.Ctx) error {
 	}
 
 	// Check token
-	if event.Token != caching.Node.Token {
+	if event.Token != caching.CSNode.Token {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	caching.Node.HandleMessage(pipes.ProtocolWS, event.Message)
+	caching.CSNode.HandleMessage(pipes.ProtocolWS, event.Message)
 
 	return integration.SuccessfulRequest(c)
 }

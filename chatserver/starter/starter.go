@@ -46,15 +46,15 @@ func Start(routine bool) {
 	integration.Nodes[integration.IdentifierChatNode] = currentNodeData
 
 	nodeData := integration.Nodes[integration.IdentifierChatNode]
-	caching.Node = pipes.SetupCurrent(fmt.Sprintf("%d", nodeData.NodeId), nodeData.NodeToken)
+	caching.CSNode = pipes.SetupCurrent(fmt.Sprintf("%d", nodeData.NodeId), nodeData.NodeToken)
 
 	// Report online status
 	res := integration.SetOnline(integration.IdentifierChatNode)
 	parseNodes(res)
 
-	util.Log.Printf("Node %s on app %d\n", caching.Node.ID, currentApp)
+	util.Log.Printf("Node %s on app %d\n", caching.CSNode.ID, currentApp)
 
-	caching.Node.SetupSocketless(domain + "/adoption/socketless")
+	caching.CSNode.SetupSocketless(domain + "/adoption/socketless")
 
 	app.Use(logger.New())
 	app.Route("/", routes.Setup)
@@ -77,14 +77,14 @@ func Start(routine bool) {
 	if protocol == "" {
 		protocol = "wss://"
 	}
-	caching.Node.SetupWS(protocol + domain + "/connect")
+	caching.CSNode.SetupWS(protocol + domain + "/connect")
 
 	// Connect to other nodes
-	caching.Node.IterateNodes(func(_ string, node pipes.Node) bool {
+	caching.CSNode.IterateNodes(func(_ string, node pipes.Node) bool {
 
 		util.Log.Println("Connecting to node " + node.WS)
 
-		if err := caching.Node.ConnectToNodeWS(node); err != nil {
+		if err := caching.CSNode.ConnectToNodeWS(node); err != nil {
 			util.Log.Println(err.Error())
 		}
 		return true
@@ -121,7 +121,7 @@ func parseNodes(res map[string]interface{}) bool {
 		}
 
 		// Add node to pipes
-		caching.Node.AddNode(pipes.Node{
+		caching.CSNode.AddNode(pipes.Node{
 			ID:    fmt.Sprintf("%d", int64(n["id"].(float64))),
 			Token: n["token"].(string),
 			WS:    "ws://" + fmt.Sprintf("%s:%d", domain, port) + "/adoption",

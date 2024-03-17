@@ -6,8 +6,8 @@ import (
 )
 
 // This just needs to be kept somewhere to avoid import cycles
-var Instance *pipeshandler.Instance
-var Node *pipes.LocalNode
+var CSInstance *pipeshandler.Instance
+var CSNode *pipes.LocalNode
 
 func SetupCaches() {
 	setupConversationsCache()

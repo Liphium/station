@@ -9,13 +9,13 @@ import (
 )
 
 func SetupActions() {
-	caching.Instance.RegisterHandler("game_init", initGame)
-	caching.Instance.RegisterHandler("game_event", gameEvent)
-	caching.Instance.RegisterHandler("game_start", startGame)
+	caching.SSInstance.RegisterHandler("game_init", initGame)
+	caching.SSInstance.RegisterHandler("game_event", gameEvent)
+	caching.SSInstance.RegisterHandler("game_start", startGame)
 }
 
 func sendUpdateSession(adapters []string, session games.GameSession) error {
-	return caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
+	return caching.SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
 		Channel: pipes.BroadcastChannel(adapters),
 		Local:   true,
 		Event: pipes.Event{
@@ -44,7 +44,7 @@ func sendSessionClose(room string, session string) bool {
 		i++
 	}
 
-	err := caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
+	err := caching.SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
 		Channel: pipes.BroadcastChannel(adapters),
 		Local:   true,
 		Event: pipes.Event{

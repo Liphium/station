@@ -37,7 +37,7 @@ func respondToStatus(ctx pipeshandler.Context) {
 	ids, nodes := caching.MembersToPipes(members)
 
 	// Send the subscription event
-	err = caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
+	err = caching.CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
 		Channel: pipes.Conversation(ids, nodes),
 		Event:   statusEvent(status, data, ":a"),
 	})

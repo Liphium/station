@@ -8,19 +8,19 @@ import (
 func SetupHandler() {
 
 	// Table member management
-	caching.Instance.RegisterHandler("table_join", joinTable)
-	caching.Instance.RegisterHandler("table_leave", leaveTable)
+	caching.SSInstance.RegisterHandler("table_join", joinTable)
+	caching.SSInstance.RegisterHandler("table_leave", leaveTable)
 
 	// Table object management
-	caching.Instance.RegisterHandler("tobj_create", createObject)
-	caching.Instance.RegisterHandler("tobj_delete", deleteObject)
-	caching.Instance.RegisterHandler("tobj_select", selectObject)
-	caching.Instance.RegisterHandler("tobj_modify", modifyObject)
-	caching.Instance.RegisterHandler("tobj_move", moveObject)
-	caching.Instance.RegisterHandler("tobj_rotate", rotateObject)
+	caching.SSInstance.RegisterHandler("tobj_create", createObject)
+	caching.SSInstance.RegisterHandler("tobj_delete", deleteObject)
+	caching.SSInstance.RegisterHandler("tobj_select", selectObject)
+	caching.SSInstance.RegisterHandler("tobj_modify", modifyObject)
+	caching.SSInstance.RegisterHandler("tobj_move", moveObject)
+	caching.SSInstance.RegisterHandler("tobj_rotate", rotateObject)
 
 	// Table cursor sending
-	caching.Instance.RegisterHandler("tc_move", moveCursor)
+	caching.SSInstance.RegisterHandler("tc_move", moveCursor)
 }
 
 // Send an event to all table members
@@ -30,7 +30,7 @@ func SendEventToMembers(room string, event pipes.Event) bool {
 		return false
 	}
 
-	return caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
+	return caching.SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
 		Channel: pipes.BroadcastChannel(members),
 		Local:   true,
 		Event:   event,

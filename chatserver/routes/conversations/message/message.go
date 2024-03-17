@@ -64,7 +64,7 @@ func SendSystemMessage(conversation string, content string, attachments []string
 	adapters, nodes := caching.MembersToPipes(members)
 
 	event := MessageEvent(message)
-	err = caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
+	err = caching.CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
 		Channel: pipes.Conversation(adapters, nodes),
 		Event:   event,
 	})
@@ -104,7 +104,7 @@ func SendNotStoredSystemMessage(conversation string, content string, attachments
 	adapters, nodes := caching.MembersToPipes(members)
 
 	event := MessageEvent(message)
-	err = caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
+	err = caching.CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
 		Channel: pipes.Conversation(adapters, nodes),
 		Event:   event,
 	})

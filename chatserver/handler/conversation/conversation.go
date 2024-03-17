@@ -13,7 +13,7 @@ import (
 func SetupActions() {
 	space.SetupActions()
 
-	caching.Instance.RegisterHandler("conv_sub", subscribe)
+	caching.CSInstance.RegisterHandler("conv_sub", subscribe)
 
 	// Setup messages queue
 	setupMessageQueue()
@@ -45,7 +45,7 @@ func setupMessageQueue() {
 
 				// Send messages to the adapter
 				for _, message := range messages {
-					caching.Node.SendClient(task.Adapter, message_routes.MessageEvent(message))
+					caching.CSNode.SendClient(task.Adapter, message_routes.MessageEvent(message))
 					time.Sleep(3 * time.Millisecond) // Give TCP some time to send the message
 				}
 			}

@@ -171,6 +171,6 @@ func UpdateToken(token conversations.ConversationToken) error {
 }
 
 func DeleteToken(id, token string) {
-	Node.RemoveNodeWS("s-" + token)
+	CSNode.RemoveNodeWS("s-" + token)
 	conversationsCache.Del(id)
 }

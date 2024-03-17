@@ -5,7 +5,7 @@ import (
 )
 
 func SetupActions() {
-	caching.Instance.RegisterHandler("spc_start", start)
-	caching.Instance.RegisterHandler("spc_join", joinCall)
-	caching.Instance.RegisterHandler("spc_leave", leaveCall)
+	caching.CSInstance.RegisterHandler("spc_start", start)
+	caching.CSInstance.RegisterHandler("spc_join", joinCall)
+	caching.CSInstance.RegisterHandler("spc_leave", leaveCall)
 }

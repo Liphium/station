@@ -42,7 +42,7 @@ func DeleteAdapters(account string) error {
 	// Remove adapters from pipes
 	for _, adapterName := range adapters {
 		util.Log.Println("DELETED " + adapterName)
-		Node.RemoveAdapterWS(adapterName)
+		CSNode.RemoveAdapterWS(adapterName)
 	}
 
 	adapterCache.Del(account)

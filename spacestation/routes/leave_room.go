@@ -18,7 +18,7 @@ func leaveRoom(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "invalid request body, err: "+err.Error())
 	}
 
-	connections := caching.Instance.GetSessions(req.Connection)
+	connections := caching.SSInstance.GetSessions(req.Connection)
 	if len(connections) == 0 {
 		return c.JSON(fiber.Map{
 			"success": true,
@@ -26,7 +26,7 @@ func leaveRoom(c *fiber.Ctx) error {
 	}
 
 	for _, conn := range connections {
-		connection, valid := caching.Instance.Get(req.Connection, conn)
+		connection, valid := caching.SSInstance.Get(req.Connection, conn)
 		if !valid {
 			continue
 		}

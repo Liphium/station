@@ -53,7 +53,7 @@ func SendStateUpdate(member string, room string, muted bool, deafened bool) bool
 	}
 
 	// Send to all
-	err := caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
+	err := caching.SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
 		Local:   true,
 		Channel: pipes.BroadcastChannel(adapters),
 		Event: pipes.Event{

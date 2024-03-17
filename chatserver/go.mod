@@ -32,7 +32,6 @@ require (
 	github.com/livekit/mediatransportutil v0.0.0-20240302142739-1c3dd691a1b8 // indirect
 	github.com/mackerelio/go-osstat v0.2.4 // indirect
 	github.com/magefile/mage v1.15.0 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/pion/datachannel v1.5.5 // indirect
 	github.com/pion/dtls/v2 v2.2.10 // indirect
 	github.com/pion/ice/v2 v2.3.14 // indirect
@@ -82,7 +81,6 @@ require (
 
 require (
 	github.com/MicahParks/keyfunc/v2 v2.1.0 // indirect
-	github.com/cornelk/hashmap v1.0.8 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 )
 
@@ -105,7 +103,6 @@ require (
 	github.com/gofiber/websocket/v2 v2.2.1 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/klauspost/compress v1.17.7 // indirect
-	github.com/knz/go-libedit v1.10.1 // indirect
 	github.com/livekit/mageutil v0.0.0-20230125210925-54e8a70427c1 // indirect
 	github.com/livekit/psrpc v0.5.3-0.20240228172457-3724cb4adbc4 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -118,22 +115,23 @@ require (
 	github.com/puzpuzpuz/xsync v1.5.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/savsgio/gotils v0.0.0-20240303185622-093b76447511 // indirect
-	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.52.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
-	golang.org/x/mod v0.16.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
-	google.golang.org/genproto v0.0.0-20240304212257-790db918fca8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240304212257-790db918fca8 // indirect
 )
 
-replace github.com/Liphium/station/main => ../main
+replace github.com/Liphium/station/pipes => ../pipes
 
 replace github.com/Liphium/station/pipeshandler => ../pipeshandler
 
-replace github.com/Liphium/station/pipes => ../pipes
+replace github.com/Liphium/station/chatserver => ../chatserver
+
+replace github.com/Liphium/station/spacestation => ../spacestation
+
+replace github.com/Liphium/station/backend => ../backend

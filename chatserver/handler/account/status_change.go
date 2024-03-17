@@ -24,7 +24,7 @@ func changeStatus(ctx pipeshandler.Context) {
 	}
 
 	// Send to all clients
-	caching.Node.SendClient(ctx.Client.ID, pipes.Event{
+	caching.CSNode.SendClient(ctx.Client.ID, pipes.Event{
 		Name: "o:acc_st", // o: for own
 		Data: map[string]interface{}{
 			"st": status,

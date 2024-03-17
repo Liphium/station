@@ -97,7 +97,7 @@ func sendMessage(c *fiber.Ctx) error {
 	adapters, nodes := caching.MembersToPipes(members)
 	event := MessageEvent(message)
 
-	caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
+	caching.CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
 		Channel: pipes.Conversation(adapters, nodes),
 		Event:   event,
 	})

@@ -26,7 +26,7 @@ func subscribe(ctx pipeshandler.Context) {
 	}
 
 	// Update all node IDs
-	if database.DBConn.Model(&conversations.ConversationToken{}).Where("id IN ?", tokenIds).Update("node", util.NodeTo64(caching.Node.ID)).Error != nil {
+	if database.DBConn.Model(&conversations.ConversationToken{}).Where("id IN ?", tokenIds).Update("node", util.NodeTo64(caching.CSNode.ID)).Error != nil {
 		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
 		return
 	}
@@ -37,12 +37,12 @@ func subscribe(ctx pipeshandler.Context) {
 	for _, token := range conversationTokens {
 
 		// Register adapter for the subscription
-		caching.Node.AdaptWS(pipes.Adapter{
+		caching.CSNode.AdaptWS(pipes.Adapter{
 			ID: "s-" + token.Token,
 			Receive: func(context *pipes.Context) error {
 				client := *ctx.Client
 				util.Log.Println(context.Adapter.ID, token.Token, client.ID)
-				err := caching.Instance.SendEvent(ctx.Client, *context.Event)
+				err := caching.CSInstance.SendEvent(ctx.Client, *context.Event)
 				if err != nil {
 					util.Log.Println("COULDN'T SEND:", err.Error())
 				}
@@ -64,7 +64,7 @@ func subscribe(ctx pipeshandler.Context) {
 		}
 
 		// Send the subscription event
-		caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
+		caching.CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
 			Channel: pipes.Conversation(memberIds, memberNodes),
 			Event: pipes.Event{
 				Name: "acc_st",

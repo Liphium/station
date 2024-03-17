@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/Liphium/station/chatserver/caching"
+	"github.com/Liphium/station/spacestation/caching"
 	games_actions "github.com/Liphium/station/spacestation/handler/games"
 	tabletop_handlers "github.com/Liphium/station/spacestation/handler/tabletop"
 )
@@ -9,9 +9,9 @@ import (
 func Initialize() {
 	games_actions.SetupActions()
 
-	caching.Instance.RegisterHandler("set_data", setData)
-	caching.Instance.RegisterHandler("setup", setup)
-	caching.Instance.RegisterHandler("update", update)
+	caching.SSInstance.RegisterHandler("set_data", setData)
+	caching.SSInstance.RegisterHandler("setup", setup)
+	caching.SSInstance.RegisterHandler("update", update)
 
 	tabletop_handlers.SetupHandler()
 }

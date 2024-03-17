@@ -44,3 +44,13 @@ require (
 	golang.org/x/tools v0.14.0 // indirect
 	nhooyr.io/websocket v1.8.10 // indirect
 )
+
+replace github.com/Liphium/station/pipes => ../pipes
+
+replace github.com/Liphium/station/pipeshandler => ../pipeshandler
+
+replace github.com/Liphium/station/chatserver => ../chatserver
+
+replace github.com/Liphium/station/spacestation => ../spacestation
+
+replace github.com/Liphium/station/backend => ../backend

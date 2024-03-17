@@ -6,8 +6,8 @@ import (
 	"github.com/Liphium/station/spacestation/util"
 )
 
-var Instance *pipeshandler.Instance
-var Node *pipes.LocalNode
+var SSInstance *pipeshandler.Instance
+var SSNode *pipes.LocalNode
 
 func SetupMemory() {
 	setupRoomsCache()

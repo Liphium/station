@@ -36,7 +36,7 @@ func SendRoomData(id string) bool {
 	}
 
 	// Send to all
-	err := caching.Node.Pipe(pipes.ProtocolWS, pipes.Message{
+	err := caching.SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
 		Channel: pipes.BroadcastChannel(adapters),
 		Local:   true,
 		Event:   event,

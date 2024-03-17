@@ -117,7 +117,7 @@ func encryptedRoutes(router fiber.Router) {
 }
 
 func setupPipesFiber(router fiber.Router) {
-	caching.Instance = pipeshandler.Setup(pipeshandler.Config{
+	caching.CSInstance = pipeshandler.Setup(pipeshandler.Config{
 		Secret:              []byte(integration.JwtSecret),
 		ExpectedConnections: 10_0_0_0,       // 10 thousand, but funny
 		SessionDuration:     time.Hour * 24, // This is kinda important
@@ -185,7 +185,7 @@ func setupPipesFiber(router fiber.Router) {
 
 			// Set AES key in client data
 			client.Data = ExtraClientData{aesKey}
-			caching.Instance.UpdateClient(client)
+			caching.CSInstance.UpdateClient(client)
 
 			// Initialize the user and check if he needs to be disconnected
 			disconnect := !initializeUser(client)
@@ -205,7 +205,7 @@ func setupPipesFiber(router fiber.Router) {
 		},
 	})
 	router.Route("/", func(router fiber.Router) {
-		pipesfroutes.SetupRoutes(router, caching.Node, caching.Instance, false)
+		pipesfroutes.SetupRoutes(router, caching.CSNode, caching.CSInstance, false)
 	})
 }
 
@@ -288,11 +288,11 @@ func initializeUser(client *pipeshandler.Client) bool {
 	} else {
 
 		// Update the status
-		database.DBConn.Model(&fetching.Status{}).Where("id = ?", account).Update("node", util.NodeTo64(caching.Node.ID))
+		database.DBConn.Model(&fetching.Status{}).Where("id = ?", account).Update("node", util.NodeTo64(caching.CSNode.ID))
 	}
 
 	// Send current status
-	caching.Instance.SendEvent(client, pipes.Event{
+	caching.CSInstance.SendEvent(client, pipes.Event{
 		Name: "setup_st",
 		Data: map[string]interface{}{
 			"data": status.Data,
@@ -301,7 +301,7 @@ func initializeUser(client *pipeshandler.Client) bool {
 	})
 
 	// Send the setup complete event
-	caching.Instance.SendEvent(client, pipes.Event{
+	caching.CSInstance.SendEvent(client, pipes.Event{
 		Name: "setup_fin",
 		Data: map[string]interface{}{},
 	})
