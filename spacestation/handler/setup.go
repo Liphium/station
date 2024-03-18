@@ -67,7 +67,7 @@ func setup(ctx pipeshandler.Context) {
 			"id":      connection.ClientID,
 			"key":     connection.KeyBase64(),
 			"port":    util.UDPPort,
-			"url":     os.Getenv("LK_URL"),
+			"url":     os.Getenv("SS_LK_URL"),
 			"token":   jwtToken,
 		})
 		return
@@ -102,8 +102,7 @@ func setup(ctx pipeshandler.Context) {
 		"success": true,
 		"id":      connection.ClientID,
 		"key":     connection.KeyBase64(),
-		"port":    util.UDPPort,
-		"url":     os.Getenv("LK_URL"),
+		"url":     os.Getenv("SS_LK_URL"),
 		"token":   jwtToken,
 	})
 }

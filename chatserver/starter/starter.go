@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/Liphium/station/chatserver/caching"
-	"github.com/Liphium/station/chatserver/calls"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/handler"
 	"github.com/Liphium/station/chatserver/routes"
@@ -58,9 +57,6 @@ func Start(routine bool) {
 
 	app.Use(logger.New())
 	app.Route("/", routes.Setup)
-
-	// Connect to livekit
-	calls.Connect()
 
 	// Create handlers
 	handler.Create()

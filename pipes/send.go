@@ -24,7 +24,7 @@ func (node *LocalNode) Pipe(protocol string, message Message) error {
 	}
 
 	// Send to receivers on current node
-	//HandleMessage(protocol, message)
+	node.HandleMessage(protocol, message)
 
 	if message.Local {
 		return nil
