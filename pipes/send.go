@@ -35,7 +35,7 @@ func (node *LocalNode) Pipe(protocol string, message Message) error {
 		return node.sendToConversation(protocol, message, msg)
 
 	case "broadcast":
-		return node.sendBroadcast(protocol, message, msg)
+		return node.sendBroadcast(protocol, msg)
 
 	case "p2p":
 		return node.sendP2P(protocol, message, msg)
@@ -44,7 +44,7 @@ func (node *LocalNode) Pipe(protocol string, message Message) error {
 	return nil
 }
 
-func (local *LocalNode) sendBroadcast(protocol string, message Message, msg []byte) error {
+func (local *LocalNode) sendBroadcast(protocol string, msg []byte) error {
 
 	// Send to other nodes
 	var mainErr error = nil
