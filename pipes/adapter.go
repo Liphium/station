@@ -1,6 +1,7 @@
 package pipes
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/dgraph-io/ristretto"
@@ -59,11 +60,11 @@ func (node *LocalNode) RemoveAdapterWS(ID string) {
 }
 
 // Handles receiving messages from the target and passes them to the adapter
-func (node *LocalNode) AdapterReceiveWeb(ID string, event Event, msg []byte) {
+func (node *LocalNode) AdapterReceiveWeb(ID string, event Event, msg []byte) error {
 
 	obj, ok := node.websocketCache.Get(ID)
 	if !ok {
-		return
+		return errors.New("adapter not found")
 	}
 
 	adapter := obj.(*Adapter)
@@ -78,4 +79,6 @@ func (node *LocalNode) AdapterReceiveWeb(ID string, event Event, msg []byte) {
 	if err != nil {
 		Log.Printf("[ws] Error receiving message from target %s: %s \n", ID, err)
 	}
+
+	return err
 }

@@ -9,8 +9,9 @@ import (
 
 type Transaction struct {
 	Id               string
+	UploadToken      string // Required to upload the file
 	Token            string // Required to join the transaction
-	Session          string
+	Account          string
 	FileName         string
 	PriorityReceiver string
 	FileSize         int64
@@ -22,6 +23,7 @@ type Transaction struct {
 type TransactionReceiver struct {
 	TransactionId string
 	ReceiverId    string
+	CurrentIndex  int64
 	CurrentRange  SendRange
 	MissedRanges  []SendRange
 }
@@ -31,7 +33,7 @@ type SendRange struct {
 	EndIndex   int64
 }
 
-const ChunksAhead = 3
+const ChunksAhead = 10
 const ChunkSize = 512 * 1024 // 512KB
 
 // SessionId -> Transaction ID
@@ -40,9 +42,9 @@ var userTransactions sync.Map = sync.Map{}
 // Transaction ID -> Transaction
 var transactionsCache sync.Map = sync.Map{}
 
-func NewTransaction(session string, fileName string, fileSize int64) (*Transaction, bool) {
+func NewTransaction(account string, fileName string, fileSize int64) (*Transaction, bool) {
 
-	if _, ok := userTransactions.Load(session); ok {
+	if _, ok := userTransactions.Load(account); ok {
 		return nil, false
 	}
 
@@ -60,33 +62,24 @@ func NewTransaction(session string, fileName string, fileSize int64) (*Transacti
 
 	transaction := &Transaction{
 		Id:             id,
-		Session:        session,
+		UploadToken:    util.GenerateToken(50),
+		Token:          util.GenerateToken(50),
+		Account:        account,
 		FileName:       fileName,
 		FileSize:       fileSize,
 		Range:          SendRange{StartIndex: 0, EndIndex: endIndex},
 		ReceiversCache: sync.Map{},
 	}
 	transactionsCache.Store(id, transaction)
-	userTransactions.Store(session, id)
+	userTransactions.Store(account, id)
 
 	return transaction, true
 }
 
-func NewTransactionReceiver(id string, token string, receiverAdapter string) {
+func GetTransaction(id string) (*Transaction, bool) {
 	obj, ok := transactionsCache.Load(id)
 	if !ok {
-		return
+		return nil, false
 	}
-	transaction := obj.(*Transaction)
-	if transaction.Token == token {
-		transaction.ReceiversCache.Store(receiverAdapter, &TransactionReceiver{
-			TransactionId: id,
-			ReceiverId:    receiverAdapter,
-			CurrentRange: SendRange{
-				StartIndex: 0,
-				EndIndex:   transaction.Range.EndIndex,
-			},
-			MissedRanges: []SendRange{},
-		})
-	}
+	return obj.(*Transaction), true
 }

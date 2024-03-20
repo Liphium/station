@@ -14,7 +14,7 @@ func createTransaction(context pipeshandler.Context) {
 	name := context.Data["name"].(string)
 	size := int64(context.Data["size"].(float64))
 
-	transaction, ok := liveshare.NewTransaction(context.Client.Session, name, size)
+	transaction, ok := liveshare.NewTransaction(context.Client.ID, name, size)
 	if !ok {
 		pipeshandler.ErrorResponse(context, "failed")
 	}

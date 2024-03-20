@@ -117,14 +117,14 @@ func (local *LocalNode) sendP2P(protocol string, message Message, msg []byte) er
 }
 
 // SendClient is a function that sends a WS packet to the client
-func (local *LocalNode) SendClient(id string, event Event) {
+func (local *LocalNode) SendClient(id string, event Event) error {
 
 	msg, err := sonic.Marshal(event)
 	if err != nil {
-		return
+		return err
 	}
 
-	local.AdapterReceiveWeb(id, event, msg)
+	return local.AdapterReceiveWeb(id, event, msg)
 }
 
 func (local *LocalNode) Socketless(nodeEntity Node, message Message) error {
