@@ -9,8 +9,8 @@ import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/fetching"
-	account_routes "github.com/Liphium/station/chatserver/routes/account"
 	conversation_routes "github.com/Liphium/station/chatserver/routes/conversations"
+	liveshare_routes "github.com/Liphium/station/chatserver/routes/liveshare"
 	"github.com/Liphium/station/chatserver/routes/ping"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/main/integration"
@@ -113,7 +113,7 @@ func encryptedRoutes(router fiber.Router) {
 
 	// Authorized routes (for accounts with remote id only)
 	router.Route("/conversations", conversation_routes.SetupRoutes)
-	router.Route("/account", account_routes.SetupRoutes)
+	router.Route("/account", liveshare_routes.SetupRoutes)
 }
 
 func setupPipesFiber(router fiber.Router) {
