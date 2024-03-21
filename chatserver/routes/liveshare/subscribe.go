@@ -5,17 +5,12 @@ import (
 	"fmt"
 
 	"github.com/Liphium/station/chatserver/liveshare"
+	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/main/integration"
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
 	"github.com/valyala/fasthttp"
 )
-
-var Prefix = []byte("data: ")
-var Suffix = []byte("\n\n")
-
-// 6 cause "data", and 2 cause "\n\n"
-const PacketSize = liveshare.ChunkSize + 6 + 2
 
 func subscribeToLiveshare(c *fiber.Ctx) error {
 
@@ -25,45 +20,52 @@ func subscribeToLiveshare(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "id and token are required")
 	}
 
-	receiverId, valid := liveshare.NewTransactionReceiver(id, token)
+	receiver, valid := liveshare.NewTransactionReceiver(id, token)
 	if !valid {
 		return integration.InvalidRequest(c, "Invalid id or token")
-
 	}
 
-	c.Set("Content-Type", "text/event-stream")
+	c.Set("Content-Type", "application/octet-stream")
 	c.Set("Cache-Control", "no-cache")
 	c.Set("Connection", "keep-alive")
 	c.Set("Transfer-Encoding", "chunked")
 
 	c.Context().SetBodyStreamWriter(fasthttp.StreamWriter(func(w *bufio.Writer) {
-		fmt.Println("WRITER")
+		fmt.Println("Started writing")
 
 		firstPacket, err := sonic.Marshal(map[string]interface{}{
-			"id": receiverId,
+			"id": receiver.ReceiverId,
 		})
 		if err != nil {
-			fmt.Printf("Error while marshalling: %v. Closing http connection.\n", err)
+			util.Log.Println("Error while writing: ", err)
 			return
 		}
-		fmt.Fprintf(w, "data: %s\n\n", firstPacket)
+		_, err = w.Write(firstPacket)
+		if err != nil {
+			util.Log.Println("Error while writing: ", err)
+			return
+		}
+
+		err = w.Flush()
+		if err != nil {
+			util.Log.Println("Error while flushing: ", err)
+			return
+		}
 
 		for {
-			packet := make([]byte, PacketSize)
-			copy(packet[:], Prefix)
-			copy(packet[liveshare.ChunkSize:], Suffix)
+			packet := <-receiver.SendChannel
 
-			written, err := w.Write(packet)
+			written, err := w.Write((*packet)[:])
 			if err != nil {
-				fmt.Printf("Error while writing: %v. Closing http connection.\n", err)
-				break
+				util.Log.Println("Error while writing: ", err)
+				return
 			}
-			fmt.Println(written)
+			util.Log.Println("Wrote", written, "bytes to", receiver.ReceiverId)
 
 			err = w.Flush()
 			if err != nil {
-				fmt.Printf("Error while flushing: %v. Closing http connection.\n", err)
-				break
+				util.Log.Println("Error while flushing: ", err)
+				return
 			}
 		}
 	}))

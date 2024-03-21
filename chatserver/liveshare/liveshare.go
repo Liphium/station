@@ -1,7 +1,9 @@
 package liveshare
 
 import (
+	"fmt"
 	"math"
+	"os"
 	"sync"
 
 	"github.com/Liphium/station/chatserver/util"
@@ -11,6 +13,7 @@ type Transaction struct {
 	Id               string
 	UploadToken      string // Required to upload the file
 	Token            string // Required to join the transaction
+	VolumePath       string
 	Account          string
 	FileName         string
 	PriorityReceiver string
@@ -20,10 +23,21 @@ type Transaction struct {
 	ReceiversCache   sync.Map
 }
 
+func (t *Transaction) ChunkFilePath(chunk int64) string {
+	return fmt.Sprintf("%s/%s", t.VolumePath, t.ChunkFileName(chunk))
+}
+
+func (t *Transaction) ChunkFileName(chunk int64) string {
+	return fmt.Sprintf("chunk_%d", chunk)
+}
+
 type TransactionReceiver struct {
+	Mutex         *sync.Mutex
 	TransactionId string
 	ReceiverId    string
 	CurrentIndex  int64
+	Sent          bool
+	SendChannel   chan *[]byte
 	CurrentRange  SendRange
 	MissedRanges  []SendRange
 }
@@ -57,13 +71,15 @@ func NewTransaction(account string, fileName string, fileSize int64) (*Transacti
 		id = util.GenerateToken(10)
 	}
 
-	// Compute range
+	// Compute values
 	endIndex := int64(math.Ceil(float64(fileSize) / float64(ChunkSize)))
+	path := os.Getenv("CN_LS_REPO") + "/" + id
 
 	transaction := &Transaction{
 		Id:             id,
 		UploadToken:    util.GenerateToken(50),
 		Token:          util.GenerateToken(50),
+		VolumePath:     path,
 		Account:        account,
 		FileName:       fileName,
 		FileSize:       fileSize,
