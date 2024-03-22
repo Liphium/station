@@ -31,8 +31,9 @@ func subscribeToLiveshare(c *fiber.Ctx) error {
 	c.Set("Transfer-Encoding", "chunked")
 
 	c.Context().SetBodyStreamWriter(fasthttp.StreamWriter(func(w *bufio.Writer) {
-		fmt.Println("Started writing")
+		util.Log.Println("Started subscription, waiting for packets...")
 
+		// Send chunk start packet
 		firstPacket, err := sonic.Marshal(map[string]interface{}{
 			"id": receiver.ReceiverId,
 		})
@@ -45,7 +46,6 @@ func subscribeToLiveshare(c *fiber.Ctx) error {
 			util.Log.Println("Error while writing: ", err)
 			return
 		}
-
 		err = w.Flush()
 		if err != nil {
 			util.Log.Println("Error while flushing: ", err)
@@ -55,13 +55,25 @@ func subscribeToLiveshare(c *fiber.Ctx) error {
 		for {
 			packet := <-receiver.SendChannel
 
+			// Send chunk data packet
 			written, err := w.Write((*packet)[:])
 			if err != nil {
 				util.Log.Println("Error while writing: ", err)
 				return
 			}
 			util.Log.Println("Wrote", written, "bytes to", receiver.ReceiverId)
+			err = w.Flush()
+			if err != nil {
+				util.Log.Println("Error while flushing: ", err)
+				return
+			}
 
+			// Send chunk end packet
+			_, err = w.Write([]byte(fmt.Sprintf("\n\nc:%d\n", receiver.CurrentIndex)))
+			if err != nil {
+				util.Log.Println("Error while writing: ", err)
+				return
+			}
 			err = w.Flush()
 			if err != nil {
 				util.Log.Println("Error while flushing: ", err)

@@ -2,6 +2,7 @@ package liveshare
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"os"
 	"sync"
@@ -24,7 +25,7 @@ type Transaction struct {
 }
 
 func (t *Transaction) ChunkFilePath(chunk int64) string {
-	return fmt.Sprintf("%s/%s", t.VolumePath, t.ChunkFileName(chunk))
+	return fmt.Sprintf("%s%s", t.VolumePath, t.ChunkFileName(chunk))
 }
 
 func (t *Transaction) ChunkFileName(chunk int64) string {
@@ -36,7 +37,7 @@ type TransactionReceiver struct {
 	TransactionId string
 	ReceiverId    string
 	CurrentIndex  int64
-	Sent          bool
+	Waiting       bool
 	SendChannel   chan *[]byte
 	CurrentRange  SendRange
 	MissedRanges  []SendRange
@@ -58,8 +59,8 @@ var transactionsCache sync.Map = sync.Map{}
 
 func NewTransaction(account string, fileName string, fileSize int64) (*Transaction, bool) {
 
-	if _, ok := userTransactions.Load(account); ok {
-		return nil, false
+	if userId, ok := userTransactions.Load(account); ok {
+		transactionsCache.Delete(userId) // TODO: Delete the transaction
 	}
 
 	id := util.GenerateToken(10)
@@ -73,7 +74,12 @@ func NewTransaction(account string, fileName string, fileSize int64) (*Transacti
 
 	// Compute values
 	endIndex := int64(math.Ceil(float64(fileSize) / float64(ChunkSize)))
-	path := os.Getenv("CN_LS_REPO") + "/" + id
+	log.Println("End index:", endIndex)
+	path := os.Getenv("CN_LS_REPO") + "/" + id + "/"
+	err := os.MkdirAll(path, os.ModePerm)
+	if err != nil {
+		return nil, false
+	}
 
 	transaction := &Transaction{
 		Id:             id,
@@ -83,7 +89,8 @@ func NewTransaction(account string, fileName string, fileSize int64) (*Transacti
 		Account:        account,
 		FileName:       fileName,
 		FileSize:       fileSize,
-		Range:          SendRange{StartIndex: 0, EndIndex: endIndex},
+		CurrentIndex:   1,
+		Range:          SendRange{StartIndex: 1, EndIndex: endIndex},
 		ReceiversCache: sync.Map{},
 	}
 	transactionsCache.Store(id, transaction)

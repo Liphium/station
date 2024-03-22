@@ -16,11 +16,14 @@ func createTransaction(context pipeshandler.Context) {
 
 	transaction, ok := liveshare.NewTransaction(context.Client.ID, name, size)
 	if !ok {
-		pipeshandler.ErrorResponse(context, "failed")
+		pipeshandler.ErrorResponse(context, "failed") // TODO: Better message
+		return
 	}
 
 	pipeshandler.NormalResponse(context, map[string]interface{}{
-		"id":    transaction.Id,
-		"token": transaction.Token,
+		"success":      true,
+		"id":           transaction.Id,
+		"token":        transaction.Token,
+		"upload_token": transaction.UploadToken,
 	})
 }

@@ -1,7 +1,7 @@
 package liveshare_routes
 
 import (
-	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/Liphium/station/chatserver/liveshare"
@@ -39,10 +39,28 @@ func sendFilePart(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "invalid filename")
 	}
 
-	fileName := fmt.Sprintf("chunk_%d", transaction.CurrentIndex)
-	if file.Filename != fileName {
-		return integration.InvalidRequest(c, "no chunk file name")
+	args := strings.Split(file.Filename, "_")
+	if len(args) != 2 {
+		return integration.InvalidRequest(c, "invalid filename format")
+	}
+	chunkStr := args[1]
+	chunk32, err := strconv.Atoi(chunkStr)
+	if err != nil {
+		return integration.InvalidRequest(c, "invalid chunk index")
+	}
+	chunk := int64(chunk32)
+
+	if chunk > transaction.CurrentIndex+liveshare.ChunksAhead || chunk < transaction.CurrentIndex {
+		return integration.InvalidRequest(c, "wrong chunk index")
 	}
 
-	return c.SaveFile(file, transaction.VolumePath)
+	if err := c.SaveFile(file, transaction.VolumePath+file.Filename); err != nil {
+		return integration.InvalidRequest(c, "failed to save file")
+	}
+
+	if err := transaction.PartUploaded(chunk); err != nil {
+		return integration.InvalidRequest(c, "failed to update transaction")
+	}
+
+	return nil
 }
