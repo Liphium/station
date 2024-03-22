@@ -2,6 +2,7 @@ package liveshare
 
 import (
 	"errors"
+	"math"
 	"os"
 	"sync"
 
@@ -42,7 +43,7 @@ func NewTransactionReceiver(id string, token string) (*TransactionReceiver, bool
 			StartIndex: 1,
 			EndIndex:   transaction.Range.EndIndex,
 		},
-		SendChannel:  make(chan *[]byte),
+		SendChannel:  make(chan int64),
 		MissedRanges: []SendRange{},
 		Mutex:        &sync.Mutex{},
 		Waiting:      true,
@@ -56,11 +57,14 @@ func NewTransactionReceiver(id string, token string) (*TransactionReceiver, bool
 // Send the uploader an update to upload more parts
 func (t *Transaction) RequestUploaderParts() bool {
 
+	// Send the pipes event
+	chunkStart := math.Min(float64(t.CurrentIndex), float64(t.Range.EndIndex))
+	chunkEnd := math.Min(float64(t.CurrentIndex+ChunksAhead), float64(t.Range.EndIndex))
 	if err := caching.CSNode.SendClient(t.Account, pipes.Event{
 		Name: "transaction_send_part",
 		Data: map[string]interface{}{
-			"start": t.CurrentIndex,
-			"end":   t.CurrentIndex + ChunksAhead,
+			"start": chunkStart,
+			"end":   chunkEnd,
 		},
 	}); err != nil {
 		return false
@@ -103,11 +107,6 @@ func (t *Transaction) PartReceived(receiverId string) (bool, error) {
 	}
 	receiver.CurrentIndex++
 
-	sent := receiver.SendPart(t.ChunkFilePath(t.CurrentIndex))
-	if !sent {
-		util.Log.Println("set as waiting")
-		receiver.Waiting = true
-	}
 	return false, nil
 }
 
@@ -126,32 +125,10 @@ func (t *Transaction) PartUploaded(index int64) error {
 			receiver.Mutex.Lock()
 			defer receiver.Mutex.Unlock()
 
-			if receiver.Waiting {
-				util.Log.Println("sending part", receiver.SendPart(t.ChunkFilePath(index)))
-			}
+			receiver.SendChannel <- index
 		}()
 		return true
 	})
 
 	return nil
-}
-
-// Send a part to the receiver
-func (t *TransactionReceiver) SendPart(path string) bool {
-
-	file, err := os.Open(path)
-	if err != nil {
-		return false
-	}
-
-	// Send the part
-	part := make([]byte, ChunkSize)
-	_, err = file.Read(part)
-	if err != nil {
-		return false
-	}
-
-	t.Waiting = false
-	t.SendChannel <- &part
-	return true
 }

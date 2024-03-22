@@ -38,7 +38,7 @@ type TransactionReceiver struct {
 	ReceiverId    string
 	CurrentIndex  int64
 	Waiting       bool
-	SendChannel   chan *[]byte
+	SendChannel   chan int64
 	CurrentRange  SendRange
 	MissedRanges  []SendRange
 }

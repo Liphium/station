@@ -7,7 +7,6 @@ import (
 	"github.com/Liphium/station/chatserver/liveshare"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/main/integration"
-	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
 	"github.com/valyala/fasthttp"
 )
@@ -25,7 +24,7 @@ func subscribeToLiveshare(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "Invalid id or token")
 	}
 
-	c.Set("Content-Type", "application/octet-stream")
+	c.Set("Content-Type", "text/event-stream")
 	c.Set("Cache-Control", "no-cache")
 	c.Set("Connection", "keep-alive")
 	c.Set("Transfer-Encoding", "chunked")
@@ -34,14 +33,7 @@ func subscribeToLiveshare(c *fiber.Ctx) error {
 		util.Log.Println("Started subscription, waiting for packets...")
 
 		// Send chunk start packet
-		firstPacket, err := sonic.Marshal(map[string]interface{}{
-			"id": receiver.ReceiverId,
-		})
-		if err != nil {
-			util.Log.Println("Error while writing: ", err)
-			return
-		}
-		_, err = w.Write(firstPacket)
+		_, err := fmt.Fprintf(w, "data: %s\n\n", receiver.ReceiverId)
 		if err != nil {
 			util.Log.Println("Error while writing: ", err)
 			return
@@ -56,24 +48,12 @@ func subscribeToLiveshare(c *fiber.Ctx) error {
 			packet := <-receiver.SendChannel
 
 			// Send chunk data packet
-			written, err := w.Write((*packet)[:])
+			written, err := fmt.Fprintf(w, "data: %d\n\n", packet)
 			if err != nil {
 				util.Log.Println("Error while writing: ", err)
 				return
 			}
 			util.Log.Println("Wrote", written, "bytes to", receiver.ReceiverId)
-			err = w.Flush()
-			if err != nil {
-				util.Log.Println("Error while flushing: ", err)
-				return
-			}
-
-			// Send chunk end packet
-			_, err = w.Write([]byte(fmt.Sprintf("\n\nc:%d\n", receiver.CurrentIndex)))
-			if err != nil {
-				util.Log.Println("Error while writing: ", err)
-				return
-			}
 			err = w.Flush()
 			if err != nil {
 				util.Log.Println("Error while flushing: ", err)
