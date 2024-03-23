@@ -1,11 +1,20 @@
 package liveshare_actions
 
 import (
+	"os"
+
 	"github.com/Liphium/station/chatserver/liveshare"
+	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/pipeshandler"
 )
 
 func createTransaction(context pipeshandler.Context) {
+
+	if os.Getenv("CHAT_NODE") == "" {
+		util.Log.Println("Live share is disabled because CHAT_NODE is not set. It should be set to the URL of the chat node.")
+		pipeshandler.ErrorResponse(context, "invalid")
+		return
+	}
 
 	if context.ValidateForm("name", "size") {
 		pipeshandler.ErrorResponse(context, "invalid")
@@ -25,5 +34,6 @@ func createTransaction(context pipeshandler.Context) {
 		"id":           transaction.Id,
 		"token":        transaction.Token,
 		"upload_token": transaction.UploadToken,
+		"url":          os.Getenv("CHAT_NODE"),
 	})
 }

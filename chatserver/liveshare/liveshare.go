@@ -7,7 +7,9 @@ import (
 	"os"
 	"sync"
 
+	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/util"
+	"github.com/Liphium/station/pipes"
 )
 
 type Transaction struct {
@@ -60,7 +62,7 @@ var transactionsCache sync.Map = sync.Map{}
 func NewTransaction(account string, fileName string, fileSize int64) (*Transaction, bool) {
 
 	if userId, ok := userTransactions.Load(account); ok {
-		transactionsCache.Delete(userId) // TODO: Delete the transaction
+		CancelTransaction(userId.(string))
 	}
 
 	id := util.GenerateToken(10)
@@ -105,4 +107,43 @@ func GetTransaction(id string) (*Transaction, bool) {
 		return nil, false
 	}
 	return obj.(*Transaction), true
+}
+
+func CancelTransactionByAccount(account string) {
+	userId, ok := userTransactions.Load(account)
+	if !ok {
+		return
+	}
+	CancelTransaction(userId.(string))
+}
+
+func CancelTransaction(id string) {
+
+	transaction, ok := GetTransaction(id)
+	if !ok {
+		return
+	}
+
+	// Disconnect all receivers
+	transaction.ReceiversCache.Range(func(key, value interface{}) bool {
+		receiver := value.(*TransactionReceiver)
+		receiver.SendChannel <- -1
+		return true
+	})
+
+	// Delete the transaction from the cache
+	transactionsCache.Delete(id)
+	userTransactions.Delete(transaction.Account)
+
+	// Delete the transaction directory
+	err := os.RemoveAll(transaction.VolumePath)
+	if err != nil {
+		log.Println("Error while removing transaction directory:", err)
+	}
+
+	// Inform the sender
+	caching.CSNode.SendClient(transaction.Account, pipes.Event{
+		Name: "transaction_cancel",
+		Data: map[string]interface{}{},
+	})
 }

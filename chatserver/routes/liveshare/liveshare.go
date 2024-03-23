@@ -6,6 +6,7 @@ func Unencrypted(router fiber.Router) {
 	router.Post("/received", receivedChunk)
 	router.Get("/download", downloadChunk)
 	router.Post("/subscribe", subscribeToLiveshare)
+	router.Post("/info", transactionInfo)
 }
 
 func Authorized(router fiber.Router) {

@@ -22,6 +22,10 @@ func NewTransactionReceiver(id string, token string) (*TransactionReceiver, bool
 		return nil, false
 	}
 
+	if transaction.PriorityReceiver != "" {
+		return nil, false
+	}
+
 	receiverId := util.GenerateToken(10)
 	for {
 		_, ok := transaction.ReceiversCache.Load(receiverId)

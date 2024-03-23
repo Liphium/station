@@ -31,6 +31,10 @@ func subscribeToLiveshare(c *fiber.Ctx) error {
 
 	c.Context().SetBodyStreamWriter(fasthttp.StreamWriter(func(w *bufio.Writer) {
 		util.Log.Println("Started subscription, waiting for packets...")
+		defer func() {
+			util.Log.Println("Cancelling liveshare session")
+			liveshare.CancelTransaction(id)
+		}()
 
 		// Send chunk start packet
 		_, err := fmt.Fprintf(w, "data: %s\n\n", receiver.ReceiverId)
@@ -46,6 +50,11 @@ func subscribeToLiveshare(c *fiber.Ctx) error {
 
 		for {
 			packet := <-receiver.SendChannel
+
+			if packet == -1 {
+				util.Log.Println("Subscription ended")
+				return
+			}
 
 			// Send chunk data packet
 			written, err := fmt.Fprintf(w, "data: %d\n\n", packet)
