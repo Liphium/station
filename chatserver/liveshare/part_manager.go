@@ -102,10 +102,11 @@ func (t *Transaction) PartReceived(receiverId string) (bool, error) {
 			t.PriorityReceiver = ""
 		}
 		t.CurrentIndex++
-		t.RequestUploaderParts() // TODO: Make this not send anymore when the transaction is finished
+		t.RequestUploaderParts()
 	}
 
 	if receiver.CurrentIndex == receiver.CurrentRange.EndIndex {
+		receiver.SendChannel <- -1
 		t.ReceiversCache.Delete(receiverId)
 		return true, nil
 	}

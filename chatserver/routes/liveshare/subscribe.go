@@ -32,6 +32,9 @@ func subscribeToLiveshare(c *fiber.Ctx) error {
 	c.Context().SetBodyStreamWriter(fasthttp.StreamWriter(func(w *bufio.Writer) {
 		util.Log.Println("Started subscription, waiting for packets...")
 		defer func() {
+			if err := recover(); err != nil {
+				util.Log.Println("Recovered from panic: ", err)
+			}
 			util.Log.Println("Cancelling liveshare session")
 			liveshare.CancelTransaction(id)
 		}()

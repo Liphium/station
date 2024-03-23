@@ -36,6 +36,8 @@ func receivedChunk(c *fiber.Ctx) error {
 	}
 
 	if finished {
+		liveshare.CancelTransaction(transaction.Id)
+
 		return c.JSON(fiber.Map{
 			"success":  true,
 			"complete": true,

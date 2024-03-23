@@ -14,7 +14,7 @@ type infoRequest struct {
 func transactionInfo(c *fiber.Ctx) error {
 
 	var req infoRequest
-	if err := integration.BodyParser(c, &req); err != nil {
+	if err := c.BodyParser(&req); err != nil {
 		return integration.InvalidRequest(c, "invalid request")
 	}
 
@@ -27,8 +27,8 @@ func transactionInfo(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "invalid token")
 	}
 
-	return integration.ReturnJSON(c, fiber.Map{
-		"succeed": true,
+	return c.JSON(fiber.Map{
+		"success": true,
 		"name":    transaction.FileName,
 		"size":    transaction.FileSize,
 	})

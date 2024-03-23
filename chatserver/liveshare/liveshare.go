@@ -126,6 +126,7 @@ func CancelTransaction(id string) {
 
 	// Disconnect all receivers
 	transaction.ReceiversCache.Range(func(key, value interface{}) bool {
+		util.Log.Println("Disconnecting receiver", key)
 		receiver := value.(*TransactionReceiver)
 		receiver.SendChannel <- -1
 		return true
@@ -143,7 +144,7 @@ func CancelTransaction(id string) {
 
 	// Inform the sender
 	caching.CSNode.SendClient(transaction.Account, pipes.Event{
-		Name: "transaction_cancel",
+		Name: "transaction_end",
 		Data: map[string]interface{}{},
 	})
 }
