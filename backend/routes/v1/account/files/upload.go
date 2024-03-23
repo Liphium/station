@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Liphium/station/backend/database"
@@ -40,6 +41,10 @@ func uploadFile(c *fiber.Ctx) error {
 	fileType := file.Header.Get("Content-Type")
 	if fileType == "" {
 		util.Log.Println("invalid headers")
+		return util.InvalidRequest(c)
+	}
+
+	if strings.Contains(file.Filename, "/") || strings.Contains(file.Filename, "\\") {
 		return util.InvalidRequest(c)
 	}
 
