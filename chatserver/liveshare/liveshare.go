@@ -139,6 +139,10 @@ func CancelTransaction(id string) {
 	// Delete the transaction directory
 	err := os.RemoveAll(transaction.VolumePath)
 	if err != nil {
+		log.Println("Error while removing contents of transaction directory:", err)
+	}
+	err = os.Remove(transaction.VolumePath)
+	if err != nil {
 		log.Println("Error while removing transaction directory:", err)
 	}
 
