@@ -190,7 +190,7 @@ func RemoveObjectFromTable(room string, object string) error {
 	return nil
 }
 
-func ModifyTableObject(room string, objectId string, data string) error {
+func ModifyTableObject(room string, objectId string, data string, width float64, height float64) error {
 	obj, valid := tablesCache.Get(room)
 	if !valid {
 		return ErrTableNotFound
@@ -205,6 +205,8 @@ func ModifyTableObject(room string, objectId string, data string) error {
 	object := tObj.(*TableObject)
 	object.Holder = ""
 	object.Data = data
+	object.Width = width
+	object.Height = height
 
 	return nil
 }

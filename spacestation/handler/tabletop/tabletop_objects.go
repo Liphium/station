@@ -127,7 +127,7 @@ func selectObject(ctx pipeshandler.Context) {
 // Action: tobj_modify
 func modifyObject(ctx pipeshandler.Context) {
 
-	if ctx.ValidateForm("id", "data") {
+	if ctx.ValidateForm("id", "data", "width", "height") {
 		pipeshandler.ErrorResponse(ctx, "invalid")
 		return
 	}
@@ -149,18 +149,22 @@ func modifyObject(ctx pipeshandler.Context) {
 		return
 	}
 
-	err := caching.ModifyTableObject(ctx.Client.Session, ctx.Data["id"].(string), ctx.Data["data"].(string))
+	err := caching.ModifyTableObject(ctx.Client.Session, ctx.Data["id"].(string), ctx.Data["data"].(string),
+		ctx.Data["width"].(float64), ctx.Data["height"].(float64))
 	if err != nil {
 		pipeshandler.ErrorResponse(ctx, "server.error")
 		return
 	}
 
 	// Notify other clients
+	util.Log.Println("Sending tobj_modified event")
 	valid = SendEventToMembers(ctx.Client.Session, pipes.Event{
 		Name: "tobj_modified",
 		Data: map[string]interface{}{
 			"id":   ctx.Data["id"].(string),
 			"data": ctx.Data["data"].(string),
+			"w":    ctx.Data["width"].(float64),
+			"h":    ctx.Data["height"].(float64),
 		},
 	})
 	if !valid {
