@@ -16,9 +16,9 @@ import (
 var disabled = false
 
 // Configuration
-var maxUploadSize int64 = 10_000_000       // 10 MB
-var maxFavoriteStorage int64 = 500_000_000 // 500 MB
-var maxTotalStorage int64 = 1_000_000_000  // 1 GB
+var maxUploadSize int64 = 10       // 10 MB
+var maxFavoriteStorage int64 = 500 // 500 MB
+var maxTotalStorage int64 = 1_000  // 1 GB
 var saveLocation = ""
 var urlPath = ""
 
@@ -43,9 +43,9 @@ func Unencrypted(router fiber.Router) {
 	}
 
 	if !disabled {
-		maxUploadSize = GetIntEnv("MAX_UPLOAD_SIZE", maxUploadSize)
-		maxFavoriteStorage = GetIntEnv("MAX_FAVORITE_STORAGE", maxFavoriteStorage)
-		maxTotalStorage = GetIntEnv("MAX_TOTAL_STORAGE", maxTotalStorage)
+		maxUploadSize = GetIntEnv("MAX_UPLOAD_SIZE", maxUploadSize) * 1_000_000
+		maxFavoriteStorage = GetIntEnv("MAX_FAVORITE_STORAGE", maxFavoriteStorage) * 1_000_000
+		maxTotalStorage = GetIntEnv("MAX_TOTAL_STORAGE", maxTotalStorage) * 1_000_000
 	}
 
 	// Autorized by using a normal JWT token
@@ -76,7 +76,10 @@ func Unencrypted(router fiber.Router) {
 	}))
 
 	router.Post("/upload", uploadFile)
-	router.Post("/get/:id", downloadFile)
+}
+
+func UnencryptedUnauthorized(router fiber.Router) {
+	router.Post("/download/:id", downloadFile)
 }
 
 func GetIntEnv(key string, standard int64) int64 {

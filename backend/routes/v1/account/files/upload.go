@@ -46,7 +46,7 @@ func uploadFile(c *fiber.Ctx) error {
 
 	// Check file size
 	if file.Size > maxUploadSize {
-		return util.FailedRequest(c, "file.too_large", nil)
+		return util.FailedRequest(c, fmt.Sprintf("file.too_large:%d", maxUploadSize/1_000_000), nil)
 	}
 
 	// Check total storage
