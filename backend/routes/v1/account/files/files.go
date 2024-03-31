@@ -1,33 +1,52 @@
 package files
 
 import (
-	"context"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 )
 
-var bucketName string
-var client *s3.Client
-var uploader *manager.Uploader
 var disabled = false
 
 // Configuration
-const maxUploadSize = 10_000_000       // 10 MB
-const maxFavoriteStorage = 500_000_000 // 500 MB
-const maxTotalStorage = 1_000_000_000  // 1 GB
+var maxUploadSize int64 = 10_000_000       // 10 MB
+var maxFavoriteStorage int64 = 500_000_000 // 500 MB
+var maxTotalStorage int64 = 1_000_000_000  // 1 GB
+var saveLocation = ""
+var urlPath = ""
 
 func Unencrypted(router fiber.Router) {
+
+	if os.Getenv("FILE_REPO") == "" {
+		util.Log.Println("If you want to enable file uploading, please specify a path for those files using the FILE_REPO env variable!")
+		disabled = true
+	} else {
+		disabled = false
+		saveLocation = os.Getenv("FILE_REPO")
+		if !strings.HasSuffix(saveLocation, "/") {
+			saveLocation = saveLocation + "/"
+		}
+	}
+
+	if os.Getenv("BASE_PATH") == "" {
+		util.Log.Println("If you want to enable file uploading, please specify the domain of the server in the BASE_PATH env variable (without https:// or http:// (that's specified in the PROTOCOL env variable, https:// by default), you can specify a port if needed)")
+		disabled = true
+	} else {
+		urlPath = os.Getenv("PROTOCOL") + os.Getenv("BASE_PATH")
+	}
+
+	if !disabled {
+		maxUploadSize = GetIntEnv("MAX_UPLOAD_SIZE", maxUploadSize)
+		maxFavoriteStorage = GetIntEnv("MAX_FAVORITE_STORAGE", maxFavoriteStorage)
+		maxTotalStorage = GetIntEnv("MAX_TOTAL_STORAGE", maxTotalStorage)
+	}
 
 	// Autorized by using a normal JWT token
 	router.Use(jwtware.New(jwtware.Config{
@@ -57,43 +76,25 @@ func Unencrypted(router fiber.Router) {
 	}))
 
 	router.Post("/upload", uploadFile)
+	router.Post("/get/:id", downloadFile)
+}
+
+func GetIntEnv(key string, standard int64) int64 {
+	envValue := os.Getenv(key)
+	if envValue == "" {
+		return standard
+	} else {
+		envInt, err := strconv.Atoi(envValue)
+		if err != nil {
+			util.Log.Println("ERROR: Couldn't read", key, ". Please set it if you want to modify the option. Default value:", standard)
+			return standard
+		}
+
+		return int64(envInt)
+	}
 }
 
 func Authorized(router fiber.Router) {
-	url := os.Getenv("R2_URL")
-	bucketName = os.Getenv("R2_BUCKET")
-	accessKeyId := os.Getenv("R2_CLIENT_ID")
-	accessKeySecret := os.Getenv("R2_CLIENT_SECRET")
-
-	r2Resolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		return aws.Endpoint{
-			URL: url,
-		}, nil
-	})
-
-	cfg, err := config.LoadDefaultConfig(context.TODO(),
-		config.WithEndpointResolverWithOptions(r2Resolver),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKeyId, accessKeySecret, "")),
-		config.WithRegion("auto"),
-	)
-	if err != nil {
-		disabled = true
-		util.Log.Println("Failed to connect to R2. File integration disabled.")
-		util.Log.Fatal(err)
-	}
-
-	// Setup uploader
-	client = s3.NewFromConfig(cfg)
-
-	util.Log.Println("Checking R2 connection..")
-	_, err = client.HeadBucket(context.TODO(), &s3.HeadBucketInput{
-		Bucket: aws.String(bucketName),
-	})
-	if err != nil {
-		util.Log.Println("R2 NOT WORKING")
-		panic(err)
-	}
-	util.Log.Println("Successfully connected to R2.")
 
 	// Setup file routes
 	router.Post("/delete", deleteFile)

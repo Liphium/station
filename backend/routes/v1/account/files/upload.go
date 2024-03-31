@@ -1,9 +1,7 @@
 package files
 
 import (
-	"context"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -11,8 +9,6 @@ import (
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -63,7 +59,7 @@ func uploadFile(c *fiber.Ctx) error {
 		return util.FailedRequest(c, "file.storage_limit", nil)
 	}
 
-	// Generate file name Format: a-[accountId]-[objectIdentifier].[extension]
+	// Generate file name Format: a-[timestamp]-[accountId]-[objectIdentifier].[extension]
 	fileId := "a-" + fmt.Sprintf("%d", time.Now().UnixMilli()) + "-" + accId + "-" + auth.GenerateToken(16) + "." + extension
 	if err := database.DBConn.Create(&account.CloudFile{
 		Id:       fileId,
@@ -78,29 +74,9 @@ func uploadFile(c *fiber.Ctx) error {
 		return util.FailedRequest(c, "server.error", err)
 	}
 
-	f, err := file.Open()
+	// Save the file to local file storage
+	err = c.SaveFile(file, saveLocation+fileId)
 	if err != nil {
-		return util.FailedRequest(c, "server.error", err)
-	}
-
-	// Upload to R2
-	_, err = client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket: aws.String(bucketName),
-		Key:    aws.String(fileId),
-		Body:   f,
-		ACL:    "public-read",
-	})
-	if err != nil {
-		return util.FailedRequest(c, "server.error", err)
-	}
-	location := os.Getenv("R2_PUBLIC_URL") + fileId
-
-	// Update file path
-	if err := database.DBConn.Model(&account.CloudFile{}).Where("id = ?", fileId).Update("path", location).Error; err != nil {
-		client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
-			Bucket: aws.String(bucketName),
-			Key:    aws.String(file.Filename),
-		})
 		return util.FailedRequest(c, "server.error", err)
 	}
 
@@ -108,6 +84,6 @@ func uploadFile(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"success": true,
 		"id":      fileId,
-		"url":     location,
+		"url":     urlPath,
 	})
 }
