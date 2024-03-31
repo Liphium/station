@@ -21,7 +21,7 @@ func fileInfo(c *fiber.Ctx) error {
 
 	// Get file info
 	var cloudFile account.CloudFile
-	if err := database.DBConn.Select("id,name,size,account,path").Where("id = ?", req.Id).Take(&cloudFile).Error; err != nil {
+	if err := database.DBConn.Select("id,name,size,account").Where("id = ?", req.Id).Take(&cloudFile).Error; err != nil {
 		return util.InvalidRequest(c)
 	}
 
