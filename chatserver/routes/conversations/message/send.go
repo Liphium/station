@@ -22,8 +22,7 @@ type MessageSendRequest struct {
 }
 
 func (r *MessageSendRequest) Validate() bool {
-	return len(r.Conversation) > 0 && len(r.Data) > 0 && len(r.Token) == util.ConversationTokenLength &&
-		uint64(time.Now().UnixMilli())-r.Timestamp < 2000
+	return len(r.Conversation) > 0 && len(r.Data) > 0 && len(r.Token) == util.ConversationTokenLength
 }
 
 // Route: /conversations/message/send
