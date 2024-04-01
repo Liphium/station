@@ -46,7 +46,6 @@ func read(c *fiber.Ctx) error {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 	token.LastRead = time.Now().UnixMilli()
-	caching.UpdateToken(token)
 
 	return integration.SuccessfulRequest(c)
 }

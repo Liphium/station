@@ -92,7 +92,6 @@ func sendMessage(c *fiber.Ctx) error {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 	token.LastRead = time.Now().UnixMilli() + 1
-	caching.UpdateToken(token)
 
 	adapters, nodes := caching.MembersToPipes(members)
 	event := MessageEvent(message)

@@ -19,7 +19,7 @@ func subscribe(ctx pipeshandler.Context) {
 	}
 
 	date := int64(ctx.Data["date"].(float64))
-	conversationTokens, tokenIds, members, missingTokens, ok := PrepareConversationTokensWithLookup(ctx, true)
+	conversationTokens, tokenIds, members, missingTokens, ok := PrepareConversationTokens(ctx)
 	if !ok {
 		pipeshandler.ErrorResponse(ctx, localization.InvalidRequest)
 		return
@@ -91,11 +91,6 @@ func subscribe(ctx pipeshandler.Context) {
 
 // Returns: conversationTokens, tokenIds, members, missingTokens, success (bool)
 func PrepareConversationTokens(ctx pipeshandler.Context) ([]conversations.ConversationToken, []string, map[string][]caching.StoredMember, []string, bool) {
-	return PrepareConversationTokensWithLookup(ctx, false)
-}
-
-// Returns: conversationTokens, tokenIds, members, missingTokens, success (bool)
-func PrepareConversationTokensWithLookup(ctx pipeshandler.Context, lookup bool) ([]conversations.ConversationToken, []string, map[string][]caching.StoredMember, []string, bool) {
 
 	tokensUnparsed := ctx.Data["tokens"].([]interface{})
 	tokens := make([]conversations.SentConversationToken, len(tokensUnparsed))
@@ -115,11 +110,8 @@ func PrepareConversationTokensWithLookup(ctx pipeshandler.Context, lookup bool) 
 	var conversationTokens []conversations.ConversationToken
 	var missingTokens []string
 	var err error
-	if lookup {
-		conversationTokens, missingTokens, err = caching.ValidateTokensLookup(&tokens)
-	} else {
-		conversationTokens, missingTokens, err = caching.ValidateTokens(&tokens)
-	}
+	conversationTokens, missingTokens, err = caching.ValidateTokens(&tokens)
+
 	if err != nil {
 		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
 		return nil, nil, nil, nil, false

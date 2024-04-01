@@ -1,7 +1,6 @@
 package conversation_routes
 
 import (
-	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
@@ -59,12 +58,6 @@ func activate(c *fiber.Ctx) error {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	// Update token
-	err := caching.UpdateToken(token)
-	if err != nil {
-		return integration.FailedRequest(c, localization.ErrorServer, err)
-	}
-
 	// Return all data
 	var tokens []conversations.ConversationToken
 	if err := database.DBConn.Where(&conversations.ConversationToken{Conversation: token.Conversation}).Find(&tokens).Error; err != nil {
@@ -86,7 +79,7 @@ func activate(c *fiber.Ctx) error {
 	}
 
 	if conversation.Type == conversations.TypeGroup {
-		err = message_routes.SendSystemMessage(token.Conversation, message_routes.GroupMemberJoin, []string{message_routes.AttachAccount(token.Data)})
+		err := message_routes.SendSystemMessage(token.Conversation, message_routes.GroupMemberJoin, []string{message_routes.AttachAccount(token.Data)})
 		if err != nil {
 			return integration.FailedRequest(c, localization.ErrorServer, err)
 		}

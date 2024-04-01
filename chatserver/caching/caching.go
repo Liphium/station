@@ -10,8 +10,6 @@ var CSInstance *pipeshandler.Instance
 var CSNode *pipes.LocalNode
 
 func SetupCaches() {
-	setupConversationsCache()
-	setupMembersCache()
 	setupCallsCache()
 	setupAdapterCache()
 }

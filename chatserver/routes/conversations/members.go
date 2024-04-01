@@ -36,7 +36,7 @@ func listTokens(c *fiber.Ctx) error {
 	}
 
 	// We use methods without caching here because if a member leaves on a different node, the cache won't be cleared
-	members, err := caching.LoadMembersNew(token.Conversation)
+	members, err := caching.LoadMembers(token.Conversation)
 	if err != nil {
 		return integration.InvalidRequest(c, fmt.Sprintf("couldn't load members: %s", err.Error()))
 	}
@@ -44,7 +44,7 @@ func listTokens(c *fiber.Ctx) error {
 	realMembers := make([]returnableMemberToken, len(members))
 	for i, memberToken := range members {
 
-		member, err := caching.GetTokenNew(memberToken.TokenID)
+		member, err := caching.GetToken(memberToken.TokenID)
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return integration.FailedRequest(c, localization.ErrorServer, err)
 		}

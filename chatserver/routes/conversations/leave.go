@@ -40,7 +40,7 @@ func leaveConversation(c *fiber.Ctx) error {
 	}
 	caching.DeleteToken(token.ID, token.Token)
 
-	members, err := caching.LoadMembersNew(token.Conversation)
+	members, err := caching.LoadMembers(token.Conversation)
 	if err != nil {
 		integration.FailedRequest(c, localization.ErrorServer, err)
 	}
@@ -96,10 +96,6 @@ func leaveConversation(c *fiber.Ctx) error {
 			// Promote to admin if needed
 			if needed {
 				if database.DBConn.Model(&conversations.ConversationToken{}).Where("id = ?", bestCase.ID).Update("rank", conversations.RankAdmin).Error != nil {
-					return integration.FailedRequest(c, localization.ErrorServer, nil)
-				}
-				err = caching.UpdateToken(bestCase)
-				if err != nil {
 					return integration.FailedRequest(c, localization.ErrorServer, nil)
 				}
 
