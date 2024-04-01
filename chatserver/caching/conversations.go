@@ -5,6 +5,7 @@ import (
 
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
+	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/chatserver/util/localization"
 )
 
@@ -27,37 +28,37 @@ func ValidateToken(id string, token string) (conversations.ConversationToken, er
 }
 
 func ValidateTokens(tokens *[]conversations.SentConversationToken) ([]conversations.ConversationToken, []string, error) {
-
-	// Check cache
 	foundTokens := []conversations.ConversationToken{}
 
-	notFound := map[string]conversations.SentConversationToken{}
-	notFoundIds := []string{}
+	tokensMap := map[string]conversations.SentConversationToken{}
+	tokenIds := []string{}
 	for _, token := range *tokens {
-		notFound[token.ID] = token
-		notFoundIds = append(notFoundIds, token.ID)
+		tokensMap[token.ID] = token
+		tokenIds = append(tokenIds, token.ID)
 	}
 
 	// Get tokens from database
 	var conversationTokens []conversations.ConversationToken
-	if err := database.DBConn.Model(&conversations.ConversationToken{}).Where("id IN ?", notFoundIds).Find(&conversationTokens).Error; err != nil {
+	if err := database.DBConn.Model(&conversations.ConversationToken{}).Where("id IN ?", tokenIds).Find(&conversationTokens).Error; err != nil {
 		return nil, nil, err
 	}
 
 	for _, token := range conversationTokens {
-		if token.Token == notFound[token.ID].Token {
-			notFound[token.ID] = conversations.SentConversationToken{
+		if token.Token == tokensMap[token.ID].Token {
+			tokensMap[token.ID] = conversations.SentConversationToken{
 				ID:    "-",
 				Token: "-",
 			}
 			foundTokens = append(foundTokens, token)
+		} else {
+			util.Log.Println("not found")
 		}
 	}
 
 	// Get all missing tokens to delete those conversations from the client
 	missingTokens := []string{}
-	for id := range notFound {
-		if id != "-" {
+	for id, token := range tokensMap {
+		if token.ID != "-" {
 			missingTokens = append(missingTokens, id)
 		}
 	}
