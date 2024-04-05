@@ -21,6 +21,8 @@ func Unencrypted(router fiber.Router) {
 func Unauthorized(router fiber.Router) {
 	router.Route("/rank", rank.Unauthorized)
 	router.Route("/stored_actions", stored_actions.Unauthorized)
+
+	router.Post("/get_node", getAccountNode)
 }
 
 func Authorized(router fiber.Router) {

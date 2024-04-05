@@ -9,7 +9,6 @@ import (
 	"github.com/dgraph-io/ristretto"
 )
 
-// TODO: Move this into a shared redis instance
 // ! Always use cost 1
 var spacesCache *ristretto.Cache // Account ID -> Space Info
 var spaceApp uint
