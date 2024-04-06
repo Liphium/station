@@ -1,6 +1,8 @@
 package townsquare_handlers
 
 import (
+	"time"
+
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/chatserver/util/localization"
@@ -35,5 +37,22 @@ func joinTownsquare(message pipeshandler.Context) {
 
 // Action: townsquare_leave
 func leaveTownsquare(message pipeshandler.Context) {
-	// TODO: Implement
+	caching.LeaveTownsquare(message.Client.ID)
+	pipeshandler.SuccessResponse(message)
+}
+
+// Action: townsquare_open
+func openTownsquare(message pipeshandler.Context) {
+	caching.SetTownsquareViewing(message.Client.ID, true)
+
+	// Send messages over
+	caching.SendMessages(message.Client.ID, time.Now().UnixMilli())
+
+	pipeshandler.SuccessResponse(message)
+}
+
+// Action: townsquare_close
+func closeTownsquare(message pipeshandler.Context) {
+	caching.SetTownsquareViewing(message.Client.ID, false)
+	pipeshandler.SuccessResponse(message)
 }
