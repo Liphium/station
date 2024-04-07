@@ -37,6 +37,7 @@ func sendMessage(ctx pipeshandler.Context) {
 	pipeshandler.SuccessResponse(ctx)
 }
 
+// Action: townsquare_delete
 func deleteMessage(context pipeshandler.Context) {
 
 }

@@ -3,6 +3,7 @@ package caching
 import (
 	"sync"
 
+	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/pipes"
 )
 
@@ -46,13 +47,7 @@ func JoinTownsquare(id string, username string, key string) {
 	})
 
 	// Tell everyone about the join
-	SendTownsquareEvent(pipes.Event{
-		Name: "ts_member_join",
-		Data: map[string]interface{}{
-			"id":       id,
-			"username": username,
-		},
-	})
+	SendTownsquareEvent(townsquareJoinEvent(id, username, key))
 }
 
 // Remove someone from townsquare
@@ -88,12 +83,7 @@ func SetTownsquareViewing(id string, state bool) {
 	// Change state and notify everyone
 	member.Viewing = state
 	if member.Viewing {
-		SendTownsquareEvent(pipes.Event{
-			Name: "ts_member_open",
-			Data: map[string]interface{}{
-				"id": id,
-			},
-		})
+		SendTownsquareEvent(townsquareOpenEvent(id))
 	} else {
 		SendTownsquareEvent(pipes.Event{
 			Name: "ts_member_close",
@@ -109,7 +99,10 @@ func SendTownsquareEvent(event pipes.Event) {
 
 	// Iterate through all members and send the event to the client
 	townsquareCache.Range(func(key, value any) bool {
-		CSNode.SendClient(key.(string), event)
+		err := CSNode.SendClient(key.(string), event)
+		if err != nil {
+			util.Log.Println("error while sending event", event, err)
+		}
 		return true
 	})
 }
@@ -122,12 +115,29 @@ func TownsquareMessageId() int64 {
 	return messageCounter
 }
 
+// Save a message to the cache
+func SaveTownsquareMessage(id int64, message TownsquareMessage) {
+	townsquareMessageCache.Store(id, message)
+}
+
+// Get a townsquare message from the cache
+func GetTownsquareMessage(id int64) (TownsquareMessage, bool) {
+	obj, ok := townsquareMessageCache.Load(id)
+	if !ok {
+		return TownsquareMessage{}, ok
+	}
+	return obj.(TownsquareMessage), ok
+}
+
 // Send an event to all people in townsquare
 func SendTownsquareMessageEvent(event pipes.Event) {
 
 	// Iterate through all members and send the event to the client
 	townsquareCache.Range(func(key, value any) bool {
 		member := value.(*TownsquareMember)
+		member.Mutex.Lock()
+		defer member.Mutex.Unlock()
+
 		if member.Viewing {
 			CSNode.SendClient(key.(string), event)
 		}
@@ -135,7 +145,58 @@ func SendTownsquareMessageEvent(event pipes.Event) {
 	})
 }
 
-// Send a client messages with an offset
-func SendMessages(account string, after int64) {
+// Tell a client about all people in townsquare
+func SendAllTownsquareMembers(account string) {
+	townsquareCache.Range(func(key, value any) bool {
+		member := value.(*TownsquareMember)
+		err := CSNode.SendClient(account, townsquareJoinEvent(member.Account, member.Username, member.PublicKey))
+		if err != nil {
+			util.Log.Println("error while sending townsquare member join", member.Account, ":", err)
+		}
 
+		member.Mutex.Lock()
+		defer member.Mutex.Unlock()
+
+		if member.Viewing {
+			err = CSNode.SendClient(account, townsquareOpenEvent(member.Account))
+			if err != nil {
+				util.Log.Println("error while sending townsquare member open", member.Account, ":", err)
+			}
+		}
+
+		return true
+	})
+}
+
+// Send a client the latest messages
+func SendLatestMessages(account string) {
+	counterMutex.Lock()
+	defer counterMutex.Unlock()
+
+	SendMessages(account, messageCounter)
+}
+
+// Send a client messages with an offset
+func SendMessages(account string, before int64) {
+
+}
+
+func townsquareOpenEvent(id string) pipes.Event {
+	return pipes.Event{
+		Name: "ts_member_open",
+		Data: map[string]interface{}{
+			"id": id,
+		},
+	}
+}
+
+func townsquareJoinEvent(id string, name string, key string) pipes.Event {
+	return pipes.Event{
+		Name: "ts_member_join",
+		Data: map[string]interface{}{
+			"id":   id,
+			"name": name,
+			"key":  key,
+		},
+	}
 }

@@ -31,7 +31,10 @@ func joinTownsquare(message pipeshandler.Context) {
 		return
 	}
 
-	caching.JoinTownsquare(message.Client.ID, res["name"].(string))
+	// Join the square and init client
+	caching.JoinTownsquare(message.Client.ID, res["name"].(string), res["sg"].(string))
+	caching.SendAllTownsquareMembers(message.Client.ID)
+
 	pipeshandler.SuccessResponse(message)
 }
 
