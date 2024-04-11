@@ -46,8 +46,8 @@ SMTP_SERVER = "email-smtp.eu-north-1.amazonaws.com"
 SMTP_PORT = "2587"
 SMTP_IDENTITY = "backend"
 SMTP_FROM = "no-reply@liphium.app"
-SMTP_USER = "AKIAYS2NXAJ7B2DJ5DVT"
-SMTP_PW = "BDIOpvtxFUDdtyaf3XNVgn5M+E8sqqkDdagfoyTJ7QxM"
+SMTP_USER = "user"
+SMTP_PW = "password"
 
 
 # CHAT NODE CONFIGURATION
