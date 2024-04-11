@@ -42,7 +42,7 @@ MAX_FAVORITE_STORAGE = "500" # in MB
 MAX_TOTAL_STORAGE = "1000" # in MB
 
 # SMTP (for emails)
-SMTP_SERVER = "email-smtp.eu-north-1.amazonaws.com"
+SMTP_SERVER = "mail.liphium.app"
 SMTP_PORT = "2587"
 SMTP_IDENTITY = "backend"
 SMTP_FROM = "no-reply@liphium.app"
