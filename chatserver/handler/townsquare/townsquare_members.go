@@ -14,7 +14,7 @@ import (
 func joinTownsquare(message pipeshandler.Context) {
 
 	// Get account from backend
-	res, err := integration.PostRequest(integration.BasePath+"/v1/account/get_node", map[string]interface{}{
+	res, err := integration.PostRequest("/account/get_node", map[string]interface{}{
 		"id":    message.Client.ID,
 		"node":  util.NodeTo64(caching.CSNode.ID),
 		"token": caching.CSNode.Token,
