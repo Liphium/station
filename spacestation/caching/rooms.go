@@ -34,14 +34,13 @@ func setupRoomsCache() {
 type Room struct {
 	Mutex    *sync.Mutex
 	ID       string   // Account ID of the owner
-	Data     string   // Encrypted room data
 	Sessions []string // List of game session ids
 	Start    int64    // Timestamp of when the room was created
 }
 
 // CreateRoom creates a room in the cache
-func CreateRoom(roomId string, data string) {
-	roomsCache.Set(roomId, Room{&sync.Mutex{}, roomId, data, []string{}, time.Now().UnixMilli()}, 1)
+func CreateRoom(roomId string) {
+	roomsCache.Set(roomId, Room{&sync.Mutex{}, roomId, []string{}, time.Now().UnixMilli()}, 1)
 	roomConnectionsCache.Set(roomId, RoomConnections{}, 1)
 	roomsCache.Wait()
 }
@@ -98,26 +97,4 @@ func GetRoom(roomID string) (Room, bool) {
 	}
 
 	return object.(Room), true
-}
-
-func SetRoomData(roomID string, data string) bool {
-
-	room, valid := GetRoom(roomID)
-	if !valid {
-		return false
-	}
-	room.Mutex.Lock()
-
-	room, valid = GetRoom(roomID)
-	if !valid {
-		return false
-	}
-
-	room.Data = data
-	roomsCache.Set(roomID, room, 1)
-
-	roomsCache.Wait()
-	room.Mutex.Unlock()
-
-	return true
 }

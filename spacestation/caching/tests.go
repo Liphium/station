@@ -16,7 +16,7 @@ func TestRooms(t *testing.T) {
 	}
 
 	// Test caching
-	CreateRoom("id", "test")
+	CreateRoom("id")
 
 	room, valid := GetRoom("id")
 	if !valid {
@@ -25,9 +25,6 @@ func TestRooms(t *testing.T) {
 	} else {
 		if room.ID != "id" {
 			t.Error("Room has wrong ID")
-		}
-		if room.Data != "test" {
-			t.Error("Room has wrong data")
 		}
 	}
 

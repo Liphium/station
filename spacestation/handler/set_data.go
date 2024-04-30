@@ -2,32 +2,8 @@ package handler
 
 import (
 	"github.com/Liphium/station/pipes"
-	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
 )
-
-// Action: set_data
-func setData(ctx pipeshandler.Context) {
-
-	if ctx.ValidateForm("data") {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
-	}
-
-	// Set data
-	valid := caching.SetRoomData(ctx.Client.Session, ctx.Data["data"].(string))
-	if !valid {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
-	}
-
-	if !SendRoomData(ctx.Client.Session) {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
-	}
-
-	pipeshandler.SuccessResponse(ctx)
-}
 
 func SendRoomData(id string) bool {
 	adapters, event, valid := GetRoomData(id, "room_data")
@@ -66,7 +42,6 @@ func GetRoomData(id string, eventName string) ([]string, pipes.Event, bool) {
 		Name: eventName,
 		Data: map[string]interface{}{
 			"start":   room.Start,
-			"room":    room.Data,
 			"members": returnableMembers,
 		},
 	}, true

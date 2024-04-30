@@ -88,7 +88,7 @@ func Start() {
 
 	// Create testing room
 	if integration.Testing {
-		caching.CreateRoom("id", "test")
+		caching.CreateRoom("id")
 
 		amount, err := strconv.Atoi(os.Getenv("TESTING_AMOUNT"))
 		if err != nil {

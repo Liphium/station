@@ -66,7 +66,7 @@ func setupPipesFiber(router fiber.Router) {
 			_, valid := caching.GetRoom(claims.Session)
 			if !valid {
 				util.Log.Println("Creating new room for", claims.Account, "("+claims.Session+")")
-				caching.CreateRoom(claims.Session, "")
+				caching.CreateRoom(claims.Session)
 			} else {
 				util.Log.Println("Room already exists for", claims.Account, "("+claims.Session+")")
 			}

@@ -34,7 +34,6 @@ func roomInfo(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"success": true,
-		"data":    room.Data,
 		"start":   room.Start,
 		"members": returnableMembers,
 	})

@@ -9,7 +9,6 @@ import (
 func Initialize() {
 	games_actions.SetupActions()
 
-	caching.SSInstance.RegisterHandler("set_data", setData)
 	caching.SSInstance.RegisterHandler("setup", setup)
 	caching.SSInstance.RegisterHandler("update", update)
 
