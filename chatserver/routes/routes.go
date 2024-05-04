@@ -237,11 +237,8 @@ func EncryptionDecodingMiddleware(client *pipeshandler.Client, instance *pipesha
 		}
 	}()
 
-	util.Log.Println("DECRYPTING")
-
 	// Decrypt the message using AES
 	key := client.Data.(ExtraClientData).Key
-	util.Log.Println(len(bytes))
 	messageEncoded, err := integration.DecryptAES(key, bytes)
 	if err != nil {
 		return pipeshandler.Message{}, err
@@ -253,8 +250,6 @@ func EncryptionDecodingMiddleware(client *pipeshandler.Client, instance *pipesha
 	if err != nil {
 		return pipeshandler.Message{}, err
 	}
-
-	util.Log.Println("DECRYPTED")
 
 	return message, nil
 }

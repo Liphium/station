@@ -2,13 +2,15 @@ package account
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Session struct {
 	ID    string `json:"id" gorm:"primaryKey"` //  8 character-long string
 	Token string `json:"token" gorm:"unique"`
 
-	Account         string    `json:"account"`
+	Account         uuid.UUID `json:"account"`
 	PermissionLevel uint      `json:"level"`
 	Device          string    `json:"device"`
 	App             uint      `json:"app"`

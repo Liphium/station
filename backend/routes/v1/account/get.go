@@ -40,7 +40,6 @@ func getAccount(c *fiber.Ctx) error {
 	return util.ReturnJSON(c, fiber.Map{
 		"success": true,
 		"name":    acc.Username,
-		"tag":     acc.Tag,
 		"sg":      signaturePub.Key,
 		"pub":     pub.Key,
 	})

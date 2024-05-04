@@ -33,7 +33,10 @@ func uploadFile(c *fiber.Ctx) error {
 		util.Log.Println("no file")
 		return util.InvalidRequest(c)
 	}
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 	fileType := file.Header.Get("Content-Type")
 	if fileType == "" {
 		util.Log.Println("invalid headers")
@@ -60,7 +63,7 @@ func uploadFile(c *fiber.Ctx) error {
 	}
 
 	// Generate file name Format: a-[timestamp]-[accountId]-[objectIdentifier].[extension]
-	fileId := "a-" + fmt.Sprintf("%d", time.Now().UnixMilli()) + "-" + accId + "-" + auth.GenerateToken(16) + "." + extension
+	fileId := "a-" + fmt.Sprintf("%d", time.Now().UnixMilli()) + "-" + accId.String() + "-" + auth.GenerateToken(16) + "." + extension
 	if err := database.DBConn.Create(&account.CloudFile{
 		Id:       fileId,
 		Name:     name,

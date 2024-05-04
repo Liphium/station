@@ -4,14 +4,15 @@ import (
 	"strings"
 
 	"github.com/Liphium/station/backend/util/auth"
+	"github.com/google/uuid"
 )
 
 type Authentication struct {
 	ID string `json:"id" gorm:"primaryKey"`
 
-	Account string `json:"account"`
-	Type    uint   `json:"type"`
-	Secret  string `json:"secret"`
+	Account uuid.UUID `json:"account"`
+	Type    uint      `json:"type"`
+	Secret  string    `json:"secret"`
 }
 
 const TypePassword = 0
@@ -30,7 +31,7 @@ var Order = map[uint]uint{
 // Starting step when authenticating
 const StartStep = 0
 
-func (a *Authentication) checkPassword(password string, id string) bool {
+func (a *Authentication) checkPassword(password string, id uuid.UUID) bool {
 
 	match, err := auth.ComparePasswordAndHash(password, id, a.Secret)
 	if err != nil {
@@ -40,7 +41,7 @@ func (a *Authentication) checkPassword(password string, id string) bool {
 	return match
 }
 
-func (a *Authentication) Verify(authType uint, secret string, id string) bool {
+func (a *Authentication) Verify(authType uint, secret string, id uuid.UUID) bool {
 
 	if a.Type != authType {
 		return false

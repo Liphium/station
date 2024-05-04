@@ -1,8 +1,10 @@
 package properties
 
-//! ALL THE DATA IN THIS IS PUBLIC AND CAN BE ACCESED THROUGH /ACCOUNT/PROFILE/GET
+import "github.com/google/uuid"
+
+// ! ALL THE DATA IN THIS IS PUBLIC AND CAN BE ACCESED THROUGH /ACCOUNT/PROFILE/GET
 type Profile struct {
-	ID string `json:"id,omitempty" gorm:"primaryKey"` // Account ID
+	ID uuid.UUID `json:"id,omitempty" gorm:"primaryKey"` // Account ID
 
 	//* Picture stuff
 	Picture     string `json:"picture,omitempty"`      // File id of the picture

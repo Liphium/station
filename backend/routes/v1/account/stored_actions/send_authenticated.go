@@ -7,6 +7,7 @@ import (
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 // Route: /account/stored_actions/send_auth
@@ -22,9 +23,15 @@ func sendAuthenticatedStoredAction(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
+	// Parse account id from request
+	id, err := uuid.Parse(req.Account)
+	if err != nil {
+		return util.InvalidRequest(c)
+	}
+
 	// Get account
 	var acc account.Account
-	if err := database.DBConn.Where("id = ?", req.Account).Take(&acc).Error; err != nil {
+	if err := database.DBConn.Where("id = ?", id).Take(&acc).Error; err != nil {
 		return util.InvalidRequest(c)
 	}
 
@@ -46,7 +53,7 @@ func sendAuthenticatedStoredAction(c *fiber.Ctx) error {
 	}
 
 	var storedActionKey account.StoredActionKey
-	if err := database.DBConn.Where(&account.StoredActionKey{ID: req.Account}).Take(&storedActionKey).Error; err != nil {
+	if err := database.DBConn.Where(&account.StoredActionKey{ID: id}).Take(&storedActionKey).Error; err != nil {
 		return util.InvalidRequest(c)
 	}
 

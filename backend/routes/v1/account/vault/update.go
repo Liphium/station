@@ -20,7 +20,10 @@ func updateVaultEntry(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 	if err := database.DBConn.Model(&properties.VaultEntry{}).Where("id = ? AND account = ?", req.Entry, accId).Update("payload", req.Payload).Error; err != nil {
 		return util.FailedRequest(c, util.ErrorServer, err)
 	}

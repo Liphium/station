@@ -13,6 +13,7 @@ import (
 
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 // Environment variables
@@ -166,4 +167,14 @@ func ReturnJSON(c *fiber.Ctx, data interface{}) error {
 	}
 
 	return c.Send(encrypted)
+}
+
+// Get the system uuid set in the environment variables
+func GetSystemUUID() uuid.UUID {
+	id, err := uuid.Parse(os.Getenv("SYSTEM_UUID"))
+	if err != nil {
+		panic("Please set the SYSTEM_UUID env property.")
+	}
+
+	return id
 }

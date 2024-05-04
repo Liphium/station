@@ -11,6 +11,7 @@ import (
 	"github.com/Liphium/station/backend/util"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 var disabled = false
@@ -107,7 +108,7 @@ func Authorized(router fiber.Router) {
 	router.Post("/info", fileInfo)
 }
 
-func CountTotalStorage(accId string) (int64, error) {
+func CountTotalStorage(accId uuid.UUID) (int64, error) {
 
 	// Get total storage (coalesce is important cause otherwise we get null)
 	var totalStorage int64
@@ -123,7 +124,7 @@ func CountTotalStorage(accId string) (int64, error) {
 	return totalStorage, nil
 }
 
-func CountFavoriteStorage(accId string) (int64, error) {
+func CountFavoriteStorage(accId uuid.UUID) (int64, error) {
 
 	// Get favorite storage (coalesce is important cause otherwise we get null)
 	var favoriteStorage int64

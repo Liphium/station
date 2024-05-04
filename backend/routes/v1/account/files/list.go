@@ -20,7 +20,10 @@ func listFiles(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 
 	// Get files
 	var files []account.CloudFile

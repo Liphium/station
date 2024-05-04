@@ -1,6 +1,8 @@
 package keys
 
 import (
+	"log"
+
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
@@ -11,7 +13,11 @@ import (
 func getPublicKey(c *fiber.Ctx) error {
 
 	// Get account
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	log.Println(accId, valid)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 
 	// Get public key
 	var key account.PublicKey
@@ -42,7 +48,10 @@ func setPublicKey(c *fiber.Ctx) error {
 	}
 
 	// Get account
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 
 	var acc account.Account
 	if database.DBConn.Where("id = ?", accId).Take(&acc).Error != nil {

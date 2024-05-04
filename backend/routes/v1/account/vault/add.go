@@ -23,7 +23,10 @@ func addEntry(c *fiber.Ctx) error {
 	}
 
 	// Check if the account has too many entries
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 	var entryCount int64
 	if err := database.DBConn.Model(&properties.VaultEntry{}).Where("account = ?", accId).Count(&entryCount).Error; err != nil {
 		return util.FailedRequest(c, "server.error", err)

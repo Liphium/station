@@ -14,7 +14,10 @@ import (
 func getAllInformation(c *fiber.Ctx) error {
 
 	// Retrieve all the information
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 
 	var invitesGenerated []string
 	if err := database.DBConn.Model(&account.Invite{}).Where("creator = ?", accId).Limit(30).Order("created_at DESC").Select("id").Scan(&invitesGenerated).Error; err != nil {

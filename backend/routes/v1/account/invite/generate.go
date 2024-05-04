@@ -12,7 +12,10 @@ import (
 func generateInvite(c *fiber.Ctx) error {
 
 	// Get invite count of account
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 	var inviteCount account.InviteCount
 	if err := database.DBConn.Where("account = ?", accId).Take(&inviteCount).Error; err != nil {
 		return util.InvalidRequest(c)

@@ -22,7 +22,10 @@ func removeEntry(c *fiber.Ctx) error {
 	}
 
 	// Check if entry exists
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 	var entry properties.VaultEntry
 	if err := database.DBConn.Where("id = ? AND account = ?", req.ID, accId).Take(&entry).Error; err != nil {
 

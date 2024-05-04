@@ -36,6 +36,5 @@ func getProfile(c *fiber.Ctx) error {
 		"success": true,
 		"profile": profile,
 		"name":    acc.Username,
-		"tag":     acc.Tag,
 	})
 }

@@ -19,7 +19,10 @@ func existsFriend(c *fiber.Ctx) error {
 	}
 
 	// Check if the friendship exists
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 	if err := database.DBConn.Where("account = ? AND hash = ?", accId, req.Hash).Take(&properties.Friendship{}).Error; err != nil {
 		return util.FailedRequest(c, "not.found", nil)
 	}

@@ -233,7 +233,7 @@ func listenForCommands() {
 					break
 				}
 
-				fmt.Println("Gave 3 invites to", acc.Email, "("+acc.ID+")")
+				fmt.Println("Gave 3 invites to", acc.Email, "("+acc.ID.String()+")")
 			}
 
 			fmt.Println("Invite wave finished. Hope everyone enjoys them!")
@@ -245,26 +245,24 @@ func listenForCommands() {
 			name, _ := reader.ReadString('\n')
 			name = strings.TrimSpace(name)
 
-			id := auth.GenerateToken(5)
-			if err := database.DBConn.Create(&account.Account{
-				ID:       id,
+			acc := &account.Account{
 				Email:    name + "@liphium.app",
 				Username: name,
-				Tag:      "li",
 				RankID:   1, // Default
-			}).Error; err != nil {
+			}
+			if err := database.DBConn.Create(&acc).Error; err != nil {
 				fmt.Println("error:", err.Error())
 				continue
 			}
 
-			hash, err := auth.HashPassword("yourmum123", id)
+			hash, err := auth.HashPassword("yourmum123", acc.ID)
 			if err != nil {
 				return
 			}
 
 			if err := database.DBConn.Create(&account.Authentication{
 				ID:      auth.GenerateToken(5),
-				Account: id,
+				Account: acc.ID,
 				Type:    account.TypePassword,
 				Secret:  hash,
 			}).Error; err != nil {
@@ -272,7 +270,7 @@ func listenForCommands() {
 				continue
 			}
 
-			fmt.Println("Name:", name+"#li")
+			fmt.Println("Name:", name)
 			fmt.Println("Email:", name+"@liphium.app")
 			fmt.Println("Password:", "yourmum123")
 
@@ -280,7 +278,7 @@ func listenForCommands() {
 
 			invite := account.Invite{
 				ID:      auth.GenerateToken(32),
-				Creator: "0",
+				Creator: util.GetSystemUUID(),
 			}
 			if err := database.DBConn.Create(&invite).Error; err != nil {
 				fmt.Println("err:", err.Error())

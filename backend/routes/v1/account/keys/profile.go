@@ -11,7 +11,10 @@ import (
 func getProfileKey(c *fiber.Ctx) error {
 
 	// Get account
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 
 	// Get public key
 	var key account.ProfileKey
@@ -38,7 +41,10 @@ func setProfileKey(c *fiber.Ctx) error {
 	}
 
 	// Get account
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 
 	var acc account.Account
 	if database.DBConn.Where("id = ?", accId).Take(&acc).Error != nil {

@@ -20,7 +20,10 @@ func changeName(c *fiber.Ctx) error {
 	if err := util.BodyParser(c, &req); err != nil {
 		return util.InvalidRequest(c)
 	}
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 
 	// Check username and tag
 	valid, message := standards.CheckUsernameAndTag(req.Username, req.Tag)

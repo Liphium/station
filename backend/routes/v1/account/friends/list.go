@@ -20,7 +20,10 @@ func listFriends(c *fiber.Ctx) error {
 	}
 
 	// Get friends list
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 	var friends []properties.Friendship
 	if err := database.DBConn.Model(&properties.Friendship{}).Where("account = ? AND updated_at > ?", accId, req.After).Find(&friends).Error; err != nil {
 		return util.FailedRequest(c, "server.error", err)

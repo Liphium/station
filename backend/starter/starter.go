@@ -13,6 +13,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
 
@@ -108,7 +109,7 @@ func testMode() {
 
 	util.Log.Println("Test mode enabled.")
 
-	token, _ := util.Token("123", "123", 100, time.Now().Add(time.Hour*24))
+	token, _ := util.Token("123", uuid.New(), 100, time.Now().Add(time.Hour*24))
 
 	util.Log.Println("Test token: " + token)
 

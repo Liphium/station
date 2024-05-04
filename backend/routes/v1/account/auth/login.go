@@ -9,6 +9,7 @@ import (
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -59,7 +60,10 @@ func loginStep(c *fiber.Ctx) error {
 	}
 
 	// Get data
-	id, device, step := auth.GetLoginDataFromToken(c)
+	id, device, step, err := auth.GetLoginDataFromToken(c)
+	if err != nil {
+		return util.FailedRequest(c, "server.error", err)
+	}
 
 	var method account.Authentication
 	if err := database.DBConn.Where("account = ? AND type = ?", id, req.Type).Take(&method).Error; err != nil {
@@ -75,7 +79,7 @@ func loginStep(c *fiber.Ctx) error {
 }
 
 // Runs the next step in an authentication
-func runAuthStep(id string, device string, step uint, c *fiber.Ctx) error {
+func runAuthStep(id uuid.UUID, device string, step uint, c *fiber.Ctx) error {
 
 	// Generate token
 	tk, err := auth.GenerateLoginTokenWithStep(id, device, step)
@@ -148,7 +152,7 @@ func runAuthStep(id string, device string, step uint, c *fiber.Ctx) error {
 }
 
 // checkSessions checks if the user has too many sessions
-func checkSessions(id string) (bool, error) {
+func checkSessions(id uuid.UUID) (bool, error) {
 
 	// Check if user has too many sessions
 	var sessions int64

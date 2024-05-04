@@ -15,7 +15,10 @@ import (
 func listStoredActions(c *fiber.Ctx) error {
 
 	// Get stored actions
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 	var storedActions []properties.StoredAction
 	if database.DBConn.Where("account = ?", accId).Find(&storedActions).Error != nil {
 		return util.FailedRequest(c, "server.error", nil)

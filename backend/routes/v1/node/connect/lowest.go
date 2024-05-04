@@ -6,6 +6,7 @@ import (
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type LowestUsageRequest struct {
@@ -26,8 +27,14 @@ func GetLowest(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
+	// Parse account id from request
+	id, err := uuid.Parse(req.Account)
+	if err != nil {
+		return util.InvalidRequest(c)
+	}
+
 	// Check node
-	_, err := nodes.Node(req.Node, req.Token)
+	_, err = nodes.Node(req.Node, req.Token)
 	if err != nil {
 		return util.InvalidRequest(c)
 	}
@@ -53,7 +60,7 @@ func GetLowest(c *fiber.Ctx) error {
 	}
 
 	// Generate a jwt token for the node
-	token, err := util.ConnectionToken(req.Account, req.Session, lowest.ID)
+	token, err := util.ConnectionToken(id, req.Session, lowest.ID)
 	if err != nil {
 		return util.FailedRequest(c, util.ErrorServer, err)
 	}

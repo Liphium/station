@@ -23,7 +23,10 @@ func addFriend(c *fiber.Ctx) error {
 	}
 
 	// Check if the account has too many friends
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 	var friendCount int64
 	if err := database.DBConn.Model(&properties.Friendship{}).Where("account = ?", accId).Count(&friendCount).Error; err != nil {
 		return util.FailedRequest(c, "server.error", err)

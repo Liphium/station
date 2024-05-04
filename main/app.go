@@ -12,6 +12,7 @@ import (
 	chatserver_starter "github.com/Liphium/station/chatserver/starter"
 	"github.com/Liphium/station/main/integration"
 	spacestation_starter "github.com/Liphium/station/spacestation/starter"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
 
@@ -36,6 +37,14 @@ func main() {
 		printWithPrefix("Please set the following environment variables in your .env file:")
 		printWithPrefix("TC_PUBLIC_KEY=" + pub)
 		printWithPrefix("TC_PRIVATE_KEY=" + priv)
+
+		return
+	}
+
+	// Check if a system uuid is set
+	if os.Getenv("SYSTEM_UUID") == "" {
+		printWithPrefix("Please set the following environment variables in your .env file:")
+		printWithPrefix("SYSTEM_UUID=" + uuid.New().String())
 
 		return
 	}

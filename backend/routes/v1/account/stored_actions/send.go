@@ -8,6 +8,7 @@ import (
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/backend/util/requests"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type sendRequest struct {
@@ -29,6 +30,12 @@ func sendStoredAction(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
+	// Parse account id from request
+	id, err := uuid.Parse(req.Account)
+	if err != nil {
+		return util.InvalidRequest(c)
+	}
+
 	// Get account
 	var acc account.Account
 	if err := database.DBConn.Where("id = ?", req.Account).Take(&acc).Error; err != nil {
@@ -47,7 +54,7 @@ func sendStoredAction(c *fiber.Ctx) error {
 
 		// Check if stored action limit is reached
 		var storedActionCount int64
-		if err := database.DBConn.Model(&properties.AStoredAction{}).Where("account = ?", acc.ID).Count(&storedActionCount).Error; err != nil {
+		if err := database.DBConn.Model(&properties.AStoredAction{}).Where("account = ?", id).Count(&storedActionCount).Error; err != nil {
 			return util.FailedRequest(c, "server.error", err)
 		}
 
@@ -56,7 +63,7 @@ func sendStoredAction(c *fiber.Ctx) error {
 		}
 
 		var storedActionKey account.StoredActionKey
-		if err := database.DBConn.Where(&account.StoredActionKey{ID: req.Account}).Take(&storedActionKey).Error; err != nil {
+		if err := database.DBConn.Where(&account.StoredActionKey{ID: id}).Take(&storedActionKey).Error; err != nil {
 			return util.InvalidRequest(c)
 		}
 
@@ -98,13 +105,13 @@ func sendStoredAction(c *fiber.Ctx) error {
 	return util.SuccessfulRequest(c)
 }
 
-func sendStoredActionTo(accId string, authenticated bool, storedAction properties.StoredAction) {
+func sendStoredActionTo(accId uuid.UUID, authenticated bool, storedAction properties.StoredAction) {
 
 	var session account.Session
 	if err := database.DBConn.Where("account = ? AND node != ?", accId, 0).Take(&session).Error; err == nil {
 
 		// No error handling, cause it doesn't matter if it couldn't send
-		requests.SendEventToNode(session.Node, accId, requests.Event{
+		requests.SendEventToNode(session.Node, accId.String(), requests.Event{
 			Sender: "0",
 			Name:   "s_a", // Stored action
 			Data: map[string]interface{}{

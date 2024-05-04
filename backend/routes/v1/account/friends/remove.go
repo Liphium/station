@@ -22,7 +22,10 @@ func removeFriend(c *fiber.Ctx) error {
 	}
 
 	// Check if friendship exists
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 	var friendship properties.Friendship
 	if err := database.DBConn.Where("id = ? AND account = ?", req.ID, accId).Take(&friendship).Error; err != nil {
 

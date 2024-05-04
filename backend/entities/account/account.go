@@ -2,14 +2,15 @@ package account
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Account struct {
-	ID string `json:"id" gorm:"primaryKey"` // 8 character-long string
+	ID uuid.UUID `json:"id" gorm:"type:uuid;default:uuid_generate_v4()"`
 
 	Email     string    `json:"email" gorm:"uniqueIndex"`
-	Username  string    `json:"username"`
-	Tag       string    `json:"tag"`
+	Username  string    `json:"username" gorm:"uniqueIndex"`
 	RankID    uint      `json:"rank"`
 	CreatedAt time.Time `json:"created_at"`
 

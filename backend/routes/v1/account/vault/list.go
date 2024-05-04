@@ -22,7 +22,10 @@ func listEntries(c *fiber.Ctx) error {
 	}
 
 	// Get friends list
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 	var entries []properties.VaultEntry
 	if err := database.DBConn.Where("account = ? AND tag = ? AND updated_at > ?", accId, req.Tag, req.After).Find(&entries).Error; err != nil {
 		return util.FailedRequest(c, "server.error", err)

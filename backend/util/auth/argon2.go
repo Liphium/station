@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/argon2"
 )
 
@@ -37,14 +38,14 @@ var paramsConfig = &params{
 	keyLength:   32,
 }
 
-func HashPassword(password string, id string) (encodedHash string, err error) {
+func HashPassword(password string, id uuid.UUID) (encodedHash string, err error) {
 	salt, err := generateRandomBytes(paramsConfig.saltLength)
 	if err != nil {
 		return "", err
 	}
 
 	// !NEVER CHANGE THIS
-	hash := argon2.IDKey([]byte(password+":"+id), salt, paramsConfig.iterations, paramsConfig.memory, paramsConfig.parallelism, paramsConfig.keyLength)
+	hash := argon2.IDKey([]byte(password+":"+id.String()), salt, paramsConfig.iterations, paramsConfig.memory, paramsConfig.parallelism, paramsConfig.keyLength)
 
 	// Base64 encode the salt and hashed password.
 	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
@@ -67,7 +68,7 @@ func generateRandomBytes(n uint32) ([]byte, error) {
 }
 
 // Check if a password is correct with a hash
-func ComparePasswordAndHash(password, id, encodedHash string) (match bool, err error) {
+func ComparePasswordAndHash(password string, id uuid.UUID, encodedHash string) (match bool, err error) {
 	// Extract the parameters, salt and derived key from the encoded password
 	// hash.
 	p, salt, hash, err := decodeHash(encodedHash)
@@ -76,7 +77,7 @@ func ComparePasswordAndHash(password, id, encodedHash string) (match bool, err e
 	}
 
 	// Derive the key from the other password using the same parameters.
-	otherHash := argon2.IDKey([]byte(password+":"+id), salt, p.iterations, p.memory, p.parallelism, p.keyLength)
+	otherHash := argon2.IDKey([]byte(password+":"+id.String()), salt, p.iterations, p.memory, p.parallelism, p.keyLength)
 
 	// Check that the contents of the hashed passwords are identical. Note
 	// that we are using the subtle.ConstantTimeCompare() function for this

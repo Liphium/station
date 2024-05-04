@@ -18,7 +18,10 @@ func unfavoriteFile(c *fiber.Ctx) error {
 	if err := util.BodyParser(c, &req); err != nil {
 		return util.InvalidRequest(c)
 	}
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 
 	// Get file
 	var file account.CloudFile

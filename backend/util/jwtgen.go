@@ -9,6 +9,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 // Connection token struct
@@ -22,12 +23,12 @@ type ConnectionTokenClaims struct {
 }
 
 // Generate a connection token for a node
-func ConnectionToken(account string, session string, node uint) (string, error) {
+func ConnectionToken(account uuid.UUID, session string, node uint) (string, error) {
 
 	// Create jwt token
 	exp := time.Now().Add(time.Hour * 2)
 	tk := jwt.NewWithClaims(jwt.SigningMethodHS512, ConnectionTokenClaims{
-		Account:        account,
+		Account:        account.String(),
 		ExpiredUnixSec: exp.Unix(),
 		Session:        session,
 		Node:           fmt.Sprintf("%d", node),
@@ -44,12 +45,12 @@ func ConnectionToken(account string, session string, node uint) (string, error) 
 }
 
 // Create a token with current session information (some nodes may require this)
-func SessionInformationToken(account string, sessions []string) (string, error) {
+func SessionInformationToken(account uuid.UUID, sessions []string) (string, error) {
 
 	// Create jwt token
 	exp := time.Now().Add(time.Hour * 2)
 	tk := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
-		"acc": account,
+		"acc": account.String(),
 		"e_u": exp.Unix(), // Expiration unix
 		"se":  sessions,   // Session list (for the node)
 	})
@@ -65,13 +66,13 @@ func SessionInformationToken(account string, sessions []string) (string, error) 
 }
 
 // Generate a normal authenticated token
-func Token(session string, account string, lvl uint, exp time.Time) (string, error) {
+func Token(session string, account uuid.UUID, lvl uint, exp time.Time) (string, error) {
 
 	// Create jwt token
 	tk := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 		"ses": session,
 		"e_u": exp.Unix(), // Expiration unix
-		"acc": account,
+		"acc": account.String(),
 		"lvl": lvl,
 	})
 
@@ -123,6 +124,7 @@ func Permission(c *fiber.Ctx, perm string) bool {
 	return lvl >= permission
 }
 
+// Get session from JWT token (only use on authorized routes)
 func GetSession(c *fiber.Ctx) string {
 	if c.Locals("user") == nil || reflect.TypeOf(c.Locals("user")).String() != "*jwt.Token" {
 		return ""
@@ -133,14 +135,20 @@ func GetSession(c *fiber.Ctx) string {
 	return claims["ses"].(string)
 }
 
-func GetAcc(c *fiber.Ctx) string {
+// Get account from JWT token (only use on authorized routes)
+func GetAcc(c *fiber.Ctx) (uuid.UUID, bool) {
 	if c.Locals("user") == nil || reflect.TypeOf(c.Locals("user")).String() != "*jwt.Token" {
-		return ""
+		return uuid.UUID{}, false
 	}
 	user := c.Locals("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 
-	return claims["acc"].(string)
+	id, err := uuid.Parse(claims["acc"].(string))
+	if err != nil {
+		return uuid.UUID{}, false
+	}
+
+	return id, true
 }
 
 // Generate a JWT value that the client can't read (can't be really long because of RSA encryption)

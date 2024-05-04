@@ -66,10 +66,8 @@ func registerFinish(c *fiber.Ctx) error {
 
 	// Create account
 	var acc account.Account = account.Account{
-		ID:       auth.GenerateToken(20), // This needs to be quite long, because we don't want outsiders try to bruteforce account ids
 		Email:    claims.Email,
 		Username: req.Username,
-		Tag:      req.Tag,
 		RankID:   1, // Default rank
 	}
 	err = database.DBConn.Create(&acc).Error

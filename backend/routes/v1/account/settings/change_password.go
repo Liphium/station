@@ -22,7 +22,10 @@ func changePassword(c *fiber.Ctx) error {
 	}
 
 	// Get current password
-	accId := util.GetAcc(c)
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
 	var authentication account.Authentication
 	if err := database.DBConn.Where("account = ? AND type = ?", accId, account.TypePassword).Take(&authentication).Error; err != nil {
 		return util.FailedRequest(c, util.ErrorServer, err)
