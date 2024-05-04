@@ -10,7 +10,6 @@ import (
 
 type changeNameRequest struct {
 	Username string `json:"name"`
-	Tag      string `json:"tag"`
 }
 
 // Route: /account/settings/change_name
@@ -26,13 +25,13 @@ func changeName(c *fiber.Ctx) error {
 	}
 
 	// Check username and tag
-	valid, message := standards.CheckUsernameAndTag(req.Username, req.Tag)
+	valid, message := standards.CheckUsername(req.Username)
 	if !valid {
 		return util.FailedRequest(c, message, nil)
 	}
 
 	// Change username
-	err := database.DBConn.Model(&account.Account{}).Where("id = ?", accId).Update("username", req.Username).Update("tag", req.Tag).Error
+	err := database.DBConn.Model(&account.Account{}).Where("id = ?", accId).Update("username", req.Username).Error
 	if err != nil {
 		return util.FailedRequest(c, "username.taken", err)
 	}

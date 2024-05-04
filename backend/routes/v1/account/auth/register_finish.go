@@ -16,7 +16,6 @@ import (
 type registerFinishRequest struct {
 	Token    string `json:"token"`
 	Username string `json:"username"`
-	Tag      string `json:"tag"`
 	Password string `json:"password"`
 }
 
@@ -58,8 +57,8 @@ func registerFinish(c *fiber.Ctx) error {
 		return util.FailedRequest(c, "email.registered", nil)
 	}
 
-	// Check username and tag
-	valid, message := standards.CheckUsernameAndTag(req.Username, req.Tag)
+	// Check username
+	valid, message := standards.CheckUsername(req.Username)
 	if !valid {
 		return util.FailedRequest(c, message, nil)
 	}
