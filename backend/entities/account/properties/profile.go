@@ -11,5 +11,8 @@ type Profile struct {
 	Container   string `json:"container,omitempty"`    // Attachment container encrypted with profile key
 	PictureData string `json:"picture_data,omitempty"` // Profile picture data (zoom, x/y offset) encrypted with profile key
 
+	//* The new display name
+	DisplayName string `json:"name,omitempty"` // Name that#s displayed (encrypted)
+
 	Data string `json:"data,omitempty"` // Encrypted data (if we need it in the future)
 }
