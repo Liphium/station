@@ -54,7 +54,7 @@ const AllowedCharactersRegex = "^[\\p{L}\\p{N}_\\-]+$"
 const MinTagLength = 3
 const MaxTagLength = 5
 
-func CheckUsernameAndTag(username string, tag string) (bool, string) {
+func CheckUsername(username string) (bool, string) {
 
 	// Check length of the username
 	if len(username) < MinUsernameLength {
@@ -71,23 +71,8 @@ func CheckUsernameAndTag(username string, tag string) (bool, string) {
 		return false, "username.invalid"
 	}
 
-	// Check length of the tag
-	if len(tag) < MinTagLength {
-		return false, "tag.invalid"
-	}
-
-	if len(tag) > MaxTagLength {
-		return false, "tag.invalid"
-	}
-
-	// Check if the username is valid
-	match, err = regexp.Match(AllowedCharactersRegex, []byte(tag))
-	if !match || err != nil {
-		return false, "tag.invalid"
-	}
-
-	// Check if username and tag is available
-	if database.DBConn.Where("username = ? AND tag = ?", username, tag).Take(&account.Account{}).RowsAffected > 0 {
+	// Check if username is available
+	if database.DBConn.Where("username = ?", username).Take(&account.Account{}).RowsAffected > 0 {
 		return false, "username.taken"
 	}
 

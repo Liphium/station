@@ -9,7 +9,6 @@ import (
 
 type detailsRequest struct {
 	Username string `json:"username"`
-	Tag      string `json:"tag"`
 }
 
 // Route: /account/stored_actions/details
@@ -23,7 +22,7 @@ func getDetails(c *fiber.Ctx) error {
 
 	// Get account
 	var acc account.Account
-	if err := database.DBConn.Where("username = ? AND tag = ?", req.Username, req.Tag).Take(&acc).Error; err != nil {
+	if err := database.DBConn.Where("username = ?", req.Username).Take(&acc).Error; err != nil {
 		return util.FailedRequest(c, "not.found", err)
 	}
 
