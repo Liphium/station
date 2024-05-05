@@ -3,10 +3,8 @@ package account
 import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
-	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
 // Route: /account/me
@@ -26,12 +24,6 @@ func me(c *fiber.Ctx) error {
 		return util.FailedRequest(c, "server.error", err)
 	}
 
-	// Get account
-	var profile properties.Profile = properties.Profile{}
-	if err := database.DBConn.Where("id = ?", acc.ID).Take(&profile).Error; err != nil && err != gorm.ErrRecordNotFound {
-		return util.FailedRequest(c, "server.error", err)
-	}
-
 	// Get all valid permissions the account has
 	perms := []string{}
 	for name := range util.Permissions {
@@ -42,9 +34,8 @@ func me(c *fiber.Ctx) error {
 
 	// Retrun details
 	return util.ReturnJSON(c, fiber.Map{
-		"success":      true,
-		"account":      acc,
-		"permissions":  perms,
-		"display_name": profile.DisplayName,
+		"success":     true,
+		"account":     acc,
+		"permissions": perms,
 	})
 }

@@ -46,14 +46,12 @@ func CheckEmail(email string) (bool, string) {
 	return true, email
 }
 
-// * Account name#tag standard
+// * Account name standard
 const MinUsernameLength = 3
 const MaxUsernameLength = 16
-const AllowedCharactersRegex = "^[\\p{L}\\p{N}_\\-]+$"
+const UsernameAllowedCharacters = "^[\\p{Ll}\\p{N}_\\-]+$"
 
-const MinTagLength = 3
-const MaxTagLength = 5
-
+// Check the requirements for a username
 func CheckUsername(username string) (bool, string) {
 
 	// Check length of the username
@@ -66,7 +64,7 @@ func CheckUsername(username string) (bool, string) {
 	}
 
 	// Check if the username is valid
-	match, err := regexp.Match(AllowedCharactersRegex, []byte(username))
+	match, err := regexp.Match(UsernameAllowedCharacters, []byte(username))
 	if !match || err != nil {
 		return false, "username.invalid"
 	}
@@ -74,6 +72,24 @@ func CheckUsername(username string) (bool, string) {
 	// Check if username is available
 	if database.DBConn.Where("username = ?", username).Take(&account.Account{}).RowsAffected > 0 {
 		return false, "username.taken"
+	}
+
+	return true, ""
+}
+
+// * Account display name standard
+const MaxDisplayNameLength = 20
+
+// Check the requirements for a display name
+func CheckDisplayName(username string) (bool, string) {
+
+	// Check length of the username
+	if len(username) < MinUsernameLength {
+		return false, "display_name.invalid"
+	}
+
+	if len(username) > MaxDisplayNameLength {
+		return false, "display_name.invalid"
 	}
 
 	return true, ""
