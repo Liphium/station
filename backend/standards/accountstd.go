@@ -78,7 +78,7 @@ func CheckUsername(username string) (bool, string) {
 }
 
 // * Account display name standard
-const MaxDisplayNameLength = 20
+const MaxDisplayNameLength = 32 // is 32 now cause it is encoded with base64 and utf8
 
 // Check the requirements for a display name
 func CheckDisplayName(username string) (bool, string) {

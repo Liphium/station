@@ -247,7 +247,7 @@ func listenForCommands() {
 
 			acc := &account.Account{
 				Email:       name + "@liphium.app",
-				DisplayName: name,
+				DisplayName: "",
 				Username:    name,
 				RankID:      1, // Default
 			}
