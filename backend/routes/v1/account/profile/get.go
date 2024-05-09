@@ -1,11 +1,14 @@
 package profile
 
 import (
+	"errors"
+
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 type getProfileRequest struct {
@@ -27,14 +30,15 @@ func getProfile(c *fiber.Ctx) error {
 	}
 
 	// Get profile (to update profile picture, description, ...)
-	var profile properties.Profile
-	if err := database.DBConn.Where("id = ?", req.ID).Take(&profile).Error; err != nil {
+	var profile properties.Profile = properties.Profile{}
+	if err := database.DBConn.Where("id = ?", req.ID).Take(&profile).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return util.FailedRequest(c, util.ErrorServer, err)
 	}
 
 	return util.ReturnJSON(c, fiber.Map{
-		"success": true,
-		"profile": profile,
-		"name":    acc.Username,
+		"success":      true,
+		"profile":      profile,
+		"name":         acc.Username,
+		"display_name": acc.DisplayName,
 	})
 }
