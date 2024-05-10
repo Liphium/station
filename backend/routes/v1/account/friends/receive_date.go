@@ -7,6 +7,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type getDateRequest struct {
+	Id string `json:"id"` // Id of the friend in the vault
+}
+
 // Route: /account/friends/get_receive_date
 func getReceiveDate(c *fiber.Ctx) error {
 
@@ -30,6 +34,11 @@ func getReceiveDate(c *fiber.Ctx) error {
 		"success": true,
 		"date":    friendship.LastPacket,
 	})
+}
+
+type updateDateRequest struct {
+	Id   string `json:"id"`   // Id of the friend in the vault
+	Date string `json:"date"` // Time of the last packet (encrypted)
 }
 
 // Route: /account/friends/update_receive_date
