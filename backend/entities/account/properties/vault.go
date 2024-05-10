@@ -9,7 +9,8 @@ type Friendship struct {
 	Account    uuid.UUID `json:"account" gorm:"not null"`
 	Hash       string    `json:"hash" gorm:"not null"`
 	Payload    string    `json:"friend" gorm:"not null"` // Encrypted (with account's public key) friend key + data
-	LastPacket string    `json:"-"`                      // When the last packet was sent (to prevent replay attacks, encrypted)
+	LastSent   string    `json:"-"`                      // When the last packet was sent (to prevent replay attacks, encrypted)
+	LastPacket string    `json:"-"`                      // When the last packet was received (to prevent replay attacks, encrypted)
 	UpdatedAt  int64     `json:"updated_at" gorm:"autoUpdateTime:milli"`
 }
 

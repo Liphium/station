@@ -7,12 +7,41 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type getDateRequest struct {
+	Id string `json:"id"` // Id of the friend in the vault
+}
+
+// Route: /account/friends/get_send_date
+func getSendDate(c *fiber.Ctx) error {
+
+	// Parse the request
+	var req getDateRequest
+	if err := util.BodyParser(c, &req); err != nil {
+		return util.InvalidRequest(c)
+	}
+	accId, valid := util.GetAcc(c)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
+
+	// Get the friendship from the database
+	var friendship properties.Friendship
+	if err := database.DBConn.Where("id = ? AND account = ?", req.Id, accId).Take(&friendship).Error; err != nil {
+		return util.FailedRequest(c, util.ErrorServer, err)
+	}
+
+	return util.ReturnJSON(c, map[string]interface{}{
+		"success": true,
+		"date":    friendship.LastSent,
+	})
+}
+
 type updateDateRequest struct {
 	Id   string `json:"id"`   // Id of the friend in the vault
 	Date string `json:"date"` // Time of the last packet (encrypted)
 }
 
-// Route: /account/friends/update_date
+// Route: /account/friends/update_send_date
 func updateSendDate(c *fiber.Ctx) error {
 
 	// Parse the request
@@ -32,7 +61,7 @@ func updateSendDate(c *fiber.Ctx) error {
 
 	// Get the friendship from the database
 	if err := database.DBConn.Model(&properties.Friendship{}).Where("id = ? AND account = ?", req.Id, accId).
-		Update("last_packet", req.Date).Error; err != nil {
+		Update("last_sent", req.Date).Error; err != nil {
 		return util.FailedRequest(c, util.ErrorServer, err)
 	}
 
