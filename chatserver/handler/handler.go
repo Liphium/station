@@ -3,13 +3,13 @@ package handler
 import (
 	"github.com/Liphium/station/chatserver/handler/account"
 	"github.com/Liphium/station/chatserver/handler/conversation"
-	liveshare_actions "github.com/Liphium/station/chatserver/handler/liveshare"
 	townsquare_handlers "github.com/Liphium/station/chatserver/handler/townsquare"
+	zapshare_actions "github.com/Liphium/station/chatserver/handler/zapshare"
 )
 
 func Create() {
 	conversation.SetupActions()
 	account.SetupActions()
-	liveshare_actions.SetupActions()
+	zapshare_actions.SetupActions()
 	townsquare_handlers.SetupActions()
 }

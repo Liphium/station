@@ -1,9 +1,9 @@
-package liveshare_routes
+package zapshare_routes
 
 import (
 	"strconv"
 
-	"github.com/Liphium/station/chatserver/liveshare"
+	"github.com/Liphium/station/chatserver/zapshare"
 	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
 )
@@ -22,7 +22,7 @@ func downloadChunk(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "invalid chunk")
 	}
 
-	transaction, ok := liveshare.GetTransaction(id)
+	transaction, ok := zapshare.GetTransaction(id)
 	if !ok {
 		return integration.InvalidRequest(c, "invalid id")
 	}

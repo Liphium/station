@@ -1,11 +1,11 @@
-package liveshare_routes
+package zapshare_routes
 
 import (
 	"bufio"
 	"fmt"
 
-	"github.com/Liphium/station/chatserver/liveshare"
 	"github.com/Liphium/station/chatserver/util"
+	"github.com/Liphium/station/chatserver/zapshare"
 	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
 	"github.com/valyala/fasthttp"
@@ -19,7 +19,7 @@ func subscribeToLiveshare(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "id and token are required")
 	}
 
-	receiver, valid := liveshare.NewTransactionReceiver(id, token)
+	receiver, valid := zapshare.NewTransactionReceiver(id, token)
 	if !valid {
 		return integration.InvalidRequest(c, "Invalid id or token")
 	}
@@ -35,8 +35,8 @@ func subscribeToLiveshare(c *fiber.Ctx) error {
 			if err := recover(); err != nil {
 				util.Log.Println("Recovered from panic: ", err)
 			}
-			util.Log.Println("Cancelling liveshare session")
-			liveshare.CancelTransaction(id)
+			util.Log.Println("Cancelling zapshare session")
+			zapshare.CancelTransaction(id)
 		}()
 
 		// Send chunk start packet

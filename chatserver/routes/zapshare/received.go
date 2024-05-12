@@ -1,9 +1,9 @@
-package liveshare_routes
+package zapshare_routes
 
 import (
 	"fmt"
 
-	"github.com/Liphium/station/chatserver/liveshare"
+	"github.com/Liphium/station/chatserver/zapshare"
 	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
 )
@@ -25,7 +25,7 @@ func receivedChunk(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "id and token are required")
 	}
 
-	transaction, ok := liveshare.GetTransaction(req.Id)
+	transaction, ok := zapshare.GetTransaction(req.Id)
 	if !ok || transaction.Token != req.Token {
 		return integration.InvalidRequest(c, "invalid id or token")
 	}
@@ -36,7 +36,7 @@ func receivedChunk(c *fiber.Ctx) error {
 	}
 
 	if finished {
-		liveshare.CancelTransaction(transaction.Id)
+		zapshare.CancelTransaction(transaction.Id)
 
 		return c.JSON(fiber.Map{
 			"success":  true,

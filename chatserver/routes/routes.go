@@ -10,8 +10,8 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/fetching"
 	conversation_routes "github.com/Liphium/station/chatserver/routes/conversations"
-	liveshare_routes "github.com/Liphium/station/chatserver/routes/liveshare"
 	"github.com/Liphium/station/chatserver/routes/ping"
+	zapshare_routes "github.com/Liphium/station/chatserver/routes/zapshare"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
@@ -39,7 +39,7 @@ func Setup(router fiber.Router) {
 	setupPipesFiber(router)
 
 	// We don't need to encrypt the liveshare routes
-	router.Route("/liveshare", liveshare_routes.Unencrypted)
+	router.Route("/liveshare", zapshare_routes.Unencrypted)
 
 	router.Route("/auth", authorizedRoutes)
 	router.Route("/", encryptedRoutes)
@@ -47,7 +47,7 @@ func Setup(router fiber.Router) {
 
 func authorizedRoutes(router fiber.Router) {
 	authorize(router)
-	router.Route("/liveshare", liveshare_routes.Authorized)
+	router.Route("/liveshare", zapshare_routes.Authorized)
 }
 
 func encryptedRoutes(router fiber.Router) {
