@@ -246,9 +246,10 @@ func listenForCommands() {
 			name = strings.TrimSpace(name)
 
 			acc := &account.Account{
-				Email:    name + "@liphium.app",
-				Username: name,
-				RankID:   1, // Default
+				Email:       name + "@liphium.app",
+				DisplayName: "",
+				Username:    name,
+				RankID:      1, // Default
 			}
 			if err := database.DBConn.Create(&acc).Error; err != nil {
 				fmt.Println("error:", err.Error())

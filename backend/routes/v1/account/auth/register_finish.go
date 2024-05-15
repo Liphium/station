@@ -14,9 +14,10 @@ import (
 
 // Request to sen
 type registerFinishRequest struct {
-	Token    string `json:"token"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Token       string `json:"token"`
+	DisplayName string `json:"display_name"`
+	Username    string `json:"username"`
+	Password    string `json:"password"`
 }
 
 // Route: /auth/register/finish, Finish the registration process
@@ -63,11 +64,18 @@ func registerFinish(c *fiber.Ctx) error {
 		return util.FailedRequest(c, message, nil)
 	}
 
+	// Check if display name is valid
+	valid, message = standards.CheckDisplayName(req.DisplayName)
+	if !valid {
+		return util.FailedRequest(c, message, nil)
+	}
+
 	// Create account
 	var acc account.Account = account.Account{
-		Email:    claims.Email,
-		Username: req.Username,
-		RankID:   1, // Default rank
+		Email:       claims.Email,
+		Username:    req.Username,
+		DisplayName: req.DisplayName,
+		RankID:      1, // Default rank
 	}
 	err = database.DBConn.Create(&acc).Error
 	if err != nil {

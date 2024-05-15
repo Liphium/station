@@ -1,10 +1,10 @@
-package liveshare_routes
+package zapshare_routes
 
 import (
 	"strconv"
 	"strings"
 
-	"github.com/Liphium/station/chatserver/liveshare"
+	"github.com/Liphium/station/chatserver/zapshare"
 	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
 )
@@ -17,7 +17,7 @@ func sendFilePart(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "id and token are required")
 	}
 
-	transaction, valid := liveshare.GetTransaction(id)
+	transaction, valid := zapshare.GetTransaction(id)
 	if !valid {
 		return integration.InvalidRequest(c, "invalid transaction id")
 	}
@@ -31,7 +31,7 @@ func sendFilePart(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "no file")
 	}
 
-	if file.Size > liveshare.ChunkSize {
+	if file.Size > zapshare.ChunkSize {
 		return integration.InvalidRequest(c, "file too large")
 	}
 
@@ -50,7 +50,7 @@ func sendFilePart(c *fiber.Ctx) error {
 	}
 	chunk := int64(chunk32)
 
-	if chunk > transaction.CurrentIndex+liveshare.ChunksAhead || chunk < transaction.CurrentIndex {
+	if chunk > transaction.CurrentIndex+zapshare.ChunksAhead || chunk < transaction.CurrentIndex {
 		return integration.InvalidRequest(c, "wrong chunk index")
 	}
 

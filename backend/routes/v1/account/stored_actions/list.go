@@ -11,6 +11,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type returnableStoredAction struct {
+	Id            string `json:"id"`
+	Payload       string `json:"payload"`
+	Authenticated bool   `json:"a"`
+}
+
 // Route: /account/stored_actions/list
 func listStoredActions(c *fiber.Ctx) error {
 
@@ -19,17 +25,32 @@ func listStoredActions(c *fiber.Ctx) error {
 	if !valid {
 		return util.InvalidRequest(c)
 	}
+	var returnables = []returnableStoredAction{}
+
+	// Get all normal stored actions and add them as non authenticated ones
 	var storedActions []properties.StoredAction
 	if database.DBConn.Where("account = ?", accId).Find(&storedActions).Error != nil {
 		return util.FailedRequest(c, "server.error", nil)
 	}
+	for _, storedAction := range storedActions {
+		returnables = append(returnables, returnableStoredAction{
+			Id:            storedAction.ID,
+			Payload:       storedAction.Payload,
+			Authenticated: false,
+		})
+	}
 
+	// Get all authenticated stored actions and mark them as such in the returning phase
 	var aStoredActions []properties.AStoredAction
 	if database.DBConn.Where("account = ?", accId).Find(&aStoredActions).Error != nil {
 		return util.FailedRequest(c, "server.error", nil)
 	}
-	for _, aStoredAction := range aStoredActions {
-		storedActions = append(storedActions, properties.StoredAction(aStoredAction))
+	for _, storedAction := range storedActions {
+		returnables = append(returnables, returnableStoredAction{
+			Id:            storedAction.ID,
+			Payload:       storedAction.Payload,
+			Authenticated: true,
+		})
 	}
 
 	// Sort stored actions by created_at
@@ -57,6 +78,6 @@ func listStoredActions(c *fiber.Ctx) error {
 	return util.ReturnJSON(c, fiber.Map{
 		"success": true,
 		"key":     storedActionKey.Key,
-		"actions": storedActions,
+		"actions": returnables,
 	})
 }

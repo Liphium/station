@@ -1,10 +1,10 @@
-package liveshare_actions
+package zapshare_actions
 
 import (
 	"os"
 
-	"github.com/Liphium/station/chatserver/liveshare"
 	"github.com/Liphium/station/chatserver/util"
+	"github.com/Liphium/station/chatserver/zapshare"
 	"github.com/Liphium/station/pipeshandler"
 )
 
@@ -23,7 +23,7 @@ func createTransaction(context pipeshandler.Context) {
 	name := context.Data["name"].(string)
 	size := int64(context.Data["size"].(float64))
 
-	transaction, ok := liveshare.NewTransaction(context.Client.ID, name, size)
+	transaction, ok := zapshare.NewTransaction(context.Client.ID, name, size)
 	if !ok {
 		pipeshandler.ErrorResponse(context, "failed") // TODO: Better message
 		return

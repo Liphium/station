@@ -1,4 +1,4 @@
-package liveshare_routes
+package zapshare_routes
 
 import "github.com/gofiber/fiber/v2"
 

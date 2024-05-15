@@ -9,8 +9,9 @@ import (
 )
 
 type addFriendRequest struct {
-	Hash    string `json:"hash"`    // Payload hash
-	Payload string `json:"payload"` // Encrypted payload
+	Hash        string `json:"hash"`    // Payload hash
+	Payload     string `json:"payload"` // Encrypted payload
+	ReceiveDate string `json:"receive_date"`
 }
 
 // Route: /account/friends/add
@@ -19,6 +20,11 @@ func addFriend(c *fiber.Ctx) error {
 	// Parse request
 	var req addFriendRequest
 	if err := util.BodyParser(c, &req); err != nil {
+		return util.InvalidRequest(c)
+	}
+
+	// Make sure the date aren't garbage
+	if len(req.ReceiveDate) >= 150 {
 		return util.InvalidRequest(c)
 	}
 
@@ -43,10 +49,11 @@ func addFriend(c *fiber.Ctx) error {
 
 	// Create friendship
 	friendship := properties.Friendship{
-		ID:      auth.GenerateToken(12),
-		Account: accId,
-		Hash:    req.Hash,
-		Payload: req.Payload,
+		ID:         auth.GenerateToken(12),
+		Account:    accId,
+		Hash:       req.Hash,
+		Payload:    req.Payload,
+		LastPacket: req.ReceiveDate,
 	}
 	if err := database.DBConn.Create(&friendship).Error; err != nil {
 		return util.FailedRequest(c, "server.error", err)

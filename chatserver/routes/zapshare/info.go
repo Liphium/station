@@ -1,7 +1,7 @@
-package liveshare_routes
+package zapshare_routes
 
 import (
-	"github.com/Liphium/station/chatserver/liveshare"
+	"github.com/Liphium/station/chatserver/zapshare"
 	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
 )
@@ -18,7 +18,7 @@ func transactionInfo(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "invalid request")
 	}
 
-	transaction, ok := liveshare.GetTransaction(req.Id)
+	transaction, ok := zapshare.GetTransaction(req.Id)
 	if !ok {
 		return integration.InvalidRequest(c, "transaction not found")
 	}
