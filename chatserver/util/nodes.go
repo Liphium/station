@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"log"
 
 	"github.com/Liphium/station/main/integration"
 )
@@ -16,6 +17,7 @@ func ConnectToApp(account string, session string, app uint, cluster uint) (AppTo
 
 	// Get the lowest node
 	nodeData := integration.Nodes[integration.IdentifierChatNode]
+	log.Println("DATA", account, session)
 	res, err := integration.PostRequest("/node/get_lowest", map[string]interface{}{
 		"account": account,
 		"session": session,
