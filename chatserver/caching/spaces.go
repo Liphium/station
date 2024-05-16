@@ -7,6 +7,7 @@ import (
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/main/integration"
 	"github.com/dgraph-io/ristretto"
+	"github.com/google/uuid"
 )
 
 // ! Always use cost 1
@@ -129,5 +130,5 @@ func CreateSpace(accId string, cluster uint) (string, util.AppToken, bool) {
 }
 
 func generateConnectionID() string {
-	return "sn-" + util.GenerateToken(16)
+	return uuid.NewString()
 }
