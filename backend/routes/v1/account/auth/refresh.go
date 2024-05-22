@@ -30,7 +30,7 @@ func refreshSession(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
-	if session.Token != req.Token {
+	if session.Token != req.Token || !session.Verified {
 		return util.InvalidRequest(c)
 	}
 

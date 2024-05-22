@@ -7,9 +7,10 @@ import (
 )
 
 type Session struct {
-	ID    string `json:"id" gorm:"primaryKey"` //  8 character-long string
+	ID    string `json:"id" gorm:"primaryKey"`
 	Token string `json:"token" gorm:"unique"`
 
+	Verified        bool      `json:"sync"`
 	Account         uuid.UUID `json:"account"`
 	PermissionLevel uint      `json:"level"`
 	Device          string    `json:"device"`

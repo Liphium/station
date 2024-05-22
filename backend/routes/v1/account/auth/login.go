@@ -116,6 +116,7 @@ func runAuthStep(id uuid.UUID, device string, step uint, c *fiber.Ctx) error {
 		var createdSession account.Session = account.Session{
 			ID:              auth.GenerateToken(8),
 			Token:           tk,
+			Verified:        false,
 			Account:         acc.ID,
 			PermissionLevel: acc.Rank.Level,
 			Device:          device,
