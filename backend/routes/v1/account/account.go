@@ -19,6 +19,7 @@ func Unencrypted(router fiber.Router) {
 }
 
 func Unauthorized(router fiber.Router) {
+	router.Route("/keys", keys.Unauthorized)
 	router.Route("/rank", rank.Unauthorized)
 	router.Route("/stored_actions", stored_actions.Unauthorized)
 

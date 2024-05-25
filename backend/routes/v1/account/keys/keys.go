@@ -19,6 +19,12 @@ func Authorized(router fiber.Router) {
 	router.Post("/signature/get", getSignatureKey)
 	router.Post("/signature/set", setSignatureKey)
 
+	// Routes to manage key synchronization requests
+	router.Route("/requests", key_request_routes.Authorized)
+}
+
+func Unauthorized(router fiber.Router) {
+
 	// Routes to perform a key synchronization request
-	router.Route("/requests", key_request_routes.SetupRoutes)
+	router.Route("/requests", key_request_routes.Unauthorized)
 }
