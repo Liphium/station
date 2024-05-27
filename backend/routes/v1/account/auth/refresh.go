@@ -40,14 +40,16 @@ func refreshSession(c *fiber.Ctx) error {
 
 	// Check if the session is verified
 	if !session.Verified {
-		var request properties.KeyRequest = properties.KeyRequest{}
+		var request properties.KeyRequest = properties.KeyRequest{
+			Payload: "",
+		}
 		if err := database.DBConn.Where("session = ?", session.ID).Take(&request).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return util.FailedRequest(c, util.ErrorServer, err)
+			return util.FailedRequest(c, "session.not_verified", err)
 		}
 
 		// Check if the key request has been accepted
 		if request.Payload == "" {
-			return util.InvalidRequest(c)
+			return util.FailedRequest(c, "session.not_verified", nil)
 		}
 
 		// Update the session to verified in case it has

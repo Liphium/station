@@ -3,9 +3,9 @@ package key_request_routes
 import (
 	"errors"
 
+	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
-	"github.com/Liphium/station/chatserver/database"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )

@@ -2,11 +2,12 @@ package key_request_routes
 
 import (
 	"errors"
+	"time"
 
+	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
-	"github.com/Liphium/station/chatserver/database"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -49,6 +50,7 @@ func check(c *fiber.Ctx) error {
 			Key:       req.Key,
 			Signature: req.Signature,
 			Payload:   "",
+			CreatedAt: time.Now().UnixMilli(),
 		}
 
 		if err := database.DBConn.Create(&keyRequest).Error; err != nil {
