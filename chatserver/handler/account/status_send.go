@@ -55,6 +55,9 @@ func sendStatus(ctx pipeshandler.Context) {
 		})
 	}
 
+	// Send the status to other devices
+	caching.CSNode.SendClient(ctx.Client.ID, statusEvent(statusMessage, data, ":o"))
+
 	pipeshandler.SuccessResponse(ctx)
 }
 
