@@ -72,10 +72,11 @@ func getKey(id string, session string) string {
 
 func (instance *Instance) AddClient(client Client) *Client {
 
-	_, add := instance.connectionsCache.Get(getKey(client.ID, client.Session))
+	_, valid := instance.connectionsCache.Get(getKey(client.ID, client.Session))
 	instance.connectionsCache.Set(getKey(client.ID, client.Session), client, 1)
+	instance.connectionsCache.Wait()
 
-	if add {
+	if !valid {
 		instance.addSession(client.ID, client.Session)
 	}
 
@@ -104,6 +105,7 @@ func (instance *Instance) addSession(id string, session string) {
 	} else {
 		instance.sessionsCache.Set(id, []string{session}, 1)
 	}
+	instance.sessionsCache.Wait()
 }
 
 func (instance *Instance) removeSession(id string, session string) {

@@ -3,6 +3,7 @@ package pipeshroutes
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -78,41 +79,53 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 		if !valid {
 			return
 		}
-		local.RemoveAdapterWS(tk.Account)
-		instance.Config.ClientDisconnectHandler(client)
 
 		// Remove the connection from the cache
+		instance.Config.ClientDisconnectHandler(client)
 		instance.Remove(tk.Account, tk.Session)
+
+		// Only remove adapter if all sessions are gone
+		if len(instance.GetSessions(tk.Account)) == 0 {
+			local.RemoveAdapterWS(tk.Account)
+		}
 	}()
 
 	if instance.Config.ClientConnectHandler(client, conn.Locals("attached").(string)) {
 		return
 	}
 
-	// Add adapter for pipes
-	local.AdaptWS(pipes.Adapter{
-		ID: tk.Account,
-		Receive: func(c *pipes.Context) error {
+	// Add adapter for pipes (if this is the first session)
+	if len(instance.GetSessions(tk.Account)) == 1 {
+		local.AdaptWS(pipes.Adapter{
+			ID: tk.Account,
+			Receive: func(c *pipes.Context) error {
+				for _, session := range instance.GetSessions(tk.Account) {
+					log.Println("SENDING TO SESSION", session)
+					// Get the client
+					client, valid := instance.Get(tk.Account, session)
+					if !valid {
+						instance.ReportGeneralError("couldn't get client", fmt.Errorf("%s (%s)", tk.Account, session))
+						return errors.New("couldn't get client")
+					}
 
-			// Get the client
-			client, valid := instance.Get(tk.Account, tk.Session)
-			if !valid {
-				instance.ReportGeneralError("couldn't get client", fmt.Errorf("%s (%s)", tk.Account, tk.Session))
-				return errors.New("couldn't get client")
-			}
+					// Send message encoded with client encoding middleware
+					msg, err := instance.Config.ClientEncodingMiddleware(client, instance, c.Message)
+					if err != nil {
+						instance.ReportClientError(client, "couldn't encode received message", err)
+						return err
+					}
 
-			// Send message encoded with client encoding middleware
-			msg, err := instance.Config.ClientEncodingMiddleware(client, instance, c.Message)
-			if err != nil {
-				instance.ReportClientError(client, "couldn't encode received message", err)
-				return err
-			}
+					pipeshutil.Log.Println("sending "+c.Event.Name, "to", tk.Account)
+					if err := client.Conn.WriteMessage(websocket.BinaryMessage, msg); err != nil {
+						instance.ReportClientError(client, "couldn't send received message", err)
+						return err
+					}
+				}
 
-			pipeshutil.Log.Println("sending "+c.Event.Name, "to", tk.Account)
-
-			return conn.WriteMessage(websocket.BinaryMessage, msg)
-		},
-	})
+				return nil
+			},
+		})
+	}
 
 	if instance.Config.ClientEnterNetworkHandler(client, conn.Locals("attached").(string)) {
 		return
