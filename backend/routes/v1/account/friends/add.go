@@ -23,16 +23,27 @@ func addFriend(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
-	// Make sure the date aren't garbage
+	// Make sure the date isn't garbage
 	if len(req.ReceiveDate) >= 150 {
 		return util.InvalidRequest(c)
 	}
 
-	// Check if the account has too many friends
 	accId, valid := util.GetAcc(c)
 	if !valid {
 		return util.InvalidRequest(c)
 	}
+
+	// Check if the friend already exists (and return id and stuff if he does)
+	var friendship properties.Friendship
+	if database.DBConn.Where("account = ? AND hash = ?", accId, req.Hash).Take(&friendship).Error == nil {
+		return util.ReturnJSON(c, fiber.Map{
+			"success": true,
+			"id":      friendship.ID,
+			"hash":    friendship.Hash,
+		})
+	}
+
+	// Check if the account has too many friends
 	var friendCount int64
 	if err := database.DBConn.Model(&properties.Friendship{}).Where("account = ?", accId).Count(&friendCount).Error; err != nil {
 		return util.FailedRequest(c, "server.error", err)
@@ -42,13 +53,8 @@ func addFriend(c *fiber.Ctx) error {
 		return util.FailedRequest(c, "limit.reached", nil)
 	}
 
-	// Check if it already exists
-	if database.DBConn.Model(&properties.Friendship{}).Where("account = ? AND hash = ?", accId, req.Hash).Take(&properties.Friendship{}).Error == nil {
-		return util.FailedRequest(c, "already.exists", nil)
-	}
-
 	// Create friendship
-	friendship := properties.Friendship{
+	friendship = properties.Friendship{
 		ID:         auth.GenerateToken(12),
 		Account:    accId,
 		Hash:       req.Hash,
