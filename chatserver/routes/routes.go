@@ -281,7 +281,7 @@ func initializeUser(client *pipeshandler.Client) bool {
 		// Create a new status
 		if database.DBConn.Create(&fetching.Status{
 			ID:   account,
-			Data: "-", // Status is disabled
+			Data: "", // Status is disabled
 			Node: integration.Nodes[integration.IdentifierChatNode].NodeId,
 		}).Error != nil {
 			return false
