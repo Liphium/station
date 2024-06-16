@@ -45,7 +45,7 @@ func listStoredActions(c *fiber.Ctx) error {
 	if database.DBConn.Where("account = ?", accId).Find(&aStoredActions).Error != nil {
 		return util.FailedRequest(c, "server.error", nil)
 	}
-	for _, storedAction := range storedActions {
+	for _, storedAction := range aStoredActions {
 		returnables = append(returnables, returnableStoredAction{
 			Id:            storedAction.ID,
 			Payload:       storedAction.Payload,
