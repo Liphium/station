@@ -6,10 +6,11 @@ import (
 )
 
 type Context struct {
-	Client *Client                `json:"client"`
-	Action string                 `json:"action"` // The action to perform
-	Data   map[string]interface{} `json:"data"`
-	Node   *pipes.LocalNode       `json:"-"`
+	Client   *Client                `json:"client"`
+	Action   string                 `json:"action"` // The action to perform
+	Data     map[string]interface{} `json:"data"`
+	Node     *pipes.LocalNode       `json:"-"`
+	Instance *Instance              `json:"-"`
 }
 
 func (instance *Instance) RegisterHandler(action string, handler func(Context)) {

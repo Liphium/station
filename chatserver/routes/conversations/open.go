@@ -106,7 +106,6 @@ func openConversation(c *fiber.Ctx) error {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	// TODO: Fix that the admin can pretend to be one of the users
 	return integration.ReturnJSON(c, fiber.Map{
 		"success":      true,
 		"conversation": conv.ID,

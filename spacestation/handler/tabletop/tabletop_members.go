@@ -26,7 +26,7 @@ func joinTable(ctx pipeshandler.Context) {
 		return
 	}
 
-	err = caching.SSInstance.SendEvent(ctx.Client, pipes.Event{
+	err = caching.SSNode.SendClient(ctx.Client.ID, pipes.Event{
 		Name: "table_obj",
 		Data: map[string]interface{}{
 			"obj": objects,

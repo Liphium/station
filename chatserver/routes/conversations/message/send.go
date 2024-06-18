@@ -65,6 +65,7 @@ func sendMessage(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "member token wasn't found "+req.Token+" "+req.Conversation)
 	}
 
+	// Generate an id and certificate for the message
 	messageId := util.GenerateToken(32)
 	certificate, err := conversations.GenerateCertificate(messageId, req.Conversation, req.TokenID)
 	if err != nil {

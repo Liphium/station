@@ -20,7 +20,8 @@ type Client struct {
 	Mutex   *sync.Mutex
 }
 
-func (instance *Instance) SendEvent(c *Client, event pipes.Event) error {
+// Sends an event to the only ONE session of the connected account
+func (instance *Instance) SendEventToOne(c *Client, event pipes.Event) error {
 
 	msg, err := sonic.Marshal(event)
 	if err != nil {

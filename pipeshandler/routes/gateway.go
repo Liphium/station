@@ -168,10 +168,11 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 
 		// Handle the action
 		if !instance.Handle(pipeshandler.Context{
-			Client: client,
-			Data:   message.Data,
-			Action: message.Action,
-			Node:   local,
+			Client:   client,
+			Data:     message.Data,
+			Action:   message.Action,
+			Node:     local,
+			Instance: instance,
 		}) {
 			instance.ReportClientError(client, "couldn't handle action", errors.New(message.Action))
 			return

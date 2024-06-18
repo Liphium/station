@@ -293,19 +293,12 @@ func initializeUser(client *pipeshandler.Client) bool {
 	}
 
 	// Send current status
-	caching.CSInstance.SendEvent(client, pipes.Event{
-		Name: "setup_st",
+	caching.CSInstance.SendEventToOne(client, pipes.Event{
+		Name: "setup",
 		Data: map[string]interface{}{
 			"data": status.Data,
 			"node": status.Node,
 		},
 	})
-
-	// Send the setup complete event
-	caching.CSInstance.SendEvent(client, pipes.Event{
-		Name: "setup_fin",
-		Data: map[string]interface{}{},
-	})
-
 	return true
 }

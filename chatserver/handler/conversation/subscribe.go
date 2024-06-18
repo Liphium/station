@@ -42,7 +42,7 @@ func subscribe(ctx pipeshandler.Context) {
 			Receive: func(context *pipes.Context) error {
 				client := *ctx.Client
 				util.Log.Println(context.Adapter.ID, token.Token, client.ID)
-				err := caching.CSInstance.SendEvent(ctx.Client, *context.Event)
+				err := caching.CSNode.SendClient(ctx.Client.ID, *context.Event)
 				if err != nil {
 					util.Log.Println("COULDN'T SEND:", err.Error())
 				}
