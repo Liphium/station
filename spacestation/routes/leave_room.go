@@ -29,7 +29,7 @@ func leaveRoom(c *fiber.Ctx) error {
 
 	// Disconnect the client
 	for _, conn := range connections {
-		caching.SSInstance.Remove(req.Connection, conn)
+		caching.SSInstance.Disconnect(req.Connection, conn)
 	}
 
 	return c.JSON(fiber.Map{
