@@ -1,6 +1,7 @@
 package pipeshandler
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -126,7 +127,12 @@ func (instance *Instance) removeSession(id string, session string) {
 func (instance *Instance) Remove(id string, session string) {
 	client, valid := instance.Get(id, session)
 	if valid {
-		client.Conn.Close()
+		err := client.Conn.Close()
+		if err != nil {
+			instance.ReportGeneralError("couldn't disconnect client", err)
+		}
+	} else {
+		instance.ReportGeneralError("client "+id+" doesn't exist", errors.New("couldn't delete"))
 	}
 	instance.connectionsCache.Del(getKey(id, session))
 	instance.removeSession(id, session)

@@ -74,6 +74,8 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 	client := instance.AddClient(tk.ToClient(conn, time.Now().Add(instance.Config.SessionDuration)))
 	defer func() {
 
+		log.Println("ENDING CONNECTION")
+
 		// Send callback to app
 		client, valid := instance.Get(tk.Account, tk.Session)
 		if !valid {
