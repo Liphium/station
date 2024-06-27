@@ -74,10 +74,12 @@ func getKey(id string, session string) string {
 
 func (instance *Instance) AddClient(client Client) *Client {
 
+	// Add the session
 	_, valid := instance.connectionsCache.Get(getKey(client.ID, client.Session))
 	instance.connectionsCache.Set(getKey(client.ID, client.Session), client, 1)
 	instance.connectionsCache.Wait()
 
+	// If the session is not yet added, make sure to add it to the list
 	if !valid {
 		instance.addSession(client.ID, client.Session)
 	}
@@ -124,6 +126,7 @@ func (instance *Instance) removeSession(id string, session string) {
 	}
 }
 
+// Remove a session from the account (DOES NOT DISCONNECT, there is an extra method for that)
 func (instance *Instance) Remove(id string, session string) {
 	client, valid := instance.Get(id, session)
 	if valid {
@@ -136,6 +139,20 @@ func (instance *Instance) Remove(id string, session string) {
 	}
 	instance.connectionsCache.Del(getKey(id, session))
 	instance.removeSession(id, session)
+}
+
+// Disconnect a client from the network
+func (instance *Instance) Disconnect(id string, session string) {
+
+	// Get the client
+	client, valid := instance.Get(id, session)
+	if !valid {
+		return
+	}
+
+	// This is a little weird for disconnecting, but it works, so I'm not complaining
+	client.Conn.SetReadDeadline(time.Now().Add(time.Microsecond * 1))
+	client.Conn.Close()
 }
 
 func (instance *Instance) Send(id string, msg []byte) {

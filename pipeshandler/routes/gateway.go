@@ -73,10 +73,7 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 
 	client := instance.AddClient(tk.ToClient(conn, time.Now().Add(instance.Config.SessionDuration)))
 	defer func() {
-
-		log.Println("ENDING CONNECTION")
-
-		// Send callback to app
+		// Get the client
 		client, valid := instance.Get(tk.Account, tk.Session)
 		if !valid {
 			return
@@ -134,8 +131,8 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 	}
 
 	for {
+		log.Println("reading..")
 
-		// Read message as text
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
 
@@ -147,7 +144,7 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 			}
 
 			instance.ReportClientError(client, "couldn't read message", err)
-			break
+			return
 		}
 
 		// Get the client
