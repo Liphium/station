@@ -61,6 +61,7 @@ func main() {
 			Description: "Chat application",
 			Version:     0,
 			AccessLevel: 20,
+			Tag:         "liphium_chat",
 		}).Error; err != nil {
 			panic(err)
 		}
@@ -74,6 +75,7 @@ func main() {
 			Description: "Spaces application",
 			Version:     0,
 			AccessLevel: 20,
+			Tag:         "liphium_spaces",
 		}).Error; err != nil {
 			panic(err)
 		}
