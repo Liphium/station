@@ -31,7 +31,8 @@ func Router(router fiber.Router) {
 	// Endpoint to get server public key (so no requirements apply yet)
 	router.Post("/pub", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"pub": util.PackageRSAPublicKey(serverPublicKey),
+			"pub":              util.PackageRSAPublicKey(serverPublicKey),
+			"protocol_version": util.ProtocolVersion,
 		})
 	})
 
