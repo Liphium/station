@@ -17,6 +17,9 @@ const systemSender = "6969"
 func SetupRoutes(router fiber.Router) {
 	router.Post("/send", sendMessage)
 	router.Post("/delete", deleteMessage)
+	router.Post("/list_after", listAfter)
+	router.Post("/list_before", listBefore)
+	router.Post("/get", get)
 }
 
 // System messages
