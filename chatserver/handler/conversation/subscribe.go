@@ -11,6 +11,7 @@ import (
 )
 
 type conversationInfo struct {
+	Version           int64 `json:"v"`
 	ReadDate          int64 `json:"r"`
 	NotificationCount int64 `json:"n"`
 }
@@ -85,6 +86,14 @@ func subscribe(ctx pipeshandler.Context) {
 			Count(&notificationCount).Error; err != nil {
 
 			// Return an error
+			pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
+			return
+		}
+
+		// Get the version of the conversation
+		var version int64
+		if err := database.DBConn.Model(&conversations.Conversation{}).Select("version").Where("id = ?", token.Conversation).Take(&version).Error; err != nil {
+
 			pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
 			return
 		}

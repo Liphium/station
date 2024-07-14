@@ -34,6 +34,7 @@ const GroupMemberLeave = "group.member_leave"
 // Message not stored, but sent to just disconnect one person
 const ConversationKick = "conv.kicked"
 
+// Send a system message that is stored in the database
 func SendSystemMessage(conversation string, content string, attachments []string) error {
 
 	contentJson, err := sonic.MarshalString(map[string]interface{}{
@@ -55,6 +56,7 @@ func SendSystemMessage(conversation string, content string, attachments []string
 		Edited:       false,
 	}
 
+	// Save message to the dat
 	if err := database.DBConn.Create(&message).Error; err != nil {
 		return err
 	}
@@ -78,6 +80,7 @@ func SendSystemMessage(conversation string, content string, attachments []string
 	return nil
 }
 
+// Send a system message that isn't stored in the database
 func SendNotStoredSystemMessage(conversation string, content string, attachments []string) error {
 
 	contentJson, err := sonic.MarshalString(map[string]interface{}{

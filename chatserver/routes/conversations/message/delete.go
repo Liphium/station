@@ -69,7 +69,7 @@ func deleteMessage(c *fiber.Ctx) error {
 	}
 
 	// Send a system message to delete the message on all clients who are storing it
-	if err := SendSystemMessage(claims.Conversation, DeletedMessage, []string{claims.Message}); err != nil {
+	if err := SendNotStoredSystemMessage(claims.Conversation, DeletedMessage, []string{claims.Message}); err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 

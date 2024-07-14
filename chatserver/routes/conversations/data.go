@@ -4,13 +4,15 @@ import (
 	"fmt"
 
 	"github.com/Liphium/station/chatserver/caching"
+	"github.com/Liphium/station/chatserver/database"
+	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
-type listMembersRequest struct {
+type getDataRequest struct {
 	ID    string `json:"id"`
 	Token string `json:"token"`
 }
@@ -21,10 +23,10 @@ type returnableMemberToken struct {
 	Rank uint   `json:"rank"` // Conversation rank
 }
 
-// Route: /conversations/tokens
-func listTokens(c *fiber.Ctx) error {
+// Route: /conversations/data
+func getData(c *fiber.Ctx) error {
 
-	var req listMembersRequest
+	var req getDataRequest
 	if integration.BodyParser(c, &req) != nil {
 		return integration.InvalidRequest(c, "invalid request")
 	}
@@ -33,6 +35,12 @@ func listTokens(c *fiber.Ctx) error {
 	token, err := caching.ValidateToken(req.ID, req.Token)
 	if err != nil {
 		return integration.InvalidRequest(c, fmt.Sprintf("invalid conversation token: %s", err.Error()))
+	}
+
+	// Get the conversation from the database
+	var conversation conversations.Conversation
+	if err := database.DBConn.Where("id = ?", token.Conversation).Take(&conversation).Error; err != nil {
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// We use methods without caching here because if a member leaves on a different node, the cache won't be cleared
@@ -58,6 +66,9 @@ func listTokens(c *fiber.Ctx) error {
 
 	return integration.ReturnJSON(c, fiber.Map{
 		"success": true,
+		"id":      conversation.ID,
+		"version": conversation.Version,
+		"data":    conversation.Data,
 		"members": realMembers,
 	})
 }
