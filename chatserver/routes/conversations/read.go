@@ -45,7 +45,6 @@ func read(c *fiber.Ctx) error {
 	if err := database.DBConn.Model(&conversations.ConversationToken{}).Where("id = ?", token.ID).Update("last_read", time.Now().UnixMilli()).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
-	token.LastRead = time.Now().UnixMilli()
 
 	return integration.SuccessfulRequest(c)
 }

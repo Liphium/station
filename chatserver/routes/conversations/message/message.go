@@ -22,16 +22,18 @@ func SetupRoutes(router fiber.Router) {
 	router.Post("/get", get)
 }
 
-// System messages
-const DeletedMessage = "msg.deleted"
+// Stored system messages
 const GroupNewAdmin = "group.new_admin"
 const GroupRankChange = "group.rank_change"
 const GroupMemberJoin = "group.member_join"
 const GroupMemberKick = "group.member_kick"
 const GroupMemberInvite = "group.member_invite"
 const GroupMemberLeave = "group.member_leave"
+const ConversationEdited = "conv.edited"
 
-// Message not stored, but sent to just disconnect one person
+// Not stored system messages
+const ConversationVersionUpdate = "conv.update"
+const DeletedMessage = "msg.deleted"
 const ConversationKick = "conv.kicked"
 
 // Send a system message that is stored in the database

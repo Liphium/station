@@ -60,12 +60,21 @@ func promoteToken(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "no permission for promotion")
 	}
 
+	// Increment the version by one to save the modification
+	if err := incrementConversationVersion(conversation); err != nil {
+		return integration.FailedRequest(c, localization.ErrorServer, err)
+	}
+
+	// Update the rank in the database
 	if err := database.DBConn.Model(&conversations.ConversationToken{}).Where("id = ? AND conversation = ?", userToken.ID, userToken.Conversation).Update("rank", rankToPromote).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
+
+	// Change it for the system message
 	prevRank := userToken.Rank
 	userToken.Rank = rankToPromote
 
+	// Send a system message to let all members know about the rank change
 	err = message_routes.SendSystemMessage(token.Conversation, message_routes.GroupRankChange, []string{fmt.Sprintf("%d", prevRank), fmt.Sprintf("%d", userToken.Rank),
 		message_routes.AttachAccount(userToken.Data), message_routes.AttachAccount(token.Data)})
 	if err != nil {

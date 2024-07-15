@@ -1,8 +1,11 @@
 package conversation_routes
 
 import (
+	"fmt"
+
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
+	"github.com/Liphium/station/chatserver/database/conversations"
 	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
@@ -36,9 +39,24 @@ func kickMember(c *fiber.Ctx) error {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
+	// Check if conversation is group
+	var conversation conversations.Conversation
+	if err := database.DBConn.Where("id = ?", token.Conversation).Find(&conversation).Error; err != nil {
+		return integration.InvalidRequest(c, fmt.Sprintf("couldn't find conversation in database: %s", err.Error()))
+	}
+
+	if conversation.Type != conversations.TypeGroup {
+		return integration.FailedRequest(c, "no.group", nil)
+	}
+
 	// Check if the token has the permission
 	if token.Rank <= targetToken.Rank {
 		return integration.FailedRequest(c, localization.KickNoPermission, nil)
+	}
+
+	// Increment the version by one to save the modification
+	if err := incrementConversationVersion(conversation); err != nil {
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Delete from the database

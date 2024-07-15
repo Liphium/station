@@ -27,7 +27,7 @@ func demoteToken(c *fiber.Ctx) error {
 
 	// Check if conversation is group
 	var conversation conversations.Conversation
-	if database.DBConn.Where("id = ?", token.Conversation).Find(&conversation).Error != nil {
+	if err := database.DBConn.Where("id = ?", token.Conversation).Find(&conversation).Error; err != nil {
 		return integration.InvalidRequest(c, fmt.Sprintf("couldn't find conversation in database: %s", err.Error()))
 	}
 
@@ -54,12 +54,21 @@ func demoteToken(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "no permission")
 	}
 
+	// Increment the version by one to save the modification
+	if err := incrementConversationVersion(conversation); err != nil {
+		return integration.FailedRequest(c, localization.ErrorServer, err)
+	}
+
+	// Demote the person in the database
 	if err := database.DBConn.Model(&conversations.ConversationToken{}).Where("id = ? AND conversation = ?", userToken.ID, userToken.Conversation).Update("rank", rankToDemote).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
+
+	// Set the rank for the system message
 	prevRank := userToken.Rank
 	userToken.Rank = rankToDemote
 
+	// Send a system message to let everyone know about the rank change
 	err = message_routes.SendSystemMessage(token.Conversation, message_routes.GroupRankChange, []string{fmt.Sprintf("%d", prevRank), fmt.Sprintf("%d", userToken.Rank),
 		message_routes.AttachAccount(userToken.Data), message_routes.AttachAccount(token.Data)})
 	if err != nil {
