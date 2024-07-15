@@ -58,9 +58,10 @@ func openConversation(c *fiber.Ctx) error {
 		convType = conversations.TypeGroup
 	}
 	conv := conversations.Conversation{
-		ID:   util.GenerateToken(util.ConversationIDLength),
-		Type: uint(convType),
-		Data: req.Data,
+		ID:      util.GenerateToken(util.ConversationIDLength),
+		Type:    uint(convType),
+		Version: 1,
+		Data:    req.Data,
 	}
 
 	if err := database.DBConn.Create(&conv).Error; err != nil {
