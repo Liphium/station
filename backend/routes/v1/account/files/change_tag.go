@@ -7,19 +7,25 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type favoriteRequest struct {
-	Id string `json:"id"`
+type changeTagRequest struct {
+	Id  string `json:"id"`
+	Tag string `json:"tag"`
 }
 
-// Route: /account/files/favorite
-func favoriteFile(c *fiber.Ctx) error {
+// Route: /account/files/change_tag
+func changeFileTag(c *fiber.Ctx) error {
 
-	var req favoriteRequest
+	var req changeTagRequest
 	if err := util.BodyParser(c, &req); err != nil {
 		return util.InvalidRequest(c)
 	}
 	accId, valid := util.GetAcc(c)
 	if !valid {
+		return util.InvalidRequest(c)
+	}
+
+	// Check if tag is valid
+	if len(req.Tag) > 100 {
 		return util.InvalidRequest(c)
 	}
 
@@ -29,17 +35,8 @@ func favoriteFile(c *fiber.Ctx) error {
 		return util.FailedRequest(c, "file.not_found", nil)
 	}
 
-	favoriteStorage, err := CountFavoriteStorage(accId)
-	if err != nil {
-		return util.FailedRequest(c, "server.error", err)
-	}
-
-	if favoriteStorage+file.Size > maxFavoriteStorage {
-		return util.FailedRequest(c, "file.favorite_limit", nil)
-	}
-
-	// Toggle favorite
-	if err := database.DBConn.Model(&account.CloudFile{}).Where("account = ? AND id = ?", accId, file.Id).Update("favorite", true).Error; err != nil {
+	// Change the tag
+	if err := database.DBConn.Model(&account.CloudFile{}).Where("account = ? AND id = ?", accId, file.Id).Update("tag", req.Tag).Error; err != nil {
 		return util.FailedRequest(c, "server.error", err)
 	}
 

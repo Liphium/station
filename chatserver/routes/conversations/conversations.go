@@ -4,8 +4,8 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
-	"github.com/Liphium/station/chatserver/util"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 func SetupRoutes(router fiber.Router) {
@@ -41,32 +41,26 @@ func deleteConversation(id string) error {
 // Will also save the conversation.
 func incrementConversationVersion(conversation conversations.Conversation) error {
 
-	// Begin a new transaction
-	database.DBConn.Begin()
-	defer func() {
-		if err := recover(); err != nil {
-			util.Log.Println("fatal error during transaction:", err)
+	// Increment the version in a transaction
+	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
+
+		// Get the current version (in case it has changed)
+		var currentVersion int64
+		if err := tx.Model(&conversations.Conversation{}).Select("version").Where("id = ?", conversation.ID).Take(&currentVersion).Error; err != nil {
 			database.DBConn.Rollback()
+			return err
 		}
-	}()
 
-	// Get the conversation (in case it has changed)
-	var currentVersion int64
-	if err := database.DBConn.Model(&conversations.Conversation{}).Select("version").Where("id = ?", conversation.ID).Take(&currentVersion).Error; err != nil {
-		database.DBConn.Rollback()
-		return err
-	}
+		// Update the conversation
+		conversation.Version = currentVersion + 1
 
-	// Update the conversation
-	conversation.Version = currentVersion + 1
+		// Save the conversation
+		if err := tx.Save(&conversation).Error; err != nil {
+			return err
+		}
 
-	// Save the conversation
-	if err := database.DBConn.Save(&conversation).Error; err != nil {
-		database.DBConn.Rollback()
-		return err
-	}
+		return nil
+	})
 
-	// Stop the transaction
-	database.DBConn.Commit()
-	return nil
+	return err
 }

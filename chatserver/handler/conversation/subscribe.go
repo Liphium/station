@@ -100,6 +100,7 @@ func subscribe(ctx pipeshandler.Context) {
 
 		// Set conversation info
 		convInfo[token.Conversation] = conversationInfo{
+			Version:           version,
 			ReadDate:          token.LastRead,
 			NotificationCount: notificationCount,
 		}

@@ -8,8 +8,7 @@ import (
 )
 
 type listRequest struct {
-	Favorite bool  `json:"favorite"`
-	Start    int64 `json:"last"` // Start data
+	Tag string `json:"tag"`
 }
 
 // Route: /account/files/list
@@ -25,9 +24,14 @@ func listFiles(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
+	// Check if the tag is valid
+	if len(req.Tag) > 100 {
+		return util.InvalidRequest(c)
+	}
+
 	// Get files
 	var files []account.CloudFile
-	if database.DBConn.Where("account = ? AND favorite = ? AND created_at < ?", accId, req.Start).Limit(40).Find(&[]account.CloudFile{}).Error != nil {
+	if database.DBConn.Where("account = ? AND tag = ?", accId, req.Tag).Limit(40).Find(&[]account.CloudFile{}).Error != nil {
 		return util.FailedRequest(c, "server.error", nil)
 	}
 

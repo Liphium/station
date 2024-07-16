@@ -23,7 +23,7 @@ func uploadFile(c *fiber.Ctx) error {
 	key := c.FormValue("key", "-")
 	name := c.FormValue("name", "-")
 	extension := c.FormValue("extension", "-")
-	favorite := c.FormValue("favorite", "false")
+	tag := c.FormValue("tag", "")
 	if key == "-" || name == "-" || extension == "-" {
 		util.Log.Println("invalid form data")
 		return util.InvalidRequest(c)
@@ -43,7 +43,13 @@ func uploadFile(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
+	// Check if the file name is valid
 	if strings.Contains(file.Filename, "/") || strings.Contains(file.Filename, "\\") {
+		return util.InvalidRequest(c)
+	}
+
+	// Check if the tag is valid
+	if len(tag) > 100 {
 		return util.InvalidRequest(c)
 	}
 
@@ -65,14 +71,14 @@ func uploadFile(c *fiber.Ctx) error {
 	// Generate file name Format: a-[timestamp]-[accountId]-[objectIdentifier].[extension]
 	fileId := "a-" + fmt.Sprintf("%d", time.Now().UnixMilli()) + "-" + accId.String() + "-" + auth.GenerateToken(16) + "." + extension
 	if err := database.DBConn.Create(&account.CloudFile{
-		Id:       fileId,
-		Name:     name,
-		Type:     file.Header.Get("Content-Type"),
-		Key:      key,
-		Account:  accId,
-		Favorite: favorite == "true",
-		System:   false,
-		Size:     file.Size,
+		Id:      fileId,
+		Name:    name,
+		Type:    file.Header.Get("Content-Type"),
+		Key:     key,
+		Account: accId,
+		Tag:     tag,
+		System:  false,
+		Size:    file.Size,
 	}).Error; err != nil {
 		return util.FailedRequest(c, "server.error", err)
 	}
