@@ -101,7 +101,7 @@ func Authorized(router fiber.Router) {
 	// Setup file routes
 	router.Post("/delete", deleteFile)
 	router.Post("/list", listFiles)
-	router.Post("/favorite", changeFileTag)
+	router.Post("/change_tag", changeFileTag)
 	router.Post("/info", fileInfo)
 }
 
