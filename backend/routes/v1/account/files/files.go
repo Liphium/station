@@ -4,7 +4,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
@@ -109,8 +108,7 @@ func CountTotalStorage(accId uuid.UUID) (int64, error) {
 
 	// Get total storage (coalesce is important cause otherwise we get null)
 	var totalStorage int64
-	unix := time.Now().Add(-time.Hour * 24 * 30).UnixMilli()
-	rq := database.DBConn.Model(&account.CloudFile{}).Where("account = ? AND (created_at > ? OR favorite = ?)", accId, unix, true).Select("coalesce(sum(size), 0)").Scan(&totalStorage)
+	rq := database.DBConn.Model(&account.CloudFile{}).Where("account = ?", accId).Select("coalesce(sum(size), 0)").Scan(&totalStorage)
 	if rq.Error != nil {
 		if rq.RowsAffected > 0 {
 			return 0, nil
