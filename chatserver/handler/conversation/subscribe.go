@@ -10,15 +10,20 @@ import (
 	"github.com/Liphium/station/pipeshandler"
 )
 
+type conversationInfo struct {
+	Version           int64 `json:"v"`
+	ReadDate          int64 `json:"r"`
+	NotificationCount int64 `json:"n"`
+}
+
 // Action: conv_sub
 func subscribe(ctx pipeshandler.Context) {
 
-	if ctx.ValidateForm("tokens", "status", "date") {
+	if ctx.ValidateForm("tokens", "status") {
 		pipeshandler.ErrorResponse(ctx, localization.InvalidRequest)
 		return
 	}
 
-	date := int64(ctx.Data["date"].(float64))
 	conversationTokens, tokenIds, members, missingTokens, ok := PrepareConversationTokens(ctx)
 	if !ok {
 		pipeshandler.ErrorResponse(ctx, localization.InvalidRequest)
@@ -32,7 +37,7 @@ func subscribe(ctx pipeshandler.Context) {
 	}
 
 	statusctx := ctx.Data["status"].(string)
-	readDates := make(map[string]int64, len(conversationTokens))
+	convInfo := make(map[string]conversationInfo, len(conversationTokens))
 	adapters := make([]string, len(conversationTokens))
 	for _, token := range conversationTokens {
 
@@ -42,7 +47,7 @@ func subscribe(ctx pipeshandler.Context) {
 			Receive: func(context *pipes.Context) error {
 				client := *ctx.Client
 				util.Log.Println(context.Adapter.ID, token.Token, client.ID)
-				err := caching.CSInstance.SendEvent(ctx.Client, *context.Event)
+				err := caching.CSNode.SendClient(ctx.Client.ID, *context.Event)
 				if err != nil {
 					util.Log.Println("COULDN'T SEND:", err.Error())
 				}
@@ -75,8 +80,30 @@ func subscribe(ctx pipeshandler.Context) {
 			},
 		})
 
-		readDates[token.Conversation] = token.LastRead
-		AddConversationToken(TokenTask{"s-" + token.Token, token.Conversation, date})
+		// Get the notification count of the current conversation
+		var notificationCount int64
+		if err := database.DBConn.Model(&conversations.Message{}).Where("conversation = ? AND creation > ?", token.Conversation, token.LastRead).
+			Count(&notificationCount).Error; err != nil {
+
+			// Return an error
+			pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
+			return
+		}
+
+		// Get the version of the conversation
+		var version int64
+		if err := database.DBConn.Model(&conversations.Conversation{}).Select("version").Where("id = ?", token.Conversation).Take(&version).Error; err != nil {
+
+			pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
+			return
+		}
+
+		// Set conversation info
+		convInfo[token.Conversation] = conversationInfo{
+			Version:           version,
+			ReadDate:          token.LastRead,
+			NotificationCount: notificationCount,
+		}
 	}
 
 	// Insert adapters into cache (to be deleted when disconnecting)
@@ -84,7 +111,7 @@ func subscribe(ctx pipeshandler.Context) {
 
 	pipeshandler.NormalResponse(ctx, map[string]interface{}{
 		"success": true,
-		"read":    readDates,
+		"info":    convInfo,
 		"missing": missingTokens,
 	})
 }

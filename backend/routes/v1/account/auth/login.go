@@ -110,12 +110,19 @@ func runAuthStep(id uuid.UUID, device string, step uint, c *fiber.Ctx) error {
 			return util.FailedRequest(c, "server.error", err)
 		}
 
+		// Count the amount of sessions
+		var sessionCount int64 = 0
+		if err := database.DBConn.Model(&account.Session{}).Where("account = ?", id).Count(&sessionCount).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return util.FailedRequest(c, "server.error", err)
+		}
+
 		// Create session
 		tk := auth.GenerateToken(100)
 
 		var createdSession account.Session = account.Session{
 			ID:              auth.GenerateToken(8),
 			Token:           tk,
+			Verified:        sessionCount == 0,
 			Account:         acc.ID,
 			PermissionLevel: acc.Rank.Level,
 			Device:          device,

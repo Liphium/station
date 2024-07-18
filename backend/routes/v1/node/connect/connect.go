@@ -5,6 +5,7 @@ import (
 
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
+	"github.com/Liphium/station/backend/entities/app"
 	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
@@ -13,7 +14,7 @@ import (
 
 type connectRequest struct {
 	Cluster uint   `json:"cluster"`
-	App     uint   `json:"app"`
+	Tag     string `json:"tag"`
 	Token   string `json:"token"`
 }
 
@@ -70,16 +71,22 @@ func Connect(c *fiber.Ctx) error {
 		return util.FailedRequest(c, "invalid.token", nil)
 	}
 
+	// Get the app
+	var application app.App
+	if err := database.DBConn.Where("tag = ?", req.Tag).Take(&application).Error; err != nil {
+		return util.FailedRequest(c, "invalid.app", err)
+	}
+
 	// Get lowest load node
 	var lowest node.Node
 
 	// Connect to the same node if possible
 	if mostRecent.Node != 0 {
-		if err := database.DBConn.Model(&node.Node{}).Where("cluster_id = ? AND app_id = ? AND status = ? AND id = ?", req.Cluster, req.App, node.StatusStarted, mostRecent.Node).Order("load DESC").Take(&lowest).Error; err != nil {
+		if err := database.DBConn.Model(&node.Node{}).Where("cluster_id = ? AND app_id = ? AND status = ? AND id = ?", req.Cluster, application.ID, node.StatusStarted, mostRecent.Node).Order("load DESC").Take(&lowest).Error; err != nil {
 			return util.FailedRequest(c, "not.setup", nil)
 		}
 	} else {
-		if err := database.DBConn.Model(&node.Node{}).Where("cluster_id = ? AND app_id = ? AND status = ?", req.Cluster, req.App, node.StatusStarted).Order("load DESC").Take(&lowest).Error; err != nil {
+		if err := database.DBConn.Model(&node.Node{}).Where("cluster_id = ? AND app_id = ? AND status = ?", req.Cluster, application.ID, node.StatusStarted).Order("load DESC").Take(&lowest).Error; err != nil {
 			return util.FailedRequest(c, "not.setup", nil)
 		}
 	}
@@ -106,7 +113,7 @@ func Connect(c *fiber.Ctx) error {
 
 	currentSession.LastConnection = time.Now()
 	currentSession.Node = lowest.ID
-	currentSession.App = req.App
+	currentSession.App = application.ID
 	if err := database.DBConn.Save(&currentSession).Error; err != nil {
 		return util.FailedRequest(c, util.ErrorServer, err)
 	}

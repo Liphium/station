@@ -8,28 +8,28 @@ import (
 )
 
 func NormalResponse(ctx Context, data map[string]interface{}) {
-	Response(ctx.Client.ID, ctx.Action, data, ctx.Node)
+	Response(ctx.Client, ctx.Action, data, ctx.Instance)
 }
 
-func Response(client string, action string, data map[string]interface{}, local *pipes.LocalNode) {
-	local.SendClient(client, pipes.Event{
+func Response(client *Client, action string, data map[string]interface{}, instance *Instance) {
+	instance.SendEventToOne(client, pipes.Event{
 		Name: action,
 		Data: data,
 	})
 }
 
 func SuccessResponse(ctx Context) {
-	Response(ctx.Client.ID, ctx.Action, map[string]interface{}{
+	Response(ctx.Client, ctx.Action, map[string]interface{}{
 		"success": true,
 		"message": "",
-	}, ctx.Node)
+	}, ctx.Instance)
 }
 
 func StatusResponse(ctx Context, status string) {
-	Response(ctx.Client.ID, ctx.Action, map[string]interface{}{
+	Response(ctx.Client, ctx.Action, map[string]interface{}{
 		"success": true,
 		"message": status,
-	}, ctx.Node)
+	}, ctx.Instance)
 }
 
 func ErrorResponse(ctx Context, err string) {
@@ -39,10 +39,10 @@ func ErrorResponse(ctx Context, err string) {
 		debug.PrintStack()
 	}
 
-	Response(ctx.Client.ID, ctx.Action, map[string]interface{}{
+	Response(ctx.Client, ctx.Action, map[string]interface{}{
 		"success": false,
 		"message": err,
-	}, ctx.Node)
+	}, ctx.Instance)
 }
 
 // Returns true if one of the fields is not set

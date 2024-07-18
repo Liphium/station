@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/spacestation/caching"
+	"github.com/Liphium/station/spacestation/util"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -20,18 +21,15 @@ func leaveRoom(c *fiber.Ctx) error {
 
 	connections := caching.SSInstance.GetSessions(req.Connection)
 	if len(connections) == 0 {
+		util.Log.Println("couldn't leave room: token not found")
 		return c.JSON(fiber.Map{
 			"success": true,
 		})
 	}
 
+	// Disconnect the client
 	for _, conn := range connections {
-		connection, valid := caching.SSInstance.Get(req.Connection, conn)
-		if !valid {
-			continue
-		}
-
-		connection.Conn.Close()
+		caching.SSInstance.Disconnect(req.Connection, conn)
 	}
 
 	return c.JSON(fiber.Map{

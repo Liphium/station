@@ -17,20 +17,26 @@ const systemSender = "6969"
 func SetupRoutes(router fiber.Router) {
 	router.Post("/send", sendMessage)
 	router.Post("/delete", deleteMessage)
+	router.Post("/list_after", listAfter)
+	router.Post("/list_before", listBefore)
+	router.Post("/get", get)
 }
 
-// System messages
-const DeletedMessage = "msg.deleted"
+// Stored system messages
 const GroupNewAdmin = "group.new_admin"
 const GroupRankChange = "group.rank_change"
 const GroupMemberJoin = "group.member_join"
 const GroupMemberKick = "group.member_kick"
 const GroupMemberInvite = "group.member_invite"
 const GroupMemberLeave = "group.member_leave"
+const ConversationEdited = "conv.edited"
 
-// Message not stored, but sent to just disconnect one person
+// Not stored system messages
+const ConversationVersionUpdate = "conv.update"
+const DeletedMessage = "msg.deleted"
 const ConversationKick = "conv.kicked"
 
+// Send a system message that is stored in the database
 func SendSystemMessage(conversation string, content string, attachments []string) error {
 
 	contentJson, err := sonic.MarshalString(map[string]interface{}{
@@ -52,6 +58,7 @@ func SendSystemMessage(conversation string, content string, attachments []string
 		Edited:       false,
 	}
 
+	// Save message to the dat
 	if err := database.DBConn.Create(&message).Error; err != nil {
 		return err
 	}
@@ -75,6 +82,7 @@ func SendSystemMessage(conversation string, content string, attachments []string
 	return nil
 }
 
+// Send a system message that isn't stored in the database
 func SendNotStoredSystemMessage(conversation string, content string, attachments []string) error {
 
 	contentJson, err := sonic.MarshalString(map[string]interface{}{

@@ -39,7 +39,7 @@ func respondToStatus(ctx pipeshandler.Context) {
 	// Send the subscription event
 	err = caching.CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
 		Channel: pipes.Conversation(ids, nodes),
-		Event:   statusEvent(status, data, ":a"),
+		Event:   statusEvent(status, data, convToken.Conversation, convToken.ID, ":a"),
 	})
 	if err != nil {
 		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)

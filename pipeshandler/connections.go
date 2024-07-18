@@ -1,6 +1,7 @@
 package pipeshandler
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -20,7 +21,8 @@ type Client struct {
 	Mutex   *sync.Mutex
 }
 
-func (instance *Instance) SendEvent(c *Client, event pipes.Event) error {
+// Sends an event to the only ONE session of the connected account
+func (instance *Instance) SendEventToOne(c *Client, event pipes.Event) error {
 
 	msg, err := sonic.Marshal(event)
 	if err != nil {
@@ -72,10 +74,13 @@ func getKey(id string, session string) string {
 
 func (instance *Instance) AddClient(client Client) *Client {
 
-	_, add := instance.connectionsCache.Get(getKey(client.ID, client.Session))
+	// Add the session
+	_, valid := instance.connectionsCache.Get(getKey(client.ID, client.Session))
 	instance.connectionsCache.Set(getKey(client.ID, client.Session), client, 1)
+	instance.connectionsCache.Wait()
 
-	if add {
+	// If the session is not yet added, make sure to add it to the list
+	if !valid {
 		instance.addSession(client.ID, client.Session)
 	}
 
@@ -104,6 +109,7 @@ func (instance *Instance) addSession(id string, session string) {
 	} else {
 		instance.sessionsCache.Set(id, []string{session}, 1)
 	}
+	instance.sessionsCache.Wait()
 }
 
 func (instance *Instance) removeSession(id string, session string) {
@@ -120,13 +126,33 @@ func (instance *Instance) removeSession(id string, session string) {
 	}
 }
 
+// Remove a session from the account (DOES NOT DISCONNECT, there is an extra method for that)
 func (instance *Instance) Remove(id string, session string) {
 	client, valid := instance.Get(id, session)
 	if valid {
-		client.Conn.Close()
+		err := client.Conn.Close()
+		if err != nil {
+			instance.ReportGeneralError("couldn't disconnect client", err)
+		}
+	} else {
+		instance.ReportGeneralError("client "+id+" doesn't exist", errors.New("couldn't delete"))
 	}
 	instance.connectionsCache.Del(getKey(id, session))
 	instance.removeSession(id, session)
+}
+
+// Disconnect a client from the network
+func (instance *Instance) Disconnect(id string, session string) {
+
+	// Get the client
+	client, valid := instance.Get(id, session)
+	if !valid {
+		return
+	}
+
+	// This is a little weird for disconnecting, but it works, so I'm not complaining
+	client.Conn.SetReadDeadline(time.Now().Add(time.Microsecond * 1))
+	client.Conn.Close()
 }
 
 func (instance *Instance) Send(id string, msg []byte) {

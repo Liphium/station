@@ -8,8 +8,8 @@ type CloudFile struct {
 	Type      string    `json:"type,omitempty"` // Mime type
 	Key       string    `json:"key,omitempty"`  // Encryption key (encrypted with account public key)
 	Account   uuid.UUID `json:"account,omitempty"`
-	Size      int64     `json:"size,omitempty"` // In bytes
-	Favorite  bool      `json:"favorite,omitempty"`
-	System    bool      `json:"system,omitempty"` // If in use by system (won't be deleted)
+	Size      int64     `json:"size,omitempty"`   // In bytes
+	Tag       string    `json:"tag,omitempty"`    // Tag for systems such as the library
+	System    bool      `json:"system,omitempty"` // If in use by system
 	CreatedAt int64     `json:"created,omitempty" gorm:"not null,autoCreateTime:milli"`
 }

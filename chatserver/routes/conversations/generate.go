@@ -52,6 +52,11 @@ func generateToken(c *fiber.Ctx) error {
 		return integration.FailedRequest(c, localization.GroupMemberLimit, nil)
 	}
 
+	// Increment the version by one to save the modification
+	if err := incrementConversationVersion(conversation); err != nil {
+		return integration.FailedRequest(c, localization.ErrorServer, err)
+	}
+
 	// Generate a new token
 	generated := conversations.ConversationToken{
 		ID:           util.GenerateToken(util.ConversationTokenIDLength),
@@ -66,6 +71,7 @@ func generateToken(c *fiber.Ctx) error {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
+	// Send a system message to let everyone know
 	err = message_routes.SendSystemMessage(token.Conversation, message_routes.GroupMemberInvite, []string{message_routes.AttachAccount(token.Data), message_routes.AttachAccount(generated.Data)})
 	if err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)

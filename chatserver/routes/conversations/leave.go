@@ -34,10 +34,6 @@ func leaveConversation(c *fiber.Ctx) error {
 	if err := database.DBConn.Where("id = ?", token.ID).Delete(&conversations.ConversationToken{}).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
-
-	if err != nil {
-		return integration.FailedRequest(c, localization.ErrorServer, err)
-	}
 	caching.DeleteToken(token.ID, token.Token)
 
 	members, err := caching.LoadMembers(token.Conversation)

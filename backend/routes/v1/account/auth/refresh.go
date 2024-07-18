@@ -1,13 +1,16 @@
 package auth
 
 import (
+	"errors"
 	"time"
 
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
+	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/requests"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 type refreshRequest struct {
@@ -30,13 +33,34 @@ func refreshSession(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
+	// Check if the session token matches the request
 	if session.Token != req.Token {
 		return util.InvalidRequest(c)
 	}
 
+	// Check if the session is verified
+	if !session.Verified {
+		var request properties.KeyRequest = properties.KeyRequest{
+			Payload: "",
+		}
+		if err := database.DBConn.Where("session = ?", session.ID).Take(&request).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return util.FailedRequest(c, "session.not_verified", err)
+		}
+
+		// Check if the key request has been accepted
+		if request.Payload == "" {
+			return util.FailedRequest(c, "session.not_verified", nil)
+		}
+
+		// Update the session to verified in case it has
+		session.Verified = true // will be updated in the database anyway (below)
+	}
+
 	// Refresh session
 	session.LastUsage = time.Now().Add(time.Hour * 24 * 7)
-	database.DBConn.Save(&session)
+	if err := database.DBConn.Save(&session).Error; err != nil {
+		return util.FailedRequest(c, util.ErrorServer, err)
+	}
 
 	// Create new token
 	jwtToken, err := util.Token(session.ID, session.Account, session.PermissionLevel, time.Now().Add(time.Hour*24*3))

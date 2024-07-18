@@ -58,9 +58,10 @@ func openConversation(c *fiber.Ctx) error {
 		convType = conversations.TypeGroup
 	}
 	conv := conversations.Conversation{
-		ID:   util.GenerateToken(util.ConversationIDLength),
-		Type: uint(convType),
-		Data: req.Data,
+		ID:      util.GenerateToken(util.ConversationIDLength),
+		Type:    uint(convType),
+		Version: 1,
+		Data:    req.Data,
 	}
 
 	if err := database.DBConn.Create(&conv).Error; err != nil {
@@ -106,7 +107,6 @@ func openConversation(c *fiber.Ctx) error {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	// TODO: Fix that the admin can pretend to be one of the users
 	return integration.ReturnJSON(c, fiber.Map{
 		"success":      true,
 		"conversation": conv.ID,

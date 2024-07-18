@@ -4,7 +4,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
@@ -17,9 +16,8 @@ import (
 var disabled = false
 
 // Configuration
-var maxUploadSize int64 = 10       // 10 MB
-var maxFavoriteStorage int64 = 500 // 500 MB
-var maxTotalStorage int64 = 1_000  // 1 GB
+var maxUploadSize int64 = 10      // 10 MB
+var maxTotalStorage int64 = 1_000 // 1 GB
 var saveLocation = ""
 var urlPath = ""
 
@@ -45,7 +43,6 @@ func Unencrypted(router fiber.Router) {
 
 	if !disabled {
 		maxUploadSize = GetIntEnv("MAX_UPLOAD_SIZE", maxUploadSize) * 1_000_000
-		maxFavoriteStorage = GetIntEnv("MAX_FAVORITE_STORAGE", maxFavoriteStorage) * 1_000_000
 		maxTotalStorage = GetIntEnv("MAX_TOTAL_STORAGE", maxTotalStorage) * 1_000_000
 	}
 
@@ -103,8 +100,7 @@ func Authorized(router fiber.Router) {
 	// Setup file routes
 	router.Post("/delete", deleteFile)
 	router.Post("/list", listFiles)
-	router.Post("/favorite", favoriteFile)
-	router.Post("/unfavorite", unfavoriteFile)
+	router.Post("/change_tag", changeFileTag)
 	router.Post("/info", fileInfo)
 }
 
@@ -112,8 +108,7 @@ func CountTotalStorage(accId uuid.UUID) (int64, error) {
 
 	// Get total storage (coalesce is important cause otherwise we get null)
 	var totalStorage int64
-	unix := time.Now().Add(-time.Hour * 24 * 30).UnixMilli()
-	rq := database.DBConn.Model(&account.CloudFile{}).Where("account = ? AND (created_at > ? OR favorite = ?)", accId, unix, true).Select("coalesce(sum(size), 0)").Scan(&totalStorage)
+	rq := database.DBConn.Model(&account.CloudFile{}).Where("account = ?", accId).Select("coalesce(sum(size), 0)").Scan(&totalStorage)
 	if rq.Error != nil {
 		if rq.RowsAffected > 0 {
 			return 0, nil
@@ -122,15 +117,4 @@ func CountTotalStorage(accId uuid.UUID) (int64, error) {
 	}
 
 	return totalStorage, nil
-}
-
-func CountFavoriteStorage(accId uuid.UUID) (int64, error) {
-
-	// Get favorite storage (coalesce is important cause otherwise we get null)
-	var favoriteStorage int64
-	if err := database.DBConn.Model(&account.CloudFile{}).Where("account = ? AND favorite = ?", accId, true).Select("coalesce(sum(size), 0)").Scan(&favoriteStorage).Error; err != nil {
-		return 0, err
-	}
-
-	return favoriteStorage, nil
 }

@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"crypto/sha256"
 	"encoding/base64"
 	"errors"
 	"time"
@@ -167,9 +166,6 @@ func EncryptionClientEncodingMiddleware(client *pipeshandler.Client, instance *p
 
 	// Encrypt the message using the client encryption key
 	key := client.Data.(ExtraClientData).Key
-	util.Log.Println("ENCODING KEY: "+base64.StdEncoding.EncodeToString(key), client.ID, string(message))
 	result, err := integration.EncryptAES(key, message)
-	hash := sha256.Sum256(result)
-	util.Log.Println("hash: " + base64.StdEncoding.EncodeToString(hash[:]))
 	return result, err
 }

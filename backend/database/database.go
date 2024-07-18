@@ -52,6 +52,7 @@ func Connect() {
 	db.AutoMigrate(&account.Rank{})
 	db.AutoMigrate(&account.PublicKey{})
 	db.AutoMigrate(&account.ProfileKey{})
+	db.AutoMigrate(&account.VaultKey{})
 	db.AutoMigrate(&account.SignatureKey{})
 	db.AutoMigrate(&account.StoredActionKey{})
 	db.AutoMigrate(&account.CloudFile{})
@@ -64,6 +65,7 @@ func Connect() {
 	db.AutoMigrate(&properties.StoredAction{})
 	db.AutoMigrate(&properties.AStoredAction{})
 	db.AutoMigrate(&properties.VaultEntry{})
+	db.AutoMigrate(&properties.KeyRequest{})
 
 	// Migrate node related tables
 	db.AutoMigrate(&node.Cluster{})

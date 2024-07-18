@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"crypto/sha256"
 	"encoding/base64"
 	"errors"
 	"time"
@@ -193,9 +192,6 @@ func setupPipesFiber(router fiber.Router) {
 				return true
 			}
 
-			// Just for debug purposes
-			util.Log.Println(base64.StdEncoding.EncodeToString(aesKey))
-
 			// Set AES key in client data
 			client.Data = ExtraClientData{aesKey}
 			caching.CSInstance.UpdateClient(client)
@@ -271,10 +267,7 @@ func EncryptionClientEncodingMiddleware(client *pipeshandler.Client, instance *p
 
 	// Encrypt the message using the client encryption key
 	key := client.Data.(ExtraClientData).Key
-	util.Log.Println("ENCODING KEY: "+base64.StdEncoding.EncodeToString(key), client.ID, string(message))
 	result, err := integration.EncryptAES(key, message)
-	hash := sha256.Sum256(result)
-	util.Log.Println("hash: " + base64.StdEncoding.EncodeToString(hash[:]))
 	return result, err
 }
 
@@ -288,7 +281,7 @@ func initializeUser(client *pipeshandler.Client) bool {
 		// Create a new status
 		if database.DBConn.Create(&fetching.Status{
 			ID:   account,
-			Data: "-", // Status is disabled
+			Data: "", // Status is disabled
 			Node: integration.Nodes[integration.IdentifierChatNode].NodeId,
 		}).Error != nil {
 			return false
@@ -300,19 +293,12 @@ func initializeUser(client *pipeshandler.Client) bool {
 	}
 
 	// Send current status
-	caching.CSInstance.SendEvent(client, pipes.Event{
-		Name: "setup_st",
+	caching.CSInstance.SendEventToOne(client, pipes.Event{
+		Name: "setup",
 		Data: map[string]interface{}{
 			"data": status.Data,
 			"node": status.Node,
 		},
 	})
-
-	// Send the setup complete event
-	caching.CSInstance.SendEvent(client, pipes.Event{
-		Name: "setup_fin",
-		Data: map[string]interface{}{},
-	})
-
 	return true
 }

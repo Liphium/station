@@ -79,6 +79,13 @@ func activate(c *fiber.Ctx) error {
 	}
 
 	if conversation.Type == conversations.TypeGroup {
+
+		// Increment the version by one to save the modification
+		if err := incrementConversationVersion(conversation); err != nil {
+			return integration.FailedRequest(c, localization.ErrorServer, err)
+		}
+
+		// Send a system message to tell the group members about the new member
 		err := message_routes.SendSystemMessage(token.Conversation, message_routes.GroupMemberJoin, []string{message_routes.AttachAccount(token.Data)})
 		if err != nil {
 			return integration.FailedRequest(c, localization.ErrorServer, err)
