@@ -6,6 +6,7 @@ import (
 
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
+	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/gofiber/fiber/v2"
@@ -27,9 +28,15 @@ func startLogin(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
+	// Normalize email
+	valid, normalizedEmail := standards.CheckEmail(req.Email)
+	if !valid {
+		return util.InvalidRequest(c)
+	}
+
 	// Check if user exists
 	var acc account.Account
-	if database.DBConn.Where("email = ?", req.Email).Take(&acc).Error != nil {
+	if database.DBConn.Where("email = ?", normalizedEmail).Take(&acc).Error != nil {
 		return util.FailedRequest(c, "email.invalid", nil)
 	}
 
