@@ -14,9 +14,6 @@ import (
 	"github.com/bytedance/sonic"
 )
 
-// Errors
-const ErrorTabletopInvalidAction = "tabletop.invalid_action"
-
 var Port int = 0
 var UDPPort int = 0
 var Log = log.New(log.Writer(), "space-station ", log.Flags())
