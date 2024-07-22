@@ -1,6 +1,8 @@
 package tabletop_handlers
 
 import (
+	"sync"
+
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
@@ -34,14 +36,17 @@ func createObject(message pipeshandler.Context) {
 
 	// Create the object here so the data is still there when we send it down below
 	object := &caching.TableObject{
-		LocationX: x,
-		LocationY: y,
-		Width:     width,
-		Height:    height,
-		Rotation:  rotation,
-		Type:      objType,
-		Data:      objData,
-		Creator:   message.Client.ID,
+		Mutex:             &sync.Mutex{},
+		LocationX:         x,
+		LocationY:         y,
+		Width:             width,
+		Height:            height,
+		Rotation:          rotation,
+		Type:              objType,
+		Data:              objData,
+		Creator:           message.Client.ID,
+		Holder:            "",
+		ModificationQueue: []string{},
 	}
 
 	// Add the object to the table
@@ -171,8 +176,14 @@ func modifyObject(ctx pipeshandler.Context) {
 		return
 	}
 
+	// Get the object id from the message
+	objectId := ctx.Data["id"].(string)
+
+	// Make sure the next client gets to modify the object regardless of errors
+	defer handleNextModification(ctx.Client.Session, objectId)
+
 	// Modify the object and return the error if there is one
-	err := caching.ModifyTableObject(ctx.Client.Session, connection.ClientID, ctx.Data["id"].(string), ctx.Data["data"].(string),
+	err := caching.ModifyTableObject(ctx.Client.Session, connection.ClientID, objectId, ctx.Data["data"].(string),
 		ctx.Data["width"].(float64), ctx.Data["height"].(float64))
 	if err != nil {
 		pipeshandler.ErrorResponse(ctx, err.Error())
@@ -194,6 +205,8 @@ func modifyObject(ctx pipeshandler.Context) {
 		pipeshandler.ErrorResponse(ctx, "server.error")
 		return
 	}
+
+	// Add the next client to the modification queue
 
 	pipeshandler.SuccessResponse(ctx)
 }
@@ -259,10 +272,14 @@ func rotateObject(ctx pipeshandler.Context) {
 	}
 
 	// Get the data from the message
+	objectId := ctx.Data["id"].(string)
 	rotation := ctx.Data["r"].(float64)
 
+	// Make sure the next client gets to modify the object regardless of errors
+	defer handleNextModification(ctx.Client.Session, objectId)
+
 	// Rotate the object and return an error (only if one is there)
-	err := caching.RotateTableObject(ctx.Client.Session, connection.ClientID, ctx.Data["id"].(string), rotation)
+	err := caching.RotateTableObject(ctx.Client.Session, connection.ClientID, objectId, rotation)
 	if err != nil {
 		pipeshandler.ErrorResponse(ctx, "server.error")
 		return
@@ -272,7 +289,7 @@ func rotateObject(ctx pipeshandler.Context) {
 	valid = SendEventToMembers(ctx.Client.Session, pipes.Event{
 		Name: "tobj_rotated",
 		Data: map[string]interface{}{
-			"id": ctx.Data["id"].(string),
+			"id": objectId,
 			"s":  connection.ClientID,
 			"r":  rotation,
 		},
@@ -283,4 +300,66 @@ func rotateObject(ctx pipeshandler.Context) {
 	}
 
 	pipeshandler.SuccessResponse(ctx)
+}
+
+// Action: tobj_mqueue
+func queueModificationToObject(ctx pipeshandler.Context) {
+
+	// Validate message integrity
+	if ctx.ValidateForm("id") {
+		pipeshandler.ErrorResponse(ctx, "invalid")
+		return
+	}
+
+	// Get the connection (for the client id)
+	connection, valid := caching.GetConnection(ctx.Client.ID)
+	if !valid {
+		pipeshandler.ErrorResponse(ctx, "invalid")
+		return
+	}
+
+	// Get the id of the object from the message
+	objectId := ctx.Data["id"].(string)
+
+	// Queue the modification
+	rightAway, err := caching.QueueTableObjectModification(ctx.Client.Session, objectId, connection.ClientID)
+	if err != nil {
+		pipeshandler.ErrorResponse(ctx, err.Error())
+		return
+	}
+
+	// Return whether the modification can be sent right away
+	pipeshandler.NormalResponse(ctx, map[string]interface{}{
+		"success": true,
+		"direct":  rightAway,
+	})
+}
+
+// Called when a modification is completed to contact the next modifier
+func handleNextModification(room string, object string) {
+	// Remove the current client from the modification queue
+	err := caching.RemoveFromModificationQueue(room, object)
+	if err != nil {
+		util.Log.Println("couldn't remove from modification queue:", err)
+		return
+	}
+
+	// Get the next client to modify the object
+	client, err := caching.NextModifier(room, object)
+	if err != nil {
+		util.Log.Println("error during getting next modifier:", err)
+		return
+	}
+
+	// Send event to inform the client about their modification being allowed
+	err = caching.SSNode.SendClient(client, pipes.Event{
+		Name: "tobj_mqueue_allowed",
+		Data: map[string]interface{}{
+			"id": object,
+		},
+	})
+	if err != nil {
+		util.Log.Println("error during sending next modification:", err)
+		return
+	}
 }

@@ -20,6 +20,7 @@ func SetupHandler() {
 	caching.SSInstance.RegisterHandler("tobj_modify", modifyObject)
 	caching.SSInstance.RegisterHandler("tobj_move", moveObject)
 	caching.SSInstance.RegisterHandler("tobj_rotate", rotateObject)
+	caching.SSInstance.RegisterHandler("tobj_mqueue", queueModificationToObject)
 
 	// Table cursor sending
 	caching.SSInstance.RegisterHandler("tc_move", moveCursor)

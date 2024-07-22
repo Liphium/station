@@ -20,6 +20,7 @@ var (
 	ErrObjectNotFound           = errors.New("tabletop.object_not_found")
 	ErrObjectAlreadyHeld        = errors.New("tabletop.object_already_held")
 	ErrObjectDifferentHolder    = errors.New("tabletop.object_different_holder")
+	ErrObjectNotInQueue         = errors.New("tabletop.object_not_in_queue")
 )
 
 type TableData struct {
@@ -118,16 +119,18 @@ func LeaveTable(room string, client string) error {
 }
 
 type TableObject struct {
-	ID        string  `json:"id"`
-	LocationX float64 `json:"x"`
-	LocationY float64 `json:"y"`
-	Width     float64 `json:"w"`
-	Height    float64 `json:"h"`
-	Rotation  float64 `json:"r"`
-	Type      int     `json:"t"`
-	Creator   string  `json:"cr"` // ID of the creator
-	Holder    string  `json:"ho"` // ID of the current card holder (others can't move/modify it while it's held)
-	Data      string  `json:"d"`  // Encrypted
+	Mutex             *sync.Mutex `json:"-"`
+	ID                string      `json:"id"`
+	LocationX         float64     `json:"x"`
+	LocationY         float64     `json:"y"`
+	Width             float64     `json:"w"`
+	Height            float64     `json:"h"`
+	Rotation          float64     `json:"r"`
+	Type              int         `json:"t"`
+	Creator           string      `json:"cr"` // ID of the creator
+	Holder            string      `json:"ho"` // ID of the current card holder (others can't move/modify it while it's held)
+	ModificationQueue []string    `json:"-"`  // Queue of holders wanting to interact with the object
+	Data              string      `json:"d"`  // Encrypted
 }
 
 // * Object helpers
@@ -193,11 +196,16 @@ func ModifyTableObject(room string, client string, objectId string, data string,
 	}
 	object := tObj.(*TableObject)
 
-	// Check if the holder is the client
-	if object.Holder != client {
-		return ErrObjectDifferentHolder
+	// Prevent object from being modified at the same time
+	object.Mutex.Lock()
+	defer object.Mutex.Unlock()
+
+	// Check if the client is in the modification queue
+	if object.ModificationQueue[0] != client {
+		return ErrObjectNotInQueue
 	}
 
+	// Modify the data and stuff
 	object.Data = data
 	object.Width = width
 	object.Height = height
@@ -224,6 +232,10 @@ func MoveTableObject(room string, client string, objectId string, x, y float64) 
 		return ErrObjectDifferentHolder
 	}
 
+	// Prevent object from being modified at the same time
+	object.Mutex.Lock()
+	defer object.Mutex.Unlock()
+
 	object.LocationX = x
 	object.LocationY = y
 
@@ -244,10 +256,14 @@ func RotateTableObject(room string, client string, objectId string, rotation flo
 	}
 	object := tObj.(*TableObject)
 
-	// Check if the client is actually holding the object
-	if object.Holder != client {
-		return ErrObjectDifferentHolder
+	// Check if the client is in the modification queue
+	if object.ModificationQueue[0] != client {
+		return ErrObjectNotInQueue
 	}
+
+	// Prevent object from being modified at the same time
+	object.Mutex.Lock()
+	defer object.Mutex.Unlock()
 
 	// Change the rotation
 	object.Rotation = rotation
@@ -294,6 +310,12 @@ func SelectTableObject(room string, objectId string, client string) error {
 	if object.Holder != "" {
 		return ErrObjectAlreadyHeld
 	}
+
+	// Prevent object from being modified at the same time
+	object.Mutex.Lock()
+	defer object.Mutex.Unlock()
+
+	// Set the actual holder
 	object.Holder = client
 
 	return nil
@@ -314,8 +336,93 @@ func UnselectTableObject(room string, objectId string, client string) error {
 	}
 	object := tObj.(*TableObject)
 
+	// Prevent object from being modified at the same time
+	object.Mutex.Lock()
+	defer object.Mutex.Unlock()
+
 	// Unselect it
 	object.Holder = ""
+
+	return nil
+}
+
+// Queue a new modification (returns whether the client can modify right away)
+func QueueTableObjectModification(room string, objectId string, client string) (bool, error) {
+	obj, valid := tablesCache.Load(room)
+	if !valid {
+		return false, ErrTableNotFound
+	}
+	table := obj.(*TableData)
+
+	// Load the object
+	tObj, valid := table.Objects.Load(objectId)
+	if !valid {
+		return false, ErrObjectNotFound
+	}
+	object := tObj.(*TableObject)
+
+	// Prevent object from being modified at the same time
+	object.Mutex.Lock()
+	defer object.Mutex.Unlock()
+
+	// Remove all disconnected clients from the queue
+	object.ModificationQueue = slices.DeleteFunc(object.ModificationQueue, func(element string) bool {
+		_, valid := table.Members.Load(client)
+		return !valid
+	})
+
+	// Add a new client to the modification queue
+	object.ModificationQueue = append(object.ModificationQueue, client)
+
+	// Return whether the client is the only one in the queue
+	return len(object.ModificationQueue) == 1, nil
+}
+
+// Get the next client queued for modification (at index 1)
+func NextModifier(room string, objectId string) (string, error) {
+	obj, valid := tablesCache.Load(room)
+	if !valid {
+		return "", ErrTableNotFound
+	}
+	table := obj.(*TableData)
+
+	// Load the object
+	tObj, valid := table.Objects.Load(objectId)
+	if !valid {
+		return "", ErrObjectNotFound
+	}
+	object := tObj.(*TableObject)
+
+	// Check if there is a new client queued for modification
+	if len(object.ModificationQueue) > 0 {
+		return "", nil
+	}
+
+	// Return the next client
+	return object.ModificationQueue[0], nil
+}
+
+// Remove the current client modifying from the queue
+func RemoveFromModificationQueue(room string, objectId string) error {
+	obj, valid := tablesCache.Load(room)
+	if !valid {
+		return ErrTableNotFound
+	}
+	table := obj.(*TableData)
+
+	// Load the object
+	tObj, valid := table.Objects.Load(objectId)
+	if !valid {
+		return ErrObjectNotFound
+	}
+	object := tObj.(*TableObject)
+
+	// Make sure the object isn't modified at the same time
+	object.Mutex.Lock()
+	defer object.Mutex.Unlock()
+
+	// Remove the current modifier at index 0
+	object.ModificationQueue = object.ModificationQueue[1:len(object.ModificationQueue)]
 
 	return nil
 }
