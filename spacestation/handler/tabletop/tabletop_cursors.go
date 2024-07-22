@@ -24,7 +24,7 @@ func moveCursor(ctx pipeshandler.Context) {
 	// Get all the data needed
 	x := ctx.Data["x"].(float64)
 	y := ctx.Data["y"].(float64)
-	member, valid := caching.GetMemberData(ctx.Client.Session, connection.ClientID)
+	member, valid := caching.GetMemberData(ctx.Client.Session, ctx.Client.ID)
 	if !valid {
 		pipeshandler.ErrorResponse(ctx, "server.error")
 		return

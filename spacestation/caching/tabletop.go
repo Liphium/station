@@ -58,7 +58,10 @@ func JoinTable(room string, client string, color float64) error {
 		table = obj.(*TableData)
 	}
 
+	// Make sure the table isn't modified concurrently
 	table.Mutex.Lock()
+	defer table.Mutex.Unlock()
+
 	if _, ok := table.Members.Load(client); ok {
 		return ErrClientAlreadyJoinedTable
 	}
@@ -67,7 +70,6 @@ func JoinTable(room string, client string, color float64) error {
 		Color:  color,
 	})
 	table.MemberCount++
-	table.Mutex.Unlock()
 
 	return nil
 }
@@ -441,14 +443,14 @@ func GetTableObject(room string, objectId string) (*TableObject, bool) {
 	return tObj.(*TableObject), true
 }
 
-func GetMemberData(room string, client string) (*TableMember, bool) {
+func GetMemberData(room string, connId string) (*TableMember, bool) {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
 		return nil, false
 	}
 	table := obj.(*TableData)
 
-	tObj, valid := table.Members.Load(client)
+	tObj, valid := table.Members.Load(connId)
 	if !valid {
 		return nil, false
 	}
