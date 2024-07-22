@@ -19,7 +19,6 @@ var (
 	ErrCouldntCreateTable       = errors.New("tabletop.couldnt_create")
 	ErrObjectNotFound           = errors.New("tabletop.object_not_found")
 	ErrObjectAlreadyHeld        = errors.New("tabletop.object_already_held")
-	ErrObjectDifferentHolder    = errors.New("tabletop.object_different_holder")
 	ErrObjectNotInQueue         = errors.New("tabletop.object_not_in_queue")
 )
 
@@ -231,7 +230,7 @@ func MoveTableObject(room string, client string, objectId string, x, y float64) 
 
 	// Check if the client is actually holding the object
 	if object.Holder != client {
-		return ErrObjectDifferentHolder
+		return ErrObjectAlreadyHeld
 	}
 
 	// Prevent object from being modified at the same time
@@ -396,7 +395,7 @@ func NextModifier(room string, objectId string) (string, error) {
 	object := tObj.(*TableObject)
 
 	// Check if there is a new client queued for modification
-	if len(object.ModificationQueue) > 0 {
+	if len(object.ModificationQueue) == 0 {
 		return "", nil
 	}
 

@@ -351,6 +351,11 @@ func handleNextModification(room string, object string) {
 		return
 	}
 
+	// Return if there is no client
+	if client == "" {
+		return
+	}
+
 	// Send event to inform the client about their modification being allowed
 	err = caching.SSNode.SendClient(client, pipes.Event{
 		Name: "tobj_mqueue_allowed",
