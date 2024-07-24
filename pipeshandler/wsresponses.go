@@ -8,25 +8,25 @@ import (
 )
 
 func NormalResponse(ctx Context, data map[string]interface{}) {
-	Response(ctx.Client, ctx.Action, data, ctx.Instance)
+	Response(ctx, data, ctx.Instance)
 }
 
-func Response(client *Client, action string, data map[string]interface{}, instance *Instance) {
-	instance.SendEventToOne(client, pipes.Event{
-		Name: action,
+func Response(ctx Context, data map[string]interface{}, instance *Instance) {
+	instance.SendEventToOne(ctx.Client, pipes.Event{
+		Name: "res:" + ctx.ResponseId,
 		Data: data,
 	})
 }
 
 func SuccessResponse(ctx Context) {
-	Response(ctx.Client, ctx.Action, map[string]interface{}{
+	Response(ctx, map[string]interface{}{
 		"success": true,
 		"message": "",
 	}, ctx.Instance)
 }
 
 func StatusResponse(ctx Context, status string) {
-	Response(ctx.Client, ctx.Action, map[string]interface{}{
+	Response(ctx, map[string]interface{}{
 		"success": true,
 		"message": status,
 	}, ctx.Instance)
@@ -39,7 +39,7 @@ func ErrorResponse(ctx Context, err string) {
 		debug.PrintStack()
 	}
 
-	Response(ctx.Client, ctx.Action, map[string]interface{}{
+	Response(ctx, map[string]interface{}{
 		"success": false,
 		"message": err,
 	}, ctx.Instance)

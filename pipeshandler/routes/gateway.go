@@ -165,13 +165,20 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 			return
 		}
 
+		// Extract the response id from the message
+		args := strings.Split(message.Action, ":")
+		if len(args) != 2 {
+			return
+		}
+
 		// Handle the action
 		if !instance.Handle(pipeshandler.Context{
-			Client:   client,
-			Data:     message.Data,
-			Action:   message.Action,
-			Node:     local,
-			Instance: instance,
+			Client:     client,
+			Data:       message.Data,
+			Action:     args[0],
+			ResponseId: args[1],
+			Node:       local,
+			Instance:   instance,
 		}) {
 			instance.ReportClientError(client, "couldn't handle action", errors.New(message.Action))
 			return

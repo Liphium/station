@@ -3,6 +3,7 @@ package tabletop_handlers
 import (
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/spacestation/caching"
+	"github.com/Liphium/station/spacestation/util"
 )
 
 func SetupHandler() {
@@ -15,9 +16,11 @@ func SetupHandler() {
 	caching.SSInstance.RegisterHandler("tobj_create", createObject)
 	caching.SSInstance.RegisterHandler("tobj_delete", deleteObject)
 	caching.SSInstance.RegisterHandler("tobj_select", selectObject)
+	caching.SSInstance.RegisterHandler("tobj_unselect", unselectObject)
 	caching.SSInstance.RegisterHandler("tobj_modify", modifyObject)
 	caching.SSInstance.RegisterHandler("tobj_move", moveObject)
 	caching.SSInstance.RegisterHandler("tobj_rotate", rotateObject)
+	caching.SSInstance.RegisterHandler("tobj_mqueue", queueModificationToObject)
 
 	// Table cursor sending
 	caching.SSInstance.RegisterHandler("tc_move", moveCursor)
@@ -25,14 +28,15 @@ func SetupHandler() {
 
 // Send an event to all table members
 func SendEventToMembers(room string, event pipes.Event) bool {
-	valid, members := caching.TableMembers(room)
-	if !valid {
-		return false
-	}
-
-	return caching.SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
-		Channel: pipes.BroadcastChannel(members),
-		Local:   true,
-		Event:   event,
-	}) == nil
+	valid := caching.RangeOverTableMembers(room, func(tm *caching.TableMember) bool {
+		if err := caching.SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
+			Channel: pipes.BroadcastChannel([]string{tm.Client}),
+			Local:   true,
+			Event:   event,
+		}); err != nil {
+			util.Log.Println("error during event sending to tabletop members:", err)
+		}
+		return true
+	})
+	return valid
 }

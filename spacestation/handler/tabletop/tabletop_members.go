@@ -10,7 +10,13 @@ import (
 // Action: table_join
 func joinTable(ctx pipeshandler.Context) {
 
-	err := caching.JoinTable(ctx.Client.Session, ctx.Client.ID)
+	if ctx.ValidateForm("color") {
+		pipeshandler.ErrorResponse(ctx, "invalid")
+		return
+	}
+	color := ctx.Data["color"].(float64)
+
+	err := caching.JoinTable(ctx.Client.Session, ctx.Client.ID, color)
 	if err != nil {
 		util.Log.Println("Couldn't join table of room", ctx.Client.Session, ":", err.Error())
 		pipeshandler.ErrorResponse(ctx, "server.error")
