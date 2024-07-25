@@ -7,7 +7,6 @@ import (
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
-	"github.com/Liphium/station/spacestation/server"
 	"github.com/Liphium/station/spacestation/util"
 	"github.com/livekit/protocol/auth"
 	"github.com/livekit/protocol/livekit"
@@ -37,7 +36,7 @@ func setup(ctx pipeshandler.Context) {
 	}
 
 	// Check if livekit room already exists
-	rooms, err := server.RoomClient.ListRooms(context.Background(), &livekit.ListRoomsRequest{
+	rooms, err := caching.RoomClient.ListRooms(context.Background(), &livekit.ListRoomsRequest{
 		Names: []string{ctx.Client.Session},
 	})
 	if err != nil {
@@ -48,11 +47,11 @@ func setup(ctx pipeshandler.Context) {
 	if len(rooms.Rooms) > 0 {
 
 		// Generate livekit token
-		token := server.RoomClient.CreateToken()
+		token := caching.RoomClient.CreateToken()
 		token.AddGrant(&auth.VideoGrant{
 			RoomJoin:          true,
 			Room:              ctx.Client.Session,
-			CanPublishSources: []string{"microphone", "camera"},
+			CanPublishSources: []string{"camera", "microphone", "screenshare"},
 		})
 		token.SetIdentity(connection.ClientID)
 
@@ -75,7 +74,7 @@ func setup(ctx pipeshandler.Context) {
 
 	util.Log.Println("creating new room for", ctx.Client.Session)
 
-	_, err = server.RoomClient.CreateRoom(context.Background(), &livekit.CreateRoomRequest{
+	_, err = caching.RoomClient.CreateRoom(context.Background(), &livekit.CreateRoomRequest{
 		Name:            ctx.Client.Session,
 		EmptyTimeout:    120,
 		MaxParticipants: 100,
@@ -86,7 +85,7 @@ func setup(ctx pipeshandler.Context) {
 	}
 
 	// Generate livekit token
-	token := server.RoomClient.CreateToken()
+	token := caching.RoomClient.CreateToken()
 	token.AddGrant(&auth.VideoGrant{
 		RoomJoin: true,
 		Room:     ctx.Client.Session,
