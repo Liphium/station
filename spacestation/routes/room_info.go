@@ -22,7 +22,7 @@ func roomInfo(c *fiber.Ctx) error {
 	room, validRoom := caching.GetRoom(req.Room)
 	members, valid := caching.GetAllConnections(req.Room)
 	if !valid || !validRoom {
-		return integration.InvalidRequest(c, "invalid room")
+		return integration.FailedRequest(c, "not.found", nil)
 	}
 
 	returnableMembers := make([]string, len(members))
