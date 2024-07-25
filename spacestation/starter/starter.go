@@ -14,7 +14,6 @@ import (
 	"github.com/Liphium/station/spacestation/caching/games/launcher"
 	"github.com/Liphium/station/spacestation/handler"
 	"github.com/Liphium/station/spacestation/routes"
-	"github.com/Liphium/station/spacestation/server"
 	"github.com/Liphium/station/spacestation/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -34,7 +33,7 @@ func Start() {
 		return
 	}
 
-	server.InitLiveKit()
+	caching.InitLiveKit()
 
 	launcher.InitGames()
 	util.Log.Println("Starting..")

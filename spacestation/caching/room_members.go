@@ -1,10 +1,12 @@
 package caching
 
 import (
+	"context"
 	"net"
 
 	"github.com/Liphium/station/spacestation/util"
 	"github.com/dgraph-io/ristretto"
+	"github.com/livekit/protocol/livekit"
 )
 
 type RoomConnection struct {
@@ -171,6 +173,15 @@ func RemoveMember(roomID string, connectionId string) bool {
 
 	if len(connections) == 0 {
 		DeleteRoom(roomID)
+
+		// Also delete livekit room
+		_, err := RoomClient.DeleteRoom(context.Background(), &livekit.DeleteRoomRequest{
+			Room: room.ID,
+		})
+		if err != nil {
+			util.Log.Println("couldn't close livekit room:", err)
+		}
+
 		return true
 	}
 
@@ -178,6 +189,22 @@ func RemoveMember(roomID string, connectionId string) bool {
 	roomConnectionsCache.Set(roomID, connections, 1)
 	roomConnectionsCache.Wait()
 	room.Mutex.Unlock()
+
+	// Get connection (for removing from the livekit room)
+	conn, valid := GetConnection(connectionId)
+	if !valid {
+		util.Log.Println("couldn't get connection during room deletion")
+		return true
+	}
+
+	// Remove the member from the livekit room
+	_, err := RoomClient.RemoveParticipant(context.Background(), &livekit.RoomParticipantIdentity{
+		Room:     room.ID,
+		Identity: conn.ClientID,
+	})
+	if err != nil {
+		util.Log.Println("couldn't remove member from livekit room:", err)
+	}
 
 	return true
 }
