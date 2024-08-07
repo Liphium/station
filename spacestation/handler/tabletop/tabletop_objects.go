@@ -281,7 +281,7 @@ func rotateObject(ctx pipeshandler.Context) {
 	// Rotate the object and return an error (only if one is there)
 	err := caching.RotateTableObject(ctx.Client.Session, connection.ClientID, objectId, rotation)
 	if err != nil {
-		pipeshandler.ErrorResponse(ctx, "server.error")
+		pipeshandler.ErrorResponse(ctx, err.Error())
 		return
 	}
 
