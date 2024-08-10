@@ -31,7 +31,7 @@ func (t *Transaction) ChunkFilePath(chunk int64) string {
 }
 
 func (t *Transaction) ChunkFileName(chunk int64) string {
-	return fmt.Sprintf("chunk_%d", chunk)
+	return fmt.Sprintf("chunk_%d.ch", chunk)
 }
 
 type TransactionReceiver struct {
@@ -51,7 +51,7 @@ type SendRange struct {
 }
 
 const ChunksAhead = 10
-const ChunkSize = 512 * 1024 // 512KB
+const ChunkSize = 516 * 1024 // 516KB (actual chunk is 512KB, but there may be additional headers for encryption)
 
 // SessionId -> Transaction ID
 var userTransactions sync.Map = sync.Map{}

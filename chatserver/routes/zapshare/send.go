@@ -26,15 +26,18 @@ func sendFilePart(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "invalid token")
 	}
 
+	// Get the file from the form
 	file, err := c.FormFile("part")
 	if err != nil {
 		return integration.InvalidRequest(c, "no file")
 	}
 
+	// Make sure the file isn't too small
 	if file.Size > zapshare.ChunkSize {
 		return integration.InvalidRequest(c, "file too large")
 	}
 
+	// Make sure there aren't any file path things in the filename that could cause weird issues
 	if strings.Contains(file.Filename, "/") || strings.Contains(file.Filename, "\\") {
 		return integration.InvalidRequest(c, "invalid filename")
 	}
@@ -54,7 +57,7 @@ func sendFilePart(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "wrong chunk index")
 	}
 
-	if err := c.SaveFile(file, transaction.VolumePath+file.Filename); err != nil {
+	if err := c.SaveFile(file, transaction.VolumePath+"chunk_"+chunkStr+".ch"); err != nil {
 		return integration.InvalidRequest(c, "failed to save file")
 	}
 
