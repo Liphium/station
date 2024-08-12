@@ -1,9 +1,12 @@
 package zapshare_routes
 
 import (
+	"errors"
+	"log"
 	"strconv"
 	"strings"
 
+	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/chatserver/zapshare"
 	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
@@ -33,7 +36,7 @@ func sendFilePart(c *fiber.Ctx) error {
 	}
 
 	// Make sure the file isn't too small
-	if file.Size > zapshare.ChunkSize {
+	if file.Size > zapshare.MaxChunkSize {
 		return integration.InvalidRequest(c, "file too large")
 	}
 
@@ -57,13 +60,32 @@ func sendFilePart(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "wrong chunk index")
 	}
 
-	if err := c.SaveFile(file, transaction.VolumePath+"chunk_"+chunkStr+".ch"); err != nil {
-		return integration.InvalidRequest(c, "failed to save file")
+	// Get file from the multipart header
+	handle, err := file.Open()
+	if err != nil {
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
+	defer handle.Close()
+
+	// Extract the bytes from it
+	bytes := make([]byte, file.Size)
+	size, err := handle.Read(bytes)
+	log.Println(size, "read")
+	if err != nil {
+		return integration.FailedRequest(c, localization.ErrorServer, err)
+	}
+
+	// Check if the size read is the same as the actual file size
+	if size != int(file.Size) {
+		return integration.FailedRequest(c, localization.ErrorServer, errors.New("couldn't read the full chunk, maybe better logic is required?"))
+	}
+
+	// Add the chunk to the file parts cache
+	transaction.FileParts.Store(chunk, &bytes)
 
 	if err := transaction.PartUploaded(chunk); err != nil {
 		return integration.InvalidRequest(c, "failed to update transaction")
 	}
 
-	return nil
+	return integration.SuccessfulRequest(c)
 }

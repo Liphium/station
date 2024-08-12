@@ -3,9 +3,7 @@ package zapshare
 import (
 	"errors"
 	"math"
-	"os"
 	"sync"
-	"time"
 
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/util"
@@ -83,26 +81,8 @@ func (t *Transaction) PartReceived(receiverId string) (bool, error) {
 
 	// TODO: Compute if the part can actually be deleted
 
-	//* Try to open the file first maybe??
-
-	// Delete the part (it retries it because windows sometimes blocks deletion, thanks microsoft)
-	go func() {
-		// This comment is a thanks to Microsoft because of how beautiful their operating system is!
-		// To make this deletion right here work on Windows, we need a seperate goroutine because the fucking file
-		// system is too stupid to detect that the file is actually not being used anymore at this point!! How fun!!
-		// On any other operating system (Linux) this wouldn't happen and that's why I love Microsoft so much and I especially
-		// thank them for me being able to spend like 5 hours today (10.08.2024) and yesterday debugging this issue because
-		// it works flawlessly on my server. THANKS
-		var err error
-		tries := 0
-		for (err != nil || tries == 0) && tries <= 5 {
-			tries++
-			err = os.Remove(t.ChunkFilePath(t.CurrentIndex))
-			if err != nil {
-				time.Sleep(time.Second * 5)
-			}
-		}
-	}()
+	// Delete the current part
+	t.FileParts.Delete(t.CurrentIndex)
 
 	obj, ok := t.ReceiversCache.Load(receiverId)
 	if !ok {
