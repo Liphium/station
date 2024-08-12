@@ -36,7 +36,7 @@ func subscribe(ctx pipeshandler.Context) {
 		return
 	}
 
-	statusctx := ctx.Data["status"].(string)
+	statusCtx := ctx.Data["status"].(string)
 	convInfo := make(map[string]conversationInfo, len(conversationTokens))
 	adapters := make([]string, len(conversationTokens))
 	for _, token := range conversationTokens {
@@ -68,17 +68,22 @@ func subscribe(ctx pipeshandler.Context) {
 			}
 		}
 
-		// Send the subscription event
-		caching.CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
-			Channel: pipes.Conversation(memberIds, memberNodes),
-			Event: pipes.Event{
-				Name: "acc_st",
-				Data: map[string]interface{}{
-					"st": statusctx,
-					"d":  "",
+		// Only send status to private messages
+		if len(members[token.Conversation]) == 2 {
+			// Send the subscription event
+			caching.CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
+				Channel: pipes.Conversation(memberIds, memberNodes),
+				Event: pipes.Event{
+					Name: "acc_st",
+					Data: map[string]interface{}{
+						"c":  token.Conversation,
+						"o":  token.ID,
+						"st": statusCtx,
+						"d":  "",
+					},
 				},
-			},
-		})
+			})
+		}
 
 		// Get the notification count of the current conversation
 		var notificationCount int64
