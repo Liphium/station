@@ -30,6 +30,10 @@ func receivedChunk(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "invalid id or token")
 	}
 
+	if transaction.Token != req.Token {
+		return integration.InvalidRequest(c, "invalid token")
+	}
+
 	finished, err := transaction.PartReceived(req.Receiver)
 	if err != nil {
 		return integration.InvalidRequest(c, fmt.Sprint("invalid receiver: ", err))

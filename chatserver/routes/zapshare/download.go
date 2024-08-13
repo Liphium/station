@@ -31,5 +31,12 @@ func downloadChunk(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "invalid token")
 	}
 
-	return c.SendFile(transaction.ChunkFilePath(int64(chunk)))
+	// Get the chunk file
+	obj, valid := transaction.FileParts.Load(int64(chunk))
+	if !valid {
+		return c.SendStatus(fiber.StatusNotFound)
+	}
+	bytes := obj.(*[]byte)
+
+	return c.Send(*bytes)
 }

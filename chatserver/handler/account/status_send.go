@@ -51,17 +51,17 @@ func sendStatus(ctx pipeshandler.Context) {
 		// Send the subscription event
 		caching.CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
 			Channel: pipes.Conversation(memberIds, memberNodes),
-			Event:   statusEvent(statusMessage, data, token.Conversation, token.ID, ""),
+			Event:   StatusEvent(statusMessage, data, token.Conversation, token.ID, ""),
 		})
 	}
 
 	// Send the status to other devices
-	caching.CSNode.SendClient(ctx.Client.ID, statusEvent(statusMessage, data, "", ctx.Client.ID, ":o"))
+	caching.CSNode.SendClient(ctx.Client.ID, StatusEvent(statusMessage, data, "", ctx.Client.ID, ":o"))
 
 	pipeshandler.SuccessResponse(ctx)
 }
 
-func statusEvent(st string, data string, conversation string, ownToken string, suffix string) pipes.Event {
+func StatusEvent(st string, data string, conversation string, ownToken string, suffix string) pipes.Event {
 	return pipes.Event{
 		Name: "acc_st" + suffix,
 		Data: map[string]interface{}{

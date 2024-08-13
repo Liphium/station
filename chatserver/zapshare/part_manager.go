@@ -3,7 +3,6 @@ package zapshare
 import (
 	"errors"
 	"math"
-	"os"
 	"sync"
 
 	"github.com/Liphium/station/chatserver/caching"
@@ -82,10 +81,8 @@ func (t *Transaction) PartReceived(receiverId string) (bool, error) {
 
 	// TODO: Compute if the part can actually be deleted
 
-	// Delete the part
-	if err := os.Remove(t.ChunkFilePath(t.CurrentIndex)); err != nil {
-		return false, err
-	}
+	// Delete the current part
+	t.FileParts.Delete(t.CurrentIndex)
 
 	obj, ok := t.ReceiversCache.Load(receiverId)
 	if !ok {

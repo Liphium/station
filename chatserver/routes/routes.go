@@ -12,6 +12,7 @@ import (
 	"github.com/Liphium/station/chatserver/routes/ping"
 	zapshare_routes "github.com/Liphium/station/chatserver/routes/zapshare"
 	"github.com/Liphium/station/chatserver/util"
+	"github.com/Liphium/station/chatserver/zapshare"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
@@ -154,6 +155,9 @@ func setupPipesFiber(router fiber.Router) {
 			if err != nil {
 				util.Log.Println("COULDN'T DELETE ADAPTERS:", err.Error())
 			}
+
+			// Cancel all zap transactions
+			zapshare.CancelTransactionByAccount(client.ID)
 
 			// Tell the backend that someone disconnected
 			nodeData := integration.Nodes[integration.IdentifierChatNode]

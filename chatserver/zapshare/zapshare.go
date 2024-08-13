@@ -1,10 +1,8 @@
 package zapshare
 
 import (
-	"fmt"
 	"log"
 	"math"
-	"os"
 	"sync"
 
 	"github.com/Liphium/station/chatserver/caching"
@@ -16,22 +14,14 @@ type Transaction struct {
 	Id               string
 	UploadToken      string // Required to upload the file
 	Token            string // Required to join the transaction
-	VolumePath       string
 	Account          string
 	FileName         string
 	PriorityReceiver string
 	FileSize         int64
 	CurrentIndex     int64
 	Range            SendRange
-	ReceiversCache   sync.Map
-}
-
-func (t *Transaction) ChunkFilePath(chunk int64) string {
-	return fmt.Sprintf("%s%s", t.VolumePath, t.ChunkFileName(chunk))
-}
-
-func (t *Transaction) ChunkFileName(chunk int64) string {
-	return fmt.Sprintf("chunk_%d", chunk)
+	ReceiversCache   *sync.Map
+	FileParts        *sync.Map // Chunk id -> file part
 }
 
 type TransactionReceiver struct {
@@ -51,7 +41,8 @@ type SendRange struct {
 }
 
 const ChunksAhead = 10
-const ChunkSize = 512 * 1024 // 512KB
+const ChunkSize = 512 * 1024            // 512 KB
+const MaxChunkSize = ChunkSize + 4*1024 // 516 KB (actual chunk is 512KB, but there are additional headers for encryption)
 
 // SessionId -> Transaction ID
 var userTransactions sync.Map = sync.Map{}
@@ -77,23 +68,18 @@ func NewTransaction(account string, fileName string, fileSize int64) (*Transacti
 	// Compute values
 	endIndex := int64(math.Ceil(float64(fileSize) / float64(ChunkSize)))
 	log.Println("End index:", endIndex)
-	path := os.Getenv("CN_LS_REPO") + "/" + id + "/"
-	err := os.MkdirAll(path, os.ModePerm)
-	if err != nil {
-		return nil, false
-	}
 
 	transaction := &Transaction{
 		Id:             id,
 		UploadToken:    util.GenerateToken(50),
 		Token:          util.GenerateToken(50),
-		VolumePath:     path,
 		Account:        account,
 		FileName:       fileName,
 		FileSize:       fileSize,
 		CurrentIndex:   1,
 		Range:          SendRange{StartIndex: 1, EndIndex: endIndex},
-		ReceiversCache: sync.Map{},
+		ReceiversCache: &sync.Map{},
+		FileParts:      &sync.Map{},
 	}
 	transactionsCache.Store(id, transaction)
 	userTransactions.Store(account, id)
@@ -135,16 +121,6 @@ func CancelTransaction(id string) {
 	// Delete the transaction from the cache
 	transactionsCache.Delete(id)
 	userTransactions.Delete(transaction.Account)
-
-	// Delete the transaction directory
-	err := os.RemoveAll(transaction.VolumePath)
-	if err != nil {
-		log.Println("Error while removing contents of transaction directory:", err)
-	}
-	err = os.Remove(transaction.VolumePath)
-	if err != nil {
-		log.Println("Error while removing transaction directory:", err)
-	}
 
 	// Inform the sender
 	caching.CSNode.SendClient(transaction.Account, pipes.Event{
