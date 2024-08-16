@@ -8,7 +8,7 @@ import (
 )
 
 type listRequest struct {
-	Tag string `json:"tag"`
+	Page int `json:"page"`
 }
 
 // Route: /account/files/list
@@ -19,24 +19,31 @@ func listFiles(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
+	// Check if the page is valid
+	if req.Page < 0 {
+		return util.InvalidRequest(c)
+	}
+
 	accId, valid := util.GetAcc(c)
 	if !valid {
 		return util.InvalidRequest(c)
 	}
 
-	// Check if the tag is valid
-	if len(req.Tag) > 100 {
-		return util.InvalidRequest(c)
-	}
-
 	// Get files
 	var files []account.CloudFile
-	if database.DBConn.Where("account = ? AND tag = ?", accId, req.Tag).Limit(40).Find(&[]account.CloudFile{}).Error != nil {
+	if database.DBConn.Where("account = ?", accId).Order("created_at").Offset(20*req.Page).Limit(20).Find(&files).Error != nil {
+		return util.FailedRequest(c, "server.error", nil)
+	}
+
+	// Count files to calculate amount of pages and stuff (on the client)
+	var count int64
+	if database.DBConn.Model(&account.CloudFile{}).Where("account = ?", accId).Count(&count).Error != nil {
 		return util.FailedRequest(c, "server.error", nil)
 	}
 
 	return util.ReturnJSON(c, fiber.Map{
 		"success": true,
-		"file":    files,
+		"files":   files,
+		"count":   count,
 	})
 }

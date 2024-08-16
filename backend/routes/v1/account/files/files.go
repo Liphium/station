@@ -102,6 +102,7 @@ func Authorized(router fiber.Router) {
 	router.Post("/list", listFiles)
 	router.Post("/change_tag", changeFileTag)
 	router.Post("/info", fileInfo)
+	router.Post("/storage", getStorageUsage)
 }
 
 func CountTotalStorage(accId uuid.UUID) (int64, error) {

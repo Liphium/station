@@ -40,6 +40,7 @@ func startLogin(c *fiber.Ctx) error {
 		return util.FailedRequest(c, "email.invalid", nil)
 	}
 
+	// Check if there are available sessions
 	valid, err := checkSessions(acc.ID)
 	if err != nil {
 		return util.FailedRequest(c, err.Error(), nil)
