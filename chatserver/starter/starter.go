@@ -86,7 +86,7 @@ func Start(routine bool) {
 		return true
 	})
 
-	pipes.DebugLogs = false // TODO: Replace in production
+	pipes.DebugLogs = true // TODO: Replace in production
 	// Start on localhost
 	if routine {
 		go app.Listen(fmt.Sprintf("%s:%d", os.Getenv("LISTEN"), port))
