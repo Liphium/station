@@ -2,6 +2,7 @@ package pipeshandler
 
 import (
 	"errors"
+	"log"
 	"sync"
 	"time"
 
@@ -33,9 +34,11 @@ func (instance *Instance) SendEventToOne(c *Client, event pipes.Event) error {
 		c.Mutex = &sync.Mutex{}
 	}
 
+	log.Println("waiting for mutex")
 	c.Mutex.Lock()
+	defer c.Mutex.Unlock()
+	log.Println("mutex unlocked")
 	err = instance.SendMessage(c.Conn, c, msg)
-	c.Mutex.Unlock()
 	return err
 }
 
