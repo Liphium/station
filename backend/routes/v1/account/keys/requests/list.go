@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/Liphium/station/backend/database"
+	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/gofiber/fiber/v2"
@@ -25,9 +26,27 @@ func list(c *fiber.Ctx) error {
 		return util.FailedRequest(c, util.ErrorServer, err)
 	}
 
+	// Check if they are still valid
+	var validRequests = []properties.KeyRequest{}
+	for _, request := range requests {
+
+		// Check if the session still exists
+		if err := database.DBConn.Where("account = ? AND id = ?", request.Account, request.Session).Take(&account.Session{}).Error; err != nil {
+
+			// Delete the request if the session doesn't exist anymore
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				database.DBConn.Delete(&request)
+				continue
+			}
+		}
+
+		// Append to the final list
+		validRequests = append(validRequests, request)
+	}
+
 	// Return the requests as JSON
 	return util.ReturnJSON(c, fiber.Map{
 		"success":  true,
-		"requests": requests,
+		"requests": validRequests,
 	})
 }

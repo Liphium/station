@@ -30,12 +30,12 @@ func refreshSession(c *fiber.Ctx) error {
 	// Check if session is valid
 	var session account.Session
 	if !requests.GetSession(req.Session, &session) {
-		return util.InvalidRequest(c)
+		return util.FailedRequest(c, "not.valid", nil)
 	}
 
 	// Check if the session token matches the request
 	if session.Token != req.Token {
-		return util.InvalidRequest(c)
+		return util.FailedRequest(c, "not.valid", nil)
 	}
 
 	// Check if the session is verified
