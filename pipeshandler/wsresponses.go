@@ -13,7 +13,7 @@ func NormalResponse(ctx Context, data map[string]interface{}) {
 
 func Response(ctx Context, data map[string]interface{}, instance *Instance) {
 	instance.SendEventToOne(ctx.Client, pipes.Event{
-		Name: "res:" + ctx.ResponseId,
+		Name: "res:" + ctx.Action + ":" + ctx.ResponseId,
 		Data: data,
 	})
 }
