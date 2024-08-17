@@ -2,7 +2,6 @@ package pipeshandler
 
 import (
 	"errors"
-	"log"
 	"sync"
 	"time"
 
@@ -30,15 +29,7 @@ func (instance *Instance) SendEventToOne(c *Client, event pipes.Event) error {
 		return err
 	}
 
-	if c.Mutex == nil {
-		c.Mutex = &sync.Mutex{}
-	}
-
-	log.Println("waiting for mutex")
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
-	log.Println("mutex unlocked")
-	err = instance.SendMessage(c.Conn, c, msg)
+	err = instance.SendMessage(c, msg)
 	return err
 }
 
@@ -171,7 +162,7 @@ func (instance *Instance) Send(id string, msg []byte) {
 			continue
 		}
 
-		instance.SendMessage(client.Conn, client, msg)
+		instance.SendMessage(client, msg)
 	}
 }
 
@@ -181,18 +172,27 @@ func (instance *Instance) SendSession(id string, session string, msg []byte) boo
 		return false
 	}
 
-	instance.SendMessage(client.Conn, client, msg)
+	instance.SendMessage(client, msg)
 	return true
 }
 
-func (instance *Instance) SendMessage(conn *websocket.Conn, client *Client, msg []byte) error {
+func (instance *Instance) SendMessage(client *Client, msg []byte) error {
 
 	msg, err := instance.Config.ClientEncodingMiddleware(client, instance, msg)
 	if err != nil {
 		return err
 	}
 
-	return conn.WriteMessage(websocket.BinaryMessage, msg)
+	// Make sure there are no concurrent writes
+	if client.Mutex == nil {
+		client.Mutex = &sync.Mutex{}
+	}
+
+	// Lock and unlock mutex after writing
+	client.Mutex.Lock()
+	defer client.Mutex.Unlock()
+
+	return client.Conn.WriteMessage(websocket.BinaryMessage, msg)
 }
 
 func (instance *Instance) ExistsConnection(id string, session string) bool {
