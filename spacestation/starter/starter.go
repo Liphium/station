@@ -83,7 +83,7 @@ func Start() {
 
 	util.Log.Println("Encryption is working properly!")
 
-	pipes.DebugLogs = true
+	pipes.DebugLogs = false
 
 	// Create testing room
 	if integration.Testing {
