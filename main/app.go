@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/app"
@@ -81,6 +82,10 @@ func main() {
 		}
 		printWithPrefix("Created default spaces app")
 	}
+
+	// Start default nodes (spaces and chat)
+	time.Sleep(time.Millisecond * 500)
+	printWithPrefix("Starting default nodes..")
 
 	os.Setenv("CHAT_APP", "1")
 	os.Setenv("SPACES_APP", "2")

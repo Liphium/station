@@ -108,14 +108,8 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 					}
 
 					// Send message encoded with client encoding middleware
-					msg, err := instance.Config.ClientEncodingMiddleware(client, instance, c.Message)
-					if err != nil {
-						instance.ReportClientError(client, "couldn't encode received message", err)
-						return err
-					}
-
 					pipeshutil.Log.Println("sending "+c.Event.Name, "to", tk.Account)
-					if err := client.Conn.WriteMessage(websocket.BinaryMessage, msg); err != nil {
+					if err := instance.SendMessage(client, c.Message); err != nil {
 						instance.ReportClientError(client, "couldn't send received message", err)
 						return err
 					}

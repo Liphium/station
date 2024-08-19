@@ -1,6 +1,7 @@
 package pipeshandler
 
 import (
+	"log"
 	"runtime/debug"
 
 	"github.com/Liphium/station/pipes"
@@ -12,10 +13,13 @@ func NormalResponse(ctx Context, data map[string]interface{}) {
 }
 
 func Response(ctx Context, data map[string]interface{}, instance *Instance) {
-	instance.SendEventToOne(ctx.Client, pipes.Event{
-		Name: "res:" + ctx.ResponseId,
+	err := instance.SendEventToOne(ctx.Client, pipes.Event{
+		Name: "res:" + ctx.Action + ":" + ctx.ResponseId,
 		Data: data,
 	})
+	if err != nil {
+		log.Println("error while sending response to", ctx.Action, ":", err.Error())
+	}
 }
 
 func SuccessResponse(ctx Context) {
