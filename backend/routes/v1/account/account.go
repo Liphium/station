@@ -23,6 +23,7 @@ func Unauthorized(router fiber.Router) {
 	router.Route("/rank", rank.Unauthorized)
 	router.Route("/stored_actions", stored_actions.Unauthorized)
 
+	router.Post("/get", getAccount)
 	router.Post("/get_node", getAccountNode)
 }
 
@@ -37,5 +38,5 @@ func Authorized(router fiber.Router) {
 	router.Route("/settings", settings_routes.Authorized)
 
 	router.Post("/me", me)
-	router.Post("/get", getAccount)
+	router.Post("/get_name", getAccountByUsername)
 }

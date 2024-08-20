@@ -23,7 +23,7 @@ func getAccount(c *fiber.Ctx) error {
 
 	// Get account
 	var acc account.Account
-	if err := database.DBConn.Select("username", "tag").Where("id = ?", req.ID).Take(&acc).Error; err != nil {
+	if err := database.DBConn.Select("username", "display_name").Where("id = ?", req.ID).Take(&acc).Error; err != nil {
 		return util.FailedRequest(c, "server.error", err)
 	}
 
