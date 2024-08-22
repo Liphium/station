@@ -24,7 +24,7 @@ func Start(routine bool) {
 	util.Log.SetOutput(os.Stdout)
 
 	// Setting up the node
-	if !integration.Setup(integration.IdentifierChatNode) {
+	if !integration.Setup(integration.IdentifierChatNode, !routine) {
 		return
 	}
 

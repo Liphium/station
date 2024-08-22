@@ -28,10 +28,13 @@ func Startup(routine bool) {
 
 	util.TestAES()
 
-	// Load environment variables
-	err := godotenv.Load()
-	if err != nil {
-		util.Log.Fatal("Error loading .env file")
+	// Load environment variables (don't if isolated cause not needed)
+	var err error
+	if !routine {
+		err = godotenv.Load()
+		if err != nil {
+			util.Log.Fatal("Error loading .env file")
+		}
 	}
 	util.JWT_SECRET = os.Getenv("JWT_SECRET")
 

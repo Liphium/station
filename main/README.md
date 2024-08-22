@@ -59,9 +59,6 @@ CN_DB_DATABASE = "chat"
 CN_DB_HOST = "localhost"
 CN_DB_PORT = "5432"
 
-# Live share (choose some path that exists)
-CN_LS_REPO = "/home/julian/Documents/repo/ls"
-
 
 # SPACE STATION CONFIGURATION
 

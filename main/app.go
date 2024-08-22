@@ -19,9 +19,19 @@ import (
 
 func main() {
 
-	if godotenv.Load() != nil {
-		printWithPrefix("No .env file found")
-		return
+	// Check if there is an extra environment file given
+	if len(os.Args) == 1 {
+		// Load environment variables from default location
+		if godotenv.Load() != nil {
+			printWithPrefix("No .env file found")
+			return
+		}
+	} else {
+		// Load environment variables from specified location
+		if godotenv.Load(os.Args[1]) != nil {
+			printWithPrefix("Specified file " + os.Args[1] + " not found")
+			return
+		}
 	}
 
 	printWithPrefix("Starting Liphium station..")
@@ -36,8 +46,8 @@ func main() {
 		}
 
 		printWithPrefix("Please set the following environment variables in your .env file:")
-		printWithPrefix("TC_PUBLIC_KEY=" + pub)
-		printWithPrefix("TC_PRIVATE_KEY=" + priv)
+		printWithPrefix("TC_PUBLIC_KEY=\"" + pub + "\"")
+		printWithPrefix("TC_PRIVATE_KEY=\"" + priv + "\"")
 
 		return
 	}
@@ -45,7 +55,7 @@ func main() {
 	// Check if a system uuid is set
 	if os.Getenv("SYSTEM_UUID") == "" {
 		printWithPrefix("Please set the following environment variables in your .env file:")
-		printWithPrefix("SYSTEM_UUID=" + uuid.New().String())
+		printWithPrefix("SYSTEM_UUID=\"" + uuid.New().String() + "\"")
 
 		return
 	}
@@ -143,7 +153,7 @@ func main() {
 
 	// Start space station
 	printWithPrefix("Starting space station..")
-	spacestation_starter.Start()
+	spacestation_starter.Start(false)
 }
 
 func printWithPrefix(s string) {

@@ -29,13 +29,16 @@ const IdentifierSpaceNode = "space"
 
 var Nodes map[string]NodeData = make(map[string]NodeData)
 
-func Setup(identifier string) bool {
+func Setup(identifier string, loadEnv bool) bool {
 
 	// Setup environment
-	err := godotenv.Load()
-	if err != nil {
-		Log.Println("Error loading .env file")
-		return false
+	var err error
+	if loadEnv {
+		err = godotenv.Load()
+		if err != nil {
+			Log.Println("Error loading .env file")
+			return false
+		}
 	}
 
 	if os.Getenv("PROTOCOL") == "" {

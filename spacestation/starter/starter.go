@@ -20,7 +20,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
-func Start() {
+func Start(loadEnv bool) {
 
 	// Setup memory
 	caching.SetupMemory()
@@ -29,7 +29,7 @@ func Start() {
 	app.Use(cors.New())
 	app.Use(logger.New())
 
-	if !integration.Setup(integration.IdentifierSpaceNode) {
+	if !integration.Setup(integration.IdentifierSpaceNode, loadEnv) {
 		return
 	}
 
