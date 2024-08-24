@@ -1,6 +1,8 @@
 package conversation_routes
 
 import (
+	"os"
+
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/util"
@@ -52,13 +54,15 @@ func openConversation(c *fiber.Ctx) error {
 		}
 	}
 
-	// Create conversation
+	// Determine the conversation type
 	convType := conversations.TypePrivateMessage
 	if len(req.Members) > 1 {
 		convType = conversations.TypeGroup
 	}
+
+	// Generate the address for the conversation
 	conv := conversations.Conversation{
-		ID:      util.GenerateToken(util.ConversationIDLength),
+		ID:      util.GenerateToken(util.ConversationIDLength) + "@" + os.Getenv("PROTOCOL") + os.Getenv("CHAT_NODE"),
 		Type:    uint(convType),
 		Version: 1,
 		Data:    req.Data,
