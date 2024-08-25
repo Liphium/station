@@ -8,8 +8,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-var ClusterID uint = 0
-
 func GetCurrent(identifier string) (id int64, token string, app uint, domain string) {
 
 	res, err := PostRequest("/node/this", fiber.Map{
@@ -29,7 +27,6 @@ func GetCurrent(identifier string) (id int64, token string, app uint, domain str
 
 	JwtSecret = res["jwt_secret"].(string)
 	n := res["node"].(map[string]interface{})
-	ClusterID = uint(res["cluster"].(float64))
 
 	return int64(n["id"].(float64)), n["token"].(string), uint(n["app"].(float64)), n["domain"].(string)
 }

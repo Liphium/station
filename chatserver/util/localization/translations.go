@@ -5,6 +5,7 @@ const InvalidRequest = "invalid"
 const ErrorServer = "server.error"
 const NodeError = "node.error"
 const MailError = "mail.error"
+const InvalidCredentials = "invalid.credentials"
 
 // * Group chat messages
 const KickNoPermission = "kick.no_permission"

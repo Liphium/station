@@ -3,7 +3,6 @@ package space
 import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/util/localization"
-	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipeshandler"
 )
 
@@ -21,7 +20,7 @@ func joinCall(ctx pipeshandler.Context) {
 	}
 
 	// Create space
-	appToken, valid := caching.JoinSpace(ctx.Client.ID, ctx.Data["id"].(string), integration.ClusterID)
+	appToken, valid := caching.JoinSpace(ctx.Client.ID, ctx.Data["id"].(string))
 	if !valid {
 		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
 		return

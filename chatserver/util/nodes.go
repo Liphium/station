@@ -13,7 +13,7 @@ type AppToken struct {
 	Token  string `json:"token"`
 }
 
-func ConnectToApp(account string, session string, app uint, cluster uint) (AppToken, error) {
+func ConnectToApp(account string, session string, app uint) (AppToken, error) {
 
 	// Get the lowest node
 	nodeData := integration.Nodes[integration.IdentifierChatNode]
@@ -22,7 +22,6 @@ func ConnectToApp(account string, session string, app uint, cluster uint) (AppTo
 		"account": account,
 		"session": session,
 		"app":     app,
-		"cluster": cluster,
 		"node":    nodeData.NodeId,
 		"token":   nodeData.NodeToken,
 	})

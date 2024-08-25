@@ -24,8 +24,13 @@ type NodeData struct {
 	AppId     uint
 }
 
+// Identifiers for the different node types
 const IdentifierChatNode = "chat"
 const IdentifierSpaceNode = "space"
+
+// App tags for the different node types
+const AppTagChatNode = "liphium_chat"
+const AppTagSpaceNode = "liphium_spaces"
 
 var Nodes map[string]NodeData = make(map[string]NodeData)
 
@@ -145,19 +150,7 @@ func Setup(identifier string, loadEnv bool) bool {
 	scanner.Scan()
 	creationToken = scanner.Text()
 
-	Log.Println("Getting clusters..")
-	res, err := PostRequest("/node/manage/clusters", map[string]interface{}{
-		"token": creationToken,
-	})
-
-	if err != nil {
-		Log.Println("Your creation token is invalid.")
-		return false
-	}
-
-	clusterId := setupClusters(res, scanner)
-
-	Log.Println("4. App id (e.g. 1)")
+	Log.Println("3. App id (e.g. 1)")
 	scanner.Scan()
 	appId, err := strconv.Atoi(scanner.Text())
 
@@ -166,11 +159,11 @@ func Setup(identifier string, loadEnv bool) bool {
 		return false
 	}
 
-	Log.Println("5. The domain of this node (e.g. node-1.example.com)")
+	Log.Println("4. The domain of this node (e.g. node-1.example.com)")
 	scanner.Scan()
 	nodeDomain = scanner.Text()
 
-	Log.Println("6. The performance level (relative to all other nodes) of this node (e.g. 0.75)")
+	Log.Println("5. The performance level (relative to all other nodes) of this node (e.g. 0.75)")
 	scanner.Scan()
 	performanceLevel, err := strconv.ParseFloat(scanner.Text(), 64)
 
@@ -181,12 +174,11 @@ func Setup(identifier string, loadEnv bool) bool {
 
 	Log.Println("Creating node..")
 
-	res, err = PostRequest("/node/manage/new", map[string]interface{}{
+	res, err := PostRequest("/node/manage/new", map[string]interface{}{
 		"token":             creationToken,
 		"domain":            nodeDomain,
 		"performance_level": performanceLevel,
 		"app":               appId,
-		"cluster":           clusterId,
 	})
 
 	if err != nil {

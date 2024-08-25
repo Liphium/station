@@ -8,6 +8,7 @@ import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/fetching"
+	remote_action_routes "github.com/Liphium/station/chatserver/routes/actions"
 	conversation_routes "github.com/Liphium/station/chatserver/routes/conversations"
 	"github.com/Liphium/station/chatserver/routes/ping"
 	zapshare_routes "github.com/Liphium/station/chatserver/routes/zapshare"
@@ -94,10 +95,17 @@ func encryptedRoutes(router fiber.Router) {
 	// No authorization needed for remote conversation stuff
 	router.Route("/conversations", conversation_routes.Unauthorized)
 
-	// Authorized by using a remote id or normal token
+	// Setup the routes for remote actions
+	router.Route("/actions", remote_action_routes.Unauthorized)
+
+	router.Route("/", encryptedAuthorized)
+}
+
+func encryptedAuthorized(router fiber.Router) {
+	// Authorized by using a normal token
 	authorize(router)
 
-	// Authorized routes (for accounts with remote id only)
+	// Authorized routes
 	router.Route("/conversations", conversation_routes.Authorized)
 }
 

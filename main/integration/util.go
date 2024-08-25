@@ -112,6 +112,16 @@ func PostRequest(url string, body map[string]interface{}) (map[string]interface{
 		panic("Server public key not set.")
 	}
 
+	return PostRequestTC(ServerPublicKey, BasePath+"/"+ApiVersion+url, body)
+}
+
+// Send a post request (with TC protection encryption)
+func PostRequestTC(key *rsa.PublicKey, url string, body map[string]interface{}) (map[string]interface{}, error) {
+
+	if ServerPublicKey == nil {
+		panic("Server public key not set.")
+	}
+
 	byteBody, err := sonic.Marshal(body)
 	if err != nil {
 		return nil, err
@@ -141,7 +151,7 @@ func PostRequest(url string, body map[string]interface{}) (map[string]interface{
 	reader := bytes.NewReader(encryptedBody)
 
 	// Send the request
-	req, err := http.NewRequest(http.MethodPost, BasePath+"/"+ApiVersion+url, reader)
+	req, err := http.NewRequest(http.MethodPost, url, reader)
 	if err != nil {
 		return nil, err
 	}

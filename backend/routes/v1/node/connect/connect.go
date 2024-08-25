@@ -13,9 +13,8 @@ import (
 )
 
 type connectRequest struct {
-	Cluster uint   `json:"cluster"`
-	Tag     string `json:"tag"`
-	Token   string `json:"token"`
+	Tag   string `json:"tag"`
+	Token string `json:"token"`
 }
 
 // Route: /node/connect
@@ -82,11 +81,11 @@ func Connect(c *fiber.Ctx) error {
 
 	// Connect to the same node if possible
 	if mostRecent.Node != 0 {
-		if err := database.DBConn.Model(&node.Node{}).Where("cluster_id = ? AND app_id = ? AND status = ? AND id = ?", req.Cluster, application.ID, node.StatusStarted, mostRecent.Node).Order("load DESC").Take(&lowest).Error; err != nil {
+		if err := database.DBConn.Model(&node.Node{}).Where("app_id = ? AND status = ? AND id = ?", application.ID, node.StatusStarted, mostRecent.Node).Order("load DESC").Take(&lowest).Error; err != nil {
 			return util.FailedRequest(c, "not.setup", nil)
 		}
 	} else {
-		if err := database.DBConn.Model(&node.Node{}).Where("cluster_id = ? AND app_id = ? AND status = ?", req.Cluster, application.ID, node.StatusStarted).Order("load DESC").Take(&lowest).Error; err != nil {
+		if err := database.DBConn.Model(&node.Node{}).Where("app_id = ? AND status = ?", application.ID, node.StatusStarted).Order("load DESC").Take(&lowest).Error; err != nil {
 			return util.FailedRequest(c, "not.setup", nil)
 		}
 	}

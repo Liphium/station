@@ -75,7 +75,7 @@ func LeaveSpace(accId string) bool {
 }
 
 // Join a space
-func JoinSpace(accId string, space string, cluster uint) (util.AppToken, bool) {
+func JoinSpace(accId string, space string) (util.AppToken, bool) {
 
 	_, ok := spacesCache.Get(accId)
 	if ok {
@@ -83,7 +83,7 @@ func JoinSpace(accId string, space string, cluster uint) (util.AppToken, bool) {
 	}
 
 	connId := generateConnectionID()
-	token, err := util.ConnectToApp(connId, space, spaceApp, cluster) // Use accId as roomId so it's unique
+	token, err := util.ConnectToApp(connId, space, spaceApp) // Use accId as roomId so it's unique
 	if err != nil {
 		util.Log.Println("Error while connecting to Spaces:", err)
 		return util.AppToken{}, false
@@ -98,7 +98,7 @@ func JoinSpace(accId string, space string, cluster uint) (util.AppToken, bool) {
 }
 
 // Create a space
-func CreateSpace(accId string, cluster uint) (string, util.AppToken, bool) {
+func CreateSpace(accId string) (string, util.AppToken, bool) {
 
 	/*
 		_, ok := spacesCache.Get(accId)
@@ -115,7 +115,7 @@ func CreateSpace(accId string, cluster uint) (string, util.AppToken, bool) {
 	// Get new space
 	connId := generateConnectionID()
 	roomId := util.GenerateToken(16)
-	token, err := util.ConnectToApp(connId, roomId, spaceApp, cluster) // Use accId as roomId so it's unique
+	token, err := util.ConnectToApp(connId, roomId, spaceApp) // Use accId as roomId so it's unique
 	if err != nil {
 		util.Log.Println("Error while connecting to Spaces:", err)
 		return "", util.AppToken{}, false

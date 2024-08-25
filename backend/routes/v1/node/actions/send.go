@@ -1,6 +1,8 @@
 package node_action_routes
 
 import (
+	"fmt"
+
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/app"
 	"github.com/Liphium/station/backend/entities/node"
@@ -10,7 +12,8 @@ import (
 
 type remoteActionRequest struct {
 	AppTag string      `json:"app_tag"` // For example: liphium_chat or liphium_spaces
-	Event  interface{} `json:"event"`   // Event (can be anything)
+	Action string      `json:"action"`
+	Data   interface{} `json:"data"`
 }
 
 // Route: /node/actions/send
@@ -24,7 +27,7 @@ func sendNodeAction(c *fiber.Ctx) error {
 
 	// Get the app by app tag
 	var application app.App
-	if err := database.DBConn.Where("tag = ?", req.AppTag); err != nil {
+	if err := database.DBConn.Where("tag = ?", req.AppTag).Take(&application).Error; err != nil {
 		return util.InvalidRequest(c)
 	}
 
@@ -47,10 +50,11 @@ func sendNodeAction(c *fiber.Ctx) error {
 	}
 
 	// Send the remote action to the node
-	answer, err := util.PostRequest(publicKey, util.NodeProtocol+lowest.Domain+"/actions/receive", fiber.Map{
-		"id":    lowest.ID,
-		"token": lowest.Token,
-		"event": req.Event,
+	answer, err := util.PostRequest(publicKey, util.NodeProtocol+lowest.Domain+"/actions/"+req.Action, fiber.Map{
+		"id":     fmt.Sprintf("%d", lowest.ID),
+		"token":  lowest.Token,
+		"action": req.Action,
+		"data":   req.Data,
 	})
 	if err != nil {
 		return util.FailedRequest(c, "server.error", err)

@@ -289,7 +289,7 @@ func listenForCommands() {
 
 		case "help":
 			fmt.Println("exit - Exit the application")
-			fmt.Println("create-default - Create default ranks and cluster")
+			fmt.Println("create-default - Create default ranks")
 			fmt.Println("create-app - Create a new app")
 			fmt.Println("increment-version - Increment the version of an app (when a breaking change is made)")
 			fmt.Println("create-node - Get a node token (rest of setup in the CLI of the node)")
@@ -332,5 +332,5 @@ func CreateDefaultObjects() {
 		Level: 100,
 	})
 
-	fmt.Println("Created default ranks and cluster")
+	fmt.Println("Created default ranks")
 }
