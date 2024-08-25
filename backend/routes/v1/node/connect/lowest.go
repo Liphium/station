@@ -12,7 +12,6 @@ import (
 type LowestUsageRequest struct {
 	Account string `json:"account"`
 	Session string `json:"session"`
-	Cluster uint   `json:"cluster"`
 	App     uint   `json:"app"`
 	Node    uint   `json:"node"`  // Node ID
 	Token   string `json:"token"` // Node token
@@ -42,9 +41,8 @@ func GetLowest(c *fiber.Ctx) error {
 	// Get lowest load node
 	var lowest node.Node
 	search := node.Node{
-		ClusterID: req.Cluster,
-		AppID:     req.App,
-		Status:    node.StatusStarted,
+		AppID:  req.App,
+		Status: node.StatusStarted,
 	}
 
 	if err := database.DBConn.Model(&node.Node{}).Where(&search).Order("load DESC").Take(&lowest).Error; err != nil {

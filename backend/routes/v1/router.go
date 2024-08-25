@@ -8,7 +8,6 @@ import (
 	"github.com/Liphium/station/backend/routes/v1/account"
 	"github.com/Liphium/station/backend/routes/v1/account/auth"
 	"github.com/Liphium/station/backend/routes/v1/app"
-	"github.com/Liphium/station/backend/routes/v1/cluster"
 	"github.com/Liphium/station/backend/routes/v1/node"
 	"github.com/Liphium/station/backend/util"
 	jwtware "github.com/gofiber/contrib/jwt"
@@ -126,6 +125,5 @@ func authorizedRoutes(router fiber.Router) {
 	router.Route("/account", account.Authorized)
 	router.Route("/node", node.Authorized)
 	router.Route("/app", app.Authorized)
-	router.Route("/cluster", cluster.Setup)
 	router.Route("/auth", auth.Authorized)
 }

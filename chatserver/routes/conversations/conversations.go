@@ -8,7 +8,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func SetupRoutes(router fiber.Router) {
+func Unauthorized(router fiber.Router) {
+	router.Post("/remote_activate", remoteActivate)
+}
+
+func Authorized(router fiber.Router) {
 	router.Post("/open", openConversation)
 	router.Post("/read", read)
 	router.Post("/activate", activate)

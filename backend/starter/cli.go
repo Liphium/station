@@ -332,11 +332,5 @@ func CreateDefaultObjects() {
 		Level: 100,
 	})
 
-	// Create default cluster
-	database.DBConn.Create(&node.Cluster{
-		Name:    "Default cluster",
-		Country: "DE",
-	})
-
 	fmt.Println("Created default ranks and cluster")
 }

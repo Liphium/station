@@ -11,6 +11,7 @@ type thisRequest struct {
 	Token string `json:"token"`
 }
 
+// Route: /node/this
 func this(c *fiber.Ctx) error {
 
 	// Parse request
@@ -29,7 +30,6 @@ func this(c *fiber.Ctx) error {
 		"success":    true,
 		"jwt_secret": util.JWT_SECRET,
 		"node":       node.ToEntity(),
-		"cluster":    node.ClusterID,
 	})
 
 }

@@ -62,7 +62,7 @@ func openConversation(c *fiber.Ctx) error {
 
 	// Generate the address for the conversation
 	conv := conversations.Conversation{
-		ID:      util.GenerateToken(util.ConversationIDLength) + "@" + os.Getenv("PROTOCOL") + os.Getenv("CHAT_NODE"),
+		ID:      util.GenerateToken(util.ConversationIDLength) + "@" + os.Getenv("PROTOCOL") + os.Getenv("BASE_PATH"),
 		Type:    uint(convType),
 		Version: 1,
 		Data:    req.Data,

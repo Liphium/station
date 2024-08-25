@@ -1,6 +1,8 @@
 package conversation_routes
 
 import (
+	"strings"
+
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
@@ -29,6 +31,7 @@ type returnableMember struct {
 // Route: /conversations/activate
 func activate(c *fiber.Ctx) error {
 
+	// Parse request
 	var req ActivateConversationRequest
 	if err := integration.BodyParser(c, &req); err != nil {
 		return integration.InvalidRequest(c, err.Error())
@@ -38,6 +41,12 @@ func activate(c *fiber.Ctx) error {
 	if !req.Validate() {
 		util.Log.Println(len(req.Token))
 		return integration.InvalidRequest(c, "request is invalid")
+	}
+
+	// Get the address from the conversation id
+	args := strings.Split(req.ID, "@")
+	if len(args) != 2 {
+		return integration.InvalidRequest(c, "conversation id is invalid")
 	}
 
 	// Activate conversation

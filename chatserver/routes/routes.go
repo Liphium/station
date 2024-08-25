@@ -91,11 +91,14 @@ func encryptedRoutes(router fiber.Router) {
 	// No authorization needed for this route
 	router.Post("/adoption/socketless", socketless)
 
+	// No authorization needed for remote conversation stuff
+	router.Route("/conversations", conversation_routes.Unauthorized)
+
 	// Authorized by using a remote id or normal token
 	authorize(router)
 
 	// Authorized routes (for accounts with remote id only)
-	router.Route("/conversations", conversation_routes.SetupRoutes)
+	router.Route("/conversations", conversation_routes.Authorized)
 }
 
 func authorize(router fiber.Router) {

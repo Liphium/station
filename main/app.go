@@ -105,7 +105,6 @@ func main() {
 	if err := database.DBConn.Where("id = ? AND app_id = ?", 1, 1).First(&defaultChatNode).Error; err != nil {
 		defaultChatNode = node.Node{
 			ID:              1,
-			ClusterID:       1,
 			AppID:           1,
 			Load:            0,
 			PeformanceLevel: 1,
@@ -128,7 +127,6 @@ func main() {
 	if err := database.DBConn.Where("id = ? AND app_id = ?", 2, 2).First(&defaultSpaceNode).Error; err != nil {
 		defaultSpaceNode = node.Node{
 			ID:              2,
-			ClusterID:       1,
 			AppID:           2,
 			Load:            0,
 			PeformanceLevel: 1,

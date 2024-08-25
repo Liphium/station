@@ -1,6 +1,7 @@
 package node
 
 import (
+	node_action_routes "github.com/Liphium/station/backend/routes/v1/node/actions"
 	"github.com/Liphium/station/backend/routes/v1/node/connect"
 	"github.com/Liphium/station/backend/routes/v1/node/manage"
 	"github.com/Liphium/station/backend/routes/v1/node/status"
@@ -11,6 +12,8 @@ import (
 func Unauthorized(router fiber.Router) {
 	router.Route("/status", status.Setup)
 	router.Route("/manage", manage.Unauthorized)
+	router.Route("/remote", node_action_routes.Unauthorized)
+
 	router.Post("/this", this)
 	router.Post("/disconnect", connect.Disconnect)
 	router.Post("/get_lowest", connect.GetLowest)

@@ -18,6 +18,7 @@ type connectRequest struct {
 	Token   string `json:"token"`
 }
 
+// Route: /node/connect
 func Connect(c *fiber.Ctx) error {
 
 	// Parse request
@@ -50,7 +51,6 @@ func Connect(c *fiber.Ctx) error {
 
 	// Get the most recent session
 	var mostRecent account.Session = account.Session{
-		Token:          "-1",
 		LastConnection: time.Unix(0, 10),
 	}
 	var sessionIds []string
