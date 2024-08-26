@@ -12,6 +12,7 @@ import (
 
 type remoteActionRequest struct {
 	AppTag string      `json:"app_tag"` // For example: liphium_chat or liphium_spaces
+	Sender string      `json:"sender"`  // Domain of the node calling the request
 	Action string      `json:"action"`
 	Data   interface{} `json:"data"`
 }
@@ -53,6 +54,7 @@ func sendNodeAction(c *fiber.Ctx) error {
 	answer, err := util.PostRequest(publicKey, util.NodeProtocol+lowest.Domain+"/actions/"+req.Action, fiber.Map{
 		"id":     fmt.Sprintf("%d", lowest.ID),
 		"token":  lowest.Token,
+		"sender": req.Sender,
 		"action": req.Action,
 		"data":   req.Data,
 	})

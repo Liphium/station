@@ -1,10 +1,9 @@
-package conversation_routes
+package conversation_actions
 
 import (
-	"strings"
-
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
+	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/chatserver/util/localization"
@@ -12,46 +11,28 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// Public so it can be unit tested (in the future ig)
-type ActivateConversationRequest struct {
-	ID    string `json:"id"`
-	Token string `json:"token"`
+type ConnectionActivateAction struct {
+	ID    string `json:"id"`    // Conversation token id
+	Token string `json:"token"` // Conversation token
 }
 
-func (r *ActivateConversationRequest) Validate() bool {
-	return len(r.ID) > 0 && len(r.Token) > 0 && len(r.Token) == util.ConversationTokenLength
-}
-
-type returnableMember struct {
+type ReturnableMember struct {
 	ID   string `json:"id"`
 	Rank uint   `json:"rank"`
 	Data string `json:"data"`
 }
 
-// Route: /conversations/activate
-func activate(c *fiber.Ctx) error {
+// Action: conv_activate
+func HandleTokenActivation(c *fiber.Ctx, action ConnectionActivateAction) error {
 
-	// Parse request
-	var req ActivateConversationRequest
-	if err := integration.BodyParser(c, &req); err != nil {
-		return integration.InvalidRequest(c, err.Error())
-	}
-
-	// Validate request
-	if !req.Validate() {
-		util.Log.Println(len(req.Token))
-		return integration.InvalidRequest(c, "request is invalid")
-	}
-
-	// Get the address from the conversation id
-	args := strings.Split(req.ID, "@")
-	if len(args) != 2 {
-		return integration.InvalidRequest(c, "conversation id is invalid")
+	// Validate the action
+	if len(action.ID) == 0 || len(action.Token) == 0 {
+		return integration.InvalidRequest(c, "data in action wasn't valid")
 	}
 
 	// Activate conversation
 	var token conversations.ConversationToken
-	if database.DBConn.Where("id = ? AND token = ?", req.ID, req.Token).First(&token).Error != nil {
+	if database.DBConn.Where("id = ? AND token = ?", action.ID, action.Token).First(&token).Error != nil {
 		return integration.FailedRequest(c, "invalid.token", nil)
 	}
 
@@ -73,9 +54,9 @@ func activate(c *fiber.Ctx) error {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	var members []returnableMember
+	var members []ReturnableMember
 	for _, token := range tokens {
-		members = append(members, returnableMember{
+		members = append(members, ReturnableMember{
 			ID:   token.ID,
 			Rank: token.Rank,
 			Data: token.Data,
@@ -90,7 +71,7 @@ func activate(c *fiber.Ctx) error {
 	if conversation.Type == conversations.TypeGroup {
 
 		// Increment the version by one to save the modification
-		if err := incrementConversationVersion(conversation); err != nil {
+		if err := action_helpers.IncrementConversationVersion(conversation); err != nil {
 			return integration.FailedRequest(c, localization.ErrorServer, err)
 		}
 

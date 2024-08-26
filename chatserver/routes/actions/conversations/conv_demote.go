@@ -1,4 +1,4 @@
-package conversation_routes
+package conversation_actions
 
 import (
 	"fmt"
@@ -6,21 +6,18 @@ import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
+	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
 )
 
-// Route: /conversations/demote_token
-func demoteToken(c *fiber.Ctx) error {
+// Action: conv_demote
+func HandleDemoteToken(c *fiber.Ctx, action PromoteTokenRequest) error {
 
-	var req promoteTokenRequest
-	if integration.BodyParser(c, &req) != nil {
-		return integration.InvalidRequest(c, "invalid request")
-	}
-
-	token, err := caching.ValidateToken(req.ID, req.Token)
+	// Validate the token
+	token, err := caching.ValidateToken(action.ID, action.Token)
 	if err != nil {
 		return integration.InvalidRequest(c, fmt.Sprintf("invalid token: %s", err.Error()))
 	}
@@ -39,7 +36,8 @@ func demoteToken(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "user doesn't have the required rank")
 	}
 
-	userToken, err := caching.GetToken(req.User)
+	// Get the token of the other user
+	userToken, err := caching.GetToken(action.User)
 	if err != nil {
 		return integration.InvalidRequest(c, fmt.Sprintf("specified user doesn't exist: %s", err.Error()))
 	}
@@ -55,7 +53,7 @@ func demoteToken(c *fiber.Ctx) error {
 	}
 
 	// Increment the version by one to save the modification
-	if err := incrementConversationVersion(conversation); err != nil {
+	if err := action_helpers.IncrementConversationVersion(conversation); err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 

@@ -1,4 +1,4 @@
-package conversation_routes
+package conversation_actions
 
 import (
 	"fmt"
@@ -6,27 +6,24 @@ import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
+	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
 )
 
-type promoteTokenRequest struct {
+type PromoteTokenRequest struct {
 	ID    string `json:"id"`
 	Token string `json:"token"`
-	User  string `json:"user"`
+	User  string `json:"user"` // User to be demoted (conv token id)
 }
 
-// Route: /conversations/promote_token
-func promoteToken(c *fiber.Ctx) error {
+// Action: conv_promote
+func HandlePromoteToken(c *fiber.Ctx, action PromoteTokenRequest) error {
 
-	var req promoteTokenRequest
-	if integration.BodyParser(c, &req) != nil {
-		return integration.InvalidRequest(c, "invalid request")
-	}
-
-	token, err := caching.ValidateToken(req.ID, req.Token)
+	// Validate the token
+	token, err := caching.ValidateToken(action.ID, action.Token)
 	if err != nil {
 		return integration.InvalidRequest(c, fmt.Sprintf("invalid conversation token: %s", err.Error()))
 	}
@@ -45,7 +42,8 @@ func promoteToken(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "no permission")
 	}
 
-	userToken, err := caching.GetToken(req.User)
+	// Get the token of the other user
+	userToken, err := caching.GetToken(action.User)
 	if err != nil {
 		return integration.InvalidRequest(c, fmt.Sprintf("couldn't get user token: %s", err.Error()))
 	}
@@ -61,7 +59,7 @@ func promoteToken(c *fiber.Ctx) error {
 	}
 
 	// Increment the version by one to save the modification
-	if err := incrementConversationVersion(conversation); err != nil {
+	if err := action_helpers.IncrementConversationVersion(conversation); err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
