@@ -174,7 +174,7 @@ func Setup(identifier string, loadEnv bool) bool {
 
 	Log.Println("Creating node..")
 
-	res, err := PostRequest("/node/manage/new", map[string]interface{}{
+	res, err := PostRequestBackend("/node/manage/new", map[string]interface{}{
 		"token":             creationToken,
 		"domain":            nodeDomain,
 		"performance_level": performanceLevel,

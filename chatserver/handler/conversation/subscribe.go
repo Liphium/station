@@ -63,7 +63,7 @@ func subscribe(ctx pipeshandler.Context) {
 			for _, member := range members[token.Conversation] {
 				if member.Token != token.Token {
 					memberIds = append(memberIds, "s-"+member.Token)
-					memberNodes = append(memberNodes, util.Node64(member.Node))
+					memberNodes = append(memberNodes, member.Node)
 				}
 			}
 		}

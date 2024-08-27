@@ -92,9 +92,6 @@ func encryptedRoutes(router fiber.Router) {
 	// No authorization needed for this route
 	router.Post("/adoption/socketless", socketless)
 
-	// No authorization needed for remote conversation stuff
-	router.Route("/conversations", conversation_routes.Unauthorized)
-
 	// Setup the routes for remote actions
 	router.Route("/actions", remote_action_routes.Unauthorized)
 
@@ -172,7 +169,7 @@ func setupPipesFiber(router fiber.Router) {
 
 			// Tell the backend that someone disconnected
 			nodeData := integration.Nodes[integration.IdentifierChatNode]
-			integration.PostRequest("/node/disconnect", map[string]interface{}{
+			integration.PostRequestBackend("/node/disconnect", map[string]interface{}{
 				"node":    nodeData.NodeId,
 				"token":   nodeData.NodeToken,
 				"session": client.Session,

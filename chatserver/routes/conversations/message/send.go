@@ -56,7 +56,7 @@ func sendMessage(c *fiber.Ctx) error {
 
 	found := false
 	for _, member := range members {
-		if member.TokenID == req.TokenID {
+		if member.TokenID == token.ID {
 			found = true
 		}
 	}
@@ -67,39 +67,36 @@ func sendMessage(c *fiber.Ctx) error {
 
 	// Generate an id and certificate for the message
 	messageId := util.GenerateToken(32)
-	certificate, err := conversations.GenerateCertificate(messageId, req.Conversation, req.TokenID)
+	certificate, err := conversations.GenerateCertificate(messageId, req.Conversation, token.ID)
 	if err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
-
-	util.Log.Println(certificate)
 
 	message := conversations.Message{
 		ID:           messageId,
 		Conversation: req.Conversation,
 		Certificate:  certificate,
 		Data:         req.Data,
-		Sender:       req.TokenID,
+		Sender:       token.ID,
 		Creation:     int64(req.Timestamp),
 		Edited:       false,
 	}
 
+	// Save the message to the database
 	if err := database.DBConn.Create(&message).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
+	// Update the read state to prevent the message sender from being notified about the message
 	if err := database.DBConn.Model(&conversations.ConversationToken{}).Where("conversation = ? AND id = ?", req.Conversation, req.TokenID).Update("last_read", time.Now().UnixMilli()+1).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
-	token.LastRead = time.Now().UnixMilli() + 1
 
-	adapters, nodes := caching.MembersToPipes(members)
+	// Send the message to everyone
 	event := MessageEvent(message)
-
-	caching.CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
-		Channel: pipes.Conversation(adapters, nodes),
-		Event:   event,
-	})
+	if err := caching.SendEventToMembers(members, event); err != nil {
+		return integration.FailedRequest(c, localization.ErrorServer, err)
+	}
 
 	return integration.ReturnJSON(c, fiber.Map{
 		"success": true,

@@ -1,4 +1,4 @@
-package conversation_routes
+package conversation_actions
 
 import (
 	"fmt"
@@ -6,35 +6,33 @@ import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
+	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
 )
 
-type kickMemberRequest struct {
+type KickMemberAction struct {
 	Id     string `json:"id"`
 	Token  string `json:"token"`
 	Target string `json:"target"`
 }
 
-// Route: /conversations/kick_member
-func kickMember(c *fiber.Ctx) error {
+// Action: conv_kick
+func HandleKick(c *fiber.Ctx, action KickMemberAction) error {
 
-	var req kickMemberRequest
-	if err := integration.BodyParser(c, &req); err != nil {
-		return integration.InvalidRequest(c, "invalid request")
-	}
-
-	if req.Id == req.Target {
+	// Make sure you can't kick yourself
+	if action.Id == action.Target {
 		return integration.InvalidRequest(c, "same token")
 	}
 
-	token, err := caching.ValidateToken(req.Id, req.Token)
+	// Validate the token and get all the tokens
+	token, err := caching.ValidateToken(action.Id, action.Token)
 	if err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
-	targetToken, err := caching.GetToken(req.Target)
+	targetToken, err := caching.GetToken(action.Target)
 	if err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
@@ -55,7 +53,7 @@ func kickMember(c *fiber.Ctx) error {
 	}
 
 	// Increment the version by one to save the modification
-	if err := incrementConversationVersion(conversation); err != nil {
+	if err := action_helpers.IncrementConversationVersion(conversation); err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 

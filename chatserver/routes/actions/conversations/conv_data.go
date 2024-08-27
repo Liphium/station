@@ -1,4 +1,4 @@
-package conversation_routes
+package conversation_actions
 
 import (
 	"fmt"
@@ -12,27 +12,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type getDataRequest struct {
-	ID    string `json:"id"`
-	Token string `json:"token"`
-}
-
 type returnableMemberToken struct {
 	ID   string `json:"id"`   // Conversation token id
 	Data string `json:"data"` // Account id (encrypted)
 	Rank uint   `json:"rank"` // Conversation rank
 }
 
-// Route: /conversations/data
-func getData(c *fiber.Ctx) error {
-
-	var req getDataRequest
-	if integration.BodyParser(c, &req) != nil {
-		return integration.InvalidRequest(c, "invalid request")
-	}
+// Action: conv_data
+func HandleGetData(c *fiber.Ctx, action GenericTokenConfirmAction) error {
 
 	// Validate token
-	token, err := caching.ValidateToken(req.ID, req.Token)
+	token, err := caching.ValidateToken(action.ID, action.Token)
 	if err != nil {
 		return integration.InvalidRequest(c, fmt.Sprintf("invalid conversation token: %s", err.Error()))
 	}

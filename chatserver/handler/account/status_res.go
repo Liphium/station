@@ -3,7 +3,6 @@ package account
 import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/util/localization"
-	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 )
 
@@ -34,14 +33,22 @@ func respondToStatus(ctx pipeshandler.Context) {
 		return
 	}
 
-	ids, nodes := caching.MembersToPipes(members)
+	// Make sure it's a private conversation
+	if len(members) > 2 {
+		pipeshandler.ErrorResponse(ctx, localization.InvalidRequest)
+		return
+	}
 
-	// Send the subscription event
-	err = caching.CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
-		Channel: pipes.Conversation(ids, nodes),
-		Event:   StatusEvent(status, data, convToken.Conversation, convToken.ID, ":a"),
-	})
-	if err != nil {
+	// Get the other member to send the status to
+	var otherMember caching.StoredMember
+	for _, member := range members {
+		if member.TokenID != convToken.ID {
+			otherMember = member
+		}
+	}
+
+	// Send the event
+	if err := caching.SendEventToMembers([]caching.StoredMember{otherMember}, StatusEvent(status, data, convToken.Conversation, convToken.ID, ":a")); err != nil {
 		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
 		return
 	}

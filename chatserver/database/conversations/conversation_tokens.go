@@ -7,8 +7,9 @@ type ConversationToken struct {
 	Token        string `json:"token" gorm:"not null,unique"` // Long token required to subscribe to the conversation
 	Data         string `json:"data" gorm:"not null"`         // Encrypted data about the user (account id, username, etc.)
 	Rank         uint   `json:"rank" gorm:"not null"`
-	LastRead     int64  `json:"-" gorm:"not null"`    // Last time the user read the conversation
-	Node         int64  `json:"node" gorm:"not null"` // Node ID
+	LastRead     int64  `json:"-" gorm:"not null"`      // Last time the user read the conversation
+	Remote       bool   `json:"remote" gorm:"not null"` // Whether the user is connected through remote or local
+	Node         string `json:"node" gorm:"not null"`   // The node the user is currently connected to (node id or domain)
 }
 
 type SentConversationToken struct {

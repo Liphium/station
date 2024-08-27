@@ -7,7 +7,6 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/util"
-	"github.com/Liphium/station/pipes"
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
 )
@@ -68,23 +67,16 @@ func SendSystemMessage(conversation string, content string, attachments []string
 	if err != nil {
 		return err
 	}
-	adapters, nodes := caching.MembersToPipes(members)
 
+	// Send the event to all the members
 	event := MessageEvent(message)
-	err = caching.CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
-		Channel: pipes.Conversation(adapters, nodes),
-		Event:   event,
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return caching.SendEventToMembers(members, event)
 }
 
 // Send a system message that isn't stored in the database
 func SendNotStoredSystemMessage(conversation string, content string, attachments []string) error {
 
+	// Generate the content for the message
 	contentJson, err := sonic.MarshalString(map[string]interface{}{
 		"c": content,
 		"a": attachments,
@@ -93,6 +85,7 @@ func SendNotStoredSystemMessage(conversation string, content string, attachments
 		return err
 	}
 
+	// Create the message
 	messageId := util.GenerateToken(32)
 	message := conversations.Message{
 		ID:           messageId,
@@ -109,18 +102,10 @@ func SendNotStoredSystemMessage(conversation string, content string, attachments
 	if err != nil {
 		return err
 	}
-	adapters, nodes := caching.MembersToPipes(members)
 
+	// Send the event to the members
 	event := MessageEvent(message)
-	err = caching.CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
-		Channel: pipes.Conversation(adapters, nodes),
-		Event:   event,
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return caching.SendEventToMembers(members, event)
 }
 
 func AttachAccount(encrypted string) string {

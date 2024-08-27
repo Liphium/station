@@ -1,9 +1,10 @@
-package conversation_routes
+package conversation_actions
 
 import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
+	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/chatserver/util/localization"
@@ -11,28 +12,22 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type changeDataRequest struct {
+type ChangeDataAction struct {
 	Id    string `json:"id"`
 	Token string `json:"token"`
 	Data  string `json:"data"`
 }
 
-// Route: /conversations/change_data
-func changeData(c *fiber.Ctx) error {
-
-	// Parse the request
-	var req changeDataRequest
-	if err := integration.BodyParser(c, &req); err != nil {
-		return integration.InvalidRequest(c, "invalid request")
-	}
+// Action: conv_change_data
+func HandleChangeData(c *fiber.Ctx, action ChangeDataAction) error {
 
 	// Check if the form is valid
-	if len(req.Data) > util.MaxConversationDataLength {
+	if len(action.Data) > util.MaxConversationDataLength {
 		return integration.FailedRequest(c, localization.GroupDataTooLong, nil)
 	}
 
 	// Validate the token
-	token, err := caching.ValidateToken(req.Id, req.Token)
+	token, err := caching.ValidateToken(action.Id, action.Token)
 	if err != nil {
 		return integration.InvalidRequest(c, "invalid token")
 	}
@@ -50,10 +45,10 @@ func changeData(c *fiber.Ctx) error {
 	}
 
 	// Update the data
-	conversation.Data = req.Data
+	conversation.Data = action.Data
 
 	// Increment the version by one to let everyone know
-	if err := incrementConversationVersion(conversation); err != nil {
+	if err := action_helpers.IncrementConversationVersion(conversation); err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 

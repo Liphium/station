@@ -41,6 +41,11 @@ func Unauthorized(router fiber.Router) {
 	router.Post("/conv_activate", actionHandler(conversation_actions.HandleTokenActivation))
 	router.Post("/conv_promote", actionHandler(conversation_actions.HandlePromoteToken))
 	router.Post("/conv_demote", actionHandler(conversation_actions.HandleDemoteToken))
+	router.Post("/conv_read", actionHandler(conversation_actions.HandleRead))
+	router.Post("/conv_data", actionHandler(conversation_actions.HandleGetData))
+	router.Post("/conv_gen_token", actionHandler(conversation_actions.HandleGenerateToken))
+	router.Post("/conv_kick", actionHandler(conversation_actions.HandleKick))
+	router.Post("/conv_leave", actionHandler(conversation_actions.HandleLeave))
 }
 
 // Creates a new handler for the action based on its calling method

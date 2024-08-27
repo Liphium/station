@@ -18,7 +18,7 @@ func ConnectToApp(account string, session string, app uint) (AppToken, error) {
 	// Get the lowest node
 	nodeData := integration.Nodes[integration.IdentifierChatNode]
 	log.Println("DATA", account, session)
-	res, err := integration.PostRequest("/node/get_lowest", map[string]interface{}{
+	res, err := integration.PostRequestBackend("/node/get_lowest", map[string]interface{}{
 		"account": account,
 		"session": session,
 		"app":     app,

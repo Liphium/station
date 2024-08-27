@@ -52,7 +52,7 @@ func Startup(routine bool) {
 	app.Use(logger.New())
 
 	// Handle routing
-	app.Route("/v1", routes_v1.Router)
+	app.Route("/", routes_v1.Router)
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello from the backend, you probably shouldn't be here though.. Anyway, enjoy your time!")
 	})

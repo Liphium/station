@@ -1,4 +1,4 @@
-package conversation_routes
+package conversation_actions
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
+	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/chatserver/util/localization"
@@ -13,21 +14,17 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type generateTokenRequest struct {
+type GenerateTokenAction struct {
 	ID    string `json:"id"`
 	Token string `json:"token"`
 	Data  string `json:"data"`
 }
 
-// Route: /conversations/generate_token
-func generateToken(c *fiber.Ctx) error {
+// Action: conv_gen_token
+func HandleGenerateToken(c *fiber.Ctx, action GenerateTokenAction) error {
 
-	var req generateTokenRequest
-	if integration.BodyParser(c, &req) != nil {
-		return integration.InvalidRequest(c, "invalid request")
-	}
-
-	token, err := caching.ValidateToken(req.ID, req.Token)
+	// Validate the token
+	token, err := caching.ValidateToken(action.ID, action.Token)
 	if err != nil {
 		return integration.InvalidRequest(c, fmt.Sprintf("invalid token: %s", err.Error()))
 	}
@@ -53,7 +50,7 @@ func generateToken(c *fiber.Ctx) error {
 	}
 
 	// Increment the version by one to save the modification
-	if err := incrementConversationVersion(conversation); err != nil {
+	if err := action_helpers.IncrementConversationVersion(conversation); err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
@@ -64,7 +61,7 @@ func generateToken(c *fiber.Ctx) error {
 		Activated:    false,
 		Conversation: token.Conversation,
 		Rank:         conversations.RankUser,
-		Data:         req.Data,
+		Data:         action.Data,
 	}
 
 	if err := database.DBConn.Create(&generated).Error; err != nil {

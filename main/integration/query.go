@@ -10,7 +10,7 @@ import (
 
 func GetCurrent(identifier string) (id int64, token string, app uint, domain string) {
 
-	res, err := PostRequest("/node/this", fiber.Map{
+	res, err := PostRequestBackend("/node/this", fiber.Map{
 		"node":  Nodes[identifier].NodeId,
 		"token": Nodes[identifier].NodeToken,
 	})
@@ -33,7 +33,7 @@ func GetCurrent(identifier string) (id int64, token string, app uint, domain str
 
 func SetOnline(identifier string) map[string]interface{} {
 
-	res, err := PostRequest("/node/status/online", fiber.Map{
+	res, err := PostRequestBackend("/node/status/online", fiber.Map{
 		"id":    Nodes[identifier].NodeId,
 		"token": Nodes[identifier].NodeToken,
 	})
@@ -58,7 +58,7 @@ func ReportOffline(node pipes.Node) {
 	// Convert node id
 	nodeID, _ := strconv.Atoi(node.ID)
 
-	_, err := PostRequest("/node/status/offline", fiber.Map{
+	_, err := PostRequestBackend("/node/status/offline", fiber.Map{
 		"node":  nodeID,
 		"token": node.Token,
 	})

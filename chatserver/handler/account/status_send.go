@@ -5,7 +5,6 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/fetching"
 	"github.com/Liphium/station/chatserver/handler/conversation"
-	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
@@ -35,24 +34,21 @@ func sendStatus(ctx pipeshandler.Context) {
 
 	for _, token := range conversationTokens {
 
-		var memberIds []string
-		var memberNodes []string
-		util.Log.Printf("%d", len(members[token.Conversation]))
-		if len(members[token.Conversation]) == 2 {
-			for _, member := range members[token.Conversation] {
-				if member.Token != token.Token {
-					memberIds = append(memberIds, "s-"+member.Token)
-					memberNodes = append(memberNodes, util.Node64(member.Node))
-				}
+		// Make sure the conversation is a private one
+		if len(members[token.Conversation]) > 2 {
+			continue
+		}
+
+		// Get the other member to send the status to
+		var otherMember caching.StoredMember
+		for _, member := range members[token.Conversation] {
+			if member.TokenID != token.ID {
+				otherMember = member
 			}
 		}
-		util.Log.Printf("Sending to %d members", len(memberIds))
 
-		// Send the subscription event
-		caching.CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
-			Channel: pipes.Conversation(memberIds, memberNodes),
-			Event:   StatusEvent(statusMessage, data, token.Conversation, token.ID, ""),
-		})
+		// Send the status event
+		caching.SendEventToMembers([]caching.StoredMember{otherMember}, StatusEvent(statusMessage, data, token.Conversation, token.ID, ""))
 	}
 
 	// Send the status to other devices

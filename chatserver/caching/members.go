@@ -1,9 +1,11 @@
 package caching
 
 import (
+	"fmt"
+
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
-	"github.com/Liphium/station/chatserver/util"
+	"github.com/Liphium/station/pipes"
 )
 
 // TODO: Reimplement caching, but properly this time
@@ -11,7 +13,8 @@ import (
 type StoredMember struct {
 	TokenID string // Conversation token ID
 	Token   string // Conversation token
-	Node    int64
+	Remote  bool   // Whether the guy is connected remote or not
+	Node    string // The domain or id of the connected node
 }
 
 // Does database requests and stuff
@@ -28,12 +31,14 @@ func LoadMembers(id string) ([]StoredMember, error) {
 			storedMembers[i] = StoredMember{
 				TokenID: member.ID,
 				Token:   "-",
+				Remote:  member.Remote,
 				Node:    member.Node,
 			}
 		} else {
 			storedMembers[i] = StoredMember{
 				TokenID: member.ID,
 				Token:   member.Token,
+				Remote:  member.Remote,
 				Node:    member.Node,
 			}
 		}
@@ -70,15 +75,39 @@ func LoadMembersArray(ids []string) (map[string][]StoredMember, error) {
 	return returnMap, nil
 }
 
-func MembersToPipes(members []StoredMember) ([]string, []string) {
+func SendEventToMembers(members []StoredMember, event pipes.Event) error {
 
-	memberAdapters := make([]string, len(members))
-	memberNodes := make([]string, len(members))
+	// Make slices for a pipes send call
+	memberAdapters := []string{}
+	memberNodes := []string{}
+
+	// Make a slice for members that need to be contacted using a remote event
+	remoteMembers := []StoredMember{}
 
 	for i, member := range members {
-		memberAdapters[i] = "s-" + member.Token
-		memberNodes[i] = util.Node64(member.Node)
+		if !member.Remote {
+			// Add them to the pipes send when they are not from a remote instance
+			memberAdapters[i] = "s-" + member.Token
+			memberNodes[i] = member.Node
+		} else {
+			// Let the event be sent remotely
+			remoteMembers = append(remoteMembers, member)
+		}
 	}
 
-	return memberAdapters, memberNodes
+	// Send event using pipes
+	err := CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
+		Channel: pipes.Conversation(memberAdapters, memberNodes),
+		Event:   event,
+	})
+	if err != nil {
+		return err
+	}
+
+	// Send the event to all the people who are connected remotely
+	for _, member := range remoteMembers {
+		fmt.Printf("member.Remote: %v\n", member.Remote)
+	}
+
+	return nil
 }

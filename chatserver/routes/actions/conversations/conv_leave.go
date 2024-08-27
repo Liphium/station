@@ -1,4 +1,4 @@
-package conversation_routes
+package conversation_actions
 
 import (
 	"fmt"
@@ -6,26 +6,18 @@ import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
+	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
 )
 
-type leaveRequest struct {
-	ID    string `json:"id"`
-	Token string `json:"token"`
-}
+// Action: conv_leave
+func HandleLeave(c *fiber.Ctx, action GenericTokenConfirmAction) error {
 
-// Routes: /conversations/leave
-func leaveConversation(c *fiber.Ctx) error {
-
-	var req leaveRequest
-	if err := integration.BodyParser(c, &req); err != nil {
-		return integration.InvalidRequest(c, "invalid request")
-	}
-
-	token, err := caching.ValidateToken(req.ID, req.Token)
+	// Validate the token
+	token, err := caching.ValidateToken(action.ID, action.Token)
 	if err != nil {
 		return integration.InvalidRequest(c, fmt.Sprintf("invalid conversation token: %s", err.Error()))
 	}
@@ -50,7 +42,7 @@ func leaveConversation(c *fiber.Ctx) error {
 	if conversation.Type == conversations.TypePrivateMessage && len(members) == 1 {
 
 		// Delete the conversation
-		if err := deleteConversation(conversation.ID); err != nil {
+		if err := action_helpers.DeleteConversation(conversation.ID); err != nil {
 			return integration.FailedRequest(c, integration.ErrorServer, err)
 		}
 
@@ -60,7 +52,7 @@ func leaveConversation(c *fiber.Ctx) error {
 	if len(members) == 0 {
 
 		// Delete conversation
-		if err := deleteConversation(conversation.ID); err != nil {
+		if err := action_helpers.DeleteConversation(conversation.ID); err != nil {
 			return integration.FailedRequest(c, localization.ErrorServer, err)
 		}
 

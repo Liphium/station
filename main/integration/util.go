@@ -5,12 +5,15 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/base64"
+	"errors"
 	"io"
 	"math/big"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/bytedance/sonic"
+	"github.com/gofiber/fiber/v2"
 )
 
 var Testing = false
@@ -106,21 +109,41 @@ func PostRequestNoTC(url string, body map[string]interface{}) (map[string]interf
 }
 
 // Send a post request (with TC protection encryption)
-func PostRequest(url string, body map[string]interface{}) (map[string]interface{}, error) {
-
-	if ServerPublicKey == nil {
-		panic("Server public key not set.")
-	}
-
-	return PostRequestTC(ServerPublicKey, BasePath+"/"+ApiVersion+url, body)
+func PostRequestBackend(url string, body map[string]interface{}) (map[string]interface{}, error) {
+	return PostRequestTC(BasePath, "/"+ApiVersion+url, body)
 }
 
-// Send a post request (with TC protection encryption)
-func PostRequestTC(key *rsa.PublicKey, url string, body map[string]interface{}) (map[string]interface{}, error) {
+// Domain -> *rsa.PublicKey
+var publicKeyCache = &sync.Map{}
 
-	if ServerPublicKey == nil {
-		panic("Server public key not set.")
+// Send a post request (with TC protection encryption, public key will be cached and retrieved)
+func PostRequestTC(server string, path string, body map[string]interface{}) (map[string]interface{}, error) {
+
+	// Check if there is a public key for that specific server
+	obj, valid := publicKeyCache.Load(server)
+	if !valid {
+
+		// Send a request to get the public key
+		res, err := PostRequestNoTC(server+"/pub", fiber.Map{})
+		if err != nil {
+			return nil, err
+		}
+
+		// Get the public key from the request
+		if res["pub"] == nil {
+			return nil, errors.New("public key couldn't be found")
+		}
+		obj, err = UnpackageRSAPublicKey(res["pub"].(string))
+		if err != nil {
+			return nil, err
+		}
+
+		// Cache the key for the next request
+		publicKeyCache.Store(server, obj.(*rsa.PublicKey))
 	}
+
+	// Cast the object retrieved from the map/server to an actual key
+	key := obj.(*rsa.PublicKey)
 
 	byteBody, err := sonic.Marshal(body)
 	if err != nil {
@@ -132,7 +155,7 @@ func PostRequestTC(key *rsa.PublicKey, url string, body map[string]interface{}) 
 	if err != nil {
 		return nil, err
 	}
-	authTag, err := EncryptRSA(ServerPublicKey, aesKey)
+	authTag, err := EncryptRSA(key, aesKey)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +174,7 @@ func PostRequestTC(key *rsa.PublicKey, url string, body map[string]interface{}) 
 	reader := bytes.NewReader(encryptedBody)
 
 	// Send the request
-	req, err := http.NewRequest(http.MethodPost, url, reader)
+	req, err := http.NewRequest(http.MethodPost, server+path, reader)
 	if err != nil {
 		return nil, err
 	}
