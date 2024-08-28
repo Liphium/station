@@ -1,8 +1,6 @@
 package conversation_routes
 
 import (
-	"os"
-
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/util"
@@ -62,7 +60,7 @@ func openConversation(c *fiber.Ctx) error {
 
 	// Generate the address for the conversation
 	conv := conversations.Conversation{
-		ID:      util.GenerateToken(util.ConversationIDLength) + "@" + os.Getenv("PROTOCOL") + os.Getenv("BASE_PATH"),
+		ID:      util.GenerateToken(util.ConversationIDLength) + "@" + integration.BasePath,
 		Type:    uint(convType),
 		Version: 1,
 		Data:    req.Data,

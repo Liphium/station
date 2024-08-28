@@ -14,13 +14,7 @@ import (
 )
 
 // Action: conv_demote
-func HandleDemoteToken(c *fiber.Ctx, action PromoteTokenRequest) error {
-
-	// Validate the token
-	token, err := caching.ValidateToken(action.ID, action.Token)
-	if err != nil {
-		return integration.InvalidRequest(c, fmt.Sprintf("invalid token: %s", err.Error()))
-	}
+func HandleDemoteToken(c *fiber.Ctx, token conversations.ConversationToken, user string) error {
 
 	// Check if conversation is group
 	var conversation conversations.Conversation
@@ -37,7 +31,7 @@ func HandleDemoteToken(c *fiber.Ctx, action PromoteTokenRequest) error {
 	}
 
 	// Get the token of the other user
-	userToken, err := caching.GetToken(action.User)
+	userToken, err := caching.GetToken(user)
 	if err != nil {
 		return integration.InvalidRequest(c, fmt.Sprintf("specified user doesn't exist: %s", err.Error()))
 	}

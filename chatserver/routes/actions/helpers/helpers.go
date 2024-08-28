@@ -7,6 +7,22 @@ import (
 	"gorm.io/gorm"
 )
 
+// A generic type for a request to any conversation remote action
+type ConversationActionRequest[T any] struct {
+	Token ConversationToken `json:"token"`
+	Data  T                 `json:"data"`
+}
+
+// Represents any kind of conversation token
+type ConversationToken struct {
+	Conversation string `json:"conv"`
+	ID           string `json:"id"`
+	Token        string `json:"token"`
+}
+
+// A generic type for any action handler function
+type ConversationActionHandlerFunc[T any] func(*fiber.Ctx, conversations.ConversationToken, T) error
+
 // A generic type for any action handler function
 type ActionHandlerFunc[T any] func(*fiber.Ctx, T) error
 

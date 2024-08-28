@@ -44,7 +44,7 @@ func GenerateToken(tkLength int32) string {
 
 // Grab public key from the server.
 func grabServerPublicKey() error {
-	res, err := http.Post(BasePath+"/"+ApiVersion+"/pub", "application/json", nil)
+	res, err := http.Post(BasePath+"/pub", "application/json", nil)
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,6 @@
 package conversation_actions
 
 import (
-	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
@@ -19,17 +18,11 @@ type ChangeDataAction struct {
 }
 
 // Action: conv_change_data
-func HandleChangeData(c *fiber.Ctx, action ChangeDataAction) error {
+func HandleChangeData(c *fiber.Ctx, token conversations.ConversationToken, data string) error {
 
 	// Check if the form is valid
-	if len(action.Data) > util.MaxConversationDataLength {
+	if len(data) > util.MaxConversationDataLength {
 		return integration.FailedRequest(c, localization.GroupDataTooLong, nil)
-	}
-
-	// Validate the token
-	token, err := caching.ValidateToken(action.Id, action.Token)
-	if err != nil {
-		return integration.InvalidRequest(c, "invalid token")
 	}
 
 	// Get the conversation
@@ -45,7 +38,7 @@ func HandleChangeData(c *fiber.Ctx, action ChangeDataAction) error {
 	}
 
 	// Update the data
-	conversation.Data = action.Data
+	conversation.Data = data
 
 	// Increment the version by one to let everyone know
 	if err := action_helpers.IncrementConversationVersion(conversation); err != nil {

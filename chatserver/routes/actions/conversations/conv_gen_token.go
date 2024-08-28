@@ -14,20 +14,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type GenerateTokenAction struct {
-	ID    string `json:"id"`
-	Token string `json:"token"`
-	Data  string `json:"data"`
-}
-
 // Action: conv_gen_token
-func HandleGenerateToken(c *fiber.Ctx, action GenerateTokenAction) error {
-
-	// Validate the token
-	token, err := caching.ValidateToken(action.ID, action.Token)
-	if err != nil {
-		return integration.InvalidRequest(c, fmt.Sprintf("invalid token: %s", err.Error()))
-	}
+func HandleGenerateToken(c *fiber.Ctx, token conversations.ConversationToken, data string) error {
 
 	// Check if conversation is group
 	var conversation conversations.Conversation
@@ -61,7 +49,7 @@ func HandleGenerateToken(c *fiber.Ctx, action GenerateTokenAction) error {
 		Activated:    false,
 		Conversation: token.Conversation,
 		Rank:         conversations.RankUser,
-		Data:         action.Data,
+		Data:         data,
 	}
 
 	if err := database.DBConn.Create(&generated).Error; err != nil {

@@ -23,17 +23,11 @@ type ReturnableMember struct {
 }
 
 // Action: conv_activate
-func HandleTokenActivation(c *fiber.Ctx, action ConnectionActivateAction) error {
+func HandleTokenActivation(c *fiber.Ctx, token conversations.ConversationToken, action ConnectionActivateAction) error {
 
 	// Validate the action
 	if len(action.ID) == 0 || len(action.Token) == 0 {
 		return integration.InvalidRequest(c, "data in action wasn't valid")
-	}
-
-	// Activate conversation
-	var token conversations.ConversationToken
-	if database.DBConn.Where("id = ? AND token = ?", action.ID, action.Token).First(&token).Error != nil {
-		return integration.FailedRequest(c, "invalid.token", nil)
 	}
 
 	if token.Activated {

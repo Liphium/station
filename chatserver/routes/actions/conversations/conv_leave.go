@@ -1,8 +1,6 @@
 package conversation_actions
 
 import (
-	"fmt"
-
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
@@ -14,13 +12,7 @@ import (
 )
 
 // Action: conv_leave
-func HandleLeave(c *fiber.Ctx, action GenericTokenConfirmAction) error {
-
-	// Validate the token
-	token, err := caching.ValidateToken(action.ID, action.Token)
-	if err != nil {
-		return integration.InvalidRequest(c, fmt.Sprintf("invalid conversation token: %s", err.Error()))
-	}
+func HandleLeave(c *fiber.Ctx, token conversations.ConversationToken, _ interface{}) error {
 
 	// Delete token
 	if err := database.DBConn.Where("id = ?", token.ID).Delete(&conversations.ConversationToken{}).Error; err != nil {

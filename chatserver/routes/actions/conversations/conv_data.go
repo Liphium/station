@@ -19,13 +19,7 @@ type returnableMemberToken struct {
 }
 
 // Action: conv_data
-func HandleGetData(c *fiber.Ctx, action GenericTokenConfirmAction) error {
-
-	// Validate token
-	token, err := caching.ValidateToken(action.ID, action.Token)
-	if err != nil {
-		return integration.InvalidRequest(c, fmt.Sprintf("invalid conversation token: %s", err.Error()))
-	}
+func HandleGetData(c *fiber.Ctx, token conversations.ConversationToken, _ interface{}) error {
 
 	// Get the conversation from the database
 	var conversation conversations.Conversation

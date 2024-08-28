@@ -13,20 +13,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type PromoteTokenRequest struct {
-	ID    string `json:"id"`
-	Token string `json:"token"`
-	User  string `json:"user"` // User to be demoted (conv token id)
-}
-
 // Action: conv_promote
-func HandlePromoteToken(c *fiber.Ctx, action PromoteTokenRequest) error {
-
-	// Validate the token
-	token, err := caching.ValidateToken(action.ID, action.Token)
-	if err != nil {
-		return integration.InvalidRequest(c, fmt.Sprintf("invalid conversation token: %s", err.Error()))
-	}
+func HandlePromoteToken(c *fiber.Ctx, token conversations.ConversationToken, user string) error {
 
 	// Check if conversation is group
 	var conversation conversations.Conversation
@@ -43,7 +31,7 @@ func HandlePromoteToken(c *fiber.Ctx, action PromoteTokenRequest) error {
 	}
 
 	// Get the token of the other user
-	userToken, err := caching.GetToken(action.User)
+	userToken, err := caching.GetToken(user)
 	if err != nil {
 		return integration.InvalidRequest(c, fmt.Sprintf("couldn't get user token: %s", err.Error()))
 	}

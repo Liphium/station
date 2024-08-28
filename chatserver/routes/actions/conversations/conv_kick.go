@@ -20,19 +20,15 @@ type KickMemberAction struct {
 }
 
 // Action: conv_kick
-func HandleKick(c *fiber.Ctx, action KickMemberAction) error {
+func HandleKick(c *fiber.Ctx, token conversations.ConversationToken, target string) error {
 
 	// Make sure you can't kick yourself
-	if action.Id == action.Target {
+	if token.ID == target {
 		return integration.InvalidRequest(c, "same token")
 	}
 
-	// Validate the token and get all the tokens
-	token, err := caching.ValidateToken(action.Id, action.Token)
-	if err != nil {
-		return integration.FailedRequest(c, localization.ErrorServer, err)
-	}
-	targetToken, err := caching.GetToken(action.Target)
+	// Get the token of the target
+	targetToken, err := caching.GetToken(target)
 	if err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}

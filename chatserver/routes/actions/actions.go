@@ -38,18 +38,18 @@ func Unauthorized(router fiber.Router) {
 	router.Post("/ping", pingTest)
 
 	// Conversation actions
-	router.Post("/conv_activate", actionHandler(conversation_actions.HandleTokenActivation))
-	router.Post("/conv_promote", actionHandler(conversation_actions.HandlePromoteToken))
-	router.Post("/conv_demote", actionHandler(conversation_actions.HandleDemoteToken))
-	router.Post("/conv_read", actionHandler(conversation_actions.HandleRead))
-	router.Post("/conv_data", actionHandler(conversation_actions.HandleGetData))
-	router.Post("/conv_gen_token", actionHandler(conversation_actions.HandleGenerateToken))
-	router.Post("/conv_kick", actionHandler(conversation_actions.HandleKick))
-	router.Post("/conv_leave", actionHandler(conversation_actions.HandleLeave))
+	router.Post("/conv_activate", conversationHandler(conversation_actions.HandleTokenActivation))
+	router.Post("/conv_promote", conversationHandler(conversation_actions.HandlePromoteToken))
+	router.Post("/conv_demote", conversationHandler(conversation_actions.HandleDemoteToken))
+	router.Post("/conv_read", conversationHandler(conversation_actions.HandleRead))
+	router.Post("/conv_data", conversationHandler(conversation_actions.HandleGetData))
+	router.Post("/conv_gen_token", conversationHandler(conversation_actions.HandleGenerateToken))
+	router.Post("/conv_kick", conversationHandler(conversation_actions.HandleKick))
+	router.Post("/conv_leave", conversationHandler(conversation_actions.HandleLeave))
 }
 
 // Creates a new handler for the action based on its calling method
-func actionHandler[T any](handler action_helpers.ActionHandlerFunc[T]) func(*fiber.Ctx) error {
+func ActionHandler[T any](handler action_helpers.ActionHandlerFunc[T]) func(*fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 		// Parse the action with the request generic
 		var req action_helpers.RemoteActionRequest[T]
@@ -62,5 +62,28 @@ func actionHandler[T any](handler action_helpers.ActionHandlerFunc[T]) func(*fib
 
 		// Handle the action
 		return handler(c, req.Data)
+	}
+}
+
+// Creates a new handler for the action based on its calling method
+func conversationHandler[T any](handler action_helpers.ConversationActionHandlerFunc[T]) func(*fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		// Parse the action with the request generic
+		var req action_helpers.RemoteActionRequest[action_helpers.ConversationActionRequest[T]]
+		if err := integration.BodyParser(c, &req); err != nil {
+			return integration.InvalidRequest(c, "action wasn't valid")
+		}
+
+		// Check the conversation token
+		token, err := caching.ValidateToken(req.Data.Token.ID, req.Data.Token.Token)
+		if err != nil {
+			return integration.InvalidRequest(c, "token wasn't valid")
+		}
+
+		// Add the remote action request data to the locals
+		c.Locals("sender", req.Sender)
+
+		// Handle the action
+		return handler(c, token, req.Data.Data)
 	}
 }
