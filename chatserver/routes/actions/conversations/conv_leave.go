@@ -5,7 +5,7 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
-	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
+	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
@@ -79,7 +79,7 @@ func HandleLeave(c *fiber.Ctx, token conversations.ConversationToken, _ interfac
 					return integration.FailedRequest(c, localization.ErrorServer, nil)
 				}
 
-				err = message_routes.SendSystemMessage(token.Conversation, message_routes.GroupNewAdmin, []string{message_routes.AttachAccount(bestCase.Data)})
+				err = message_actions.SendSystemMessage(token.Conversation, message_actions.GroupNewAdmin, []string{message_actions.AttachAccount(bestCase.Data)})
 				if err != nil {
 					return integration.FailedRequest(c, localization.ErrorServer, nil)
 				}
@@ -87,8 +87,8 @@ func HandleLeave(c *fiber.Ctx, token conversations.ConversationToken, _ interfac
 		}
 	}
 
-	message_routes.SendSystemMessage(token.Conversation, message_routes.GroupMemberLeave, []string{
-		message_routes.AttachAccount(token.Data),
+	message_actions.SendSystemMessage(token.Conversation, message_actions.GroupMemberLeave, []string{
+		message_actions.AttachAccount(token.Data),
 	})
 
 	return integration.SuccessfulRequest(c)

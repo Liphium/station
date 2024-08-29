@@ -1,4 +1,4 @@
-package message_routes
+package message_actions
 
 import (
 	"time"
@@ -8,18 +8,9 @@ import (
 	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/bytedance/sonic"
-	"github.com/gofiber/fiber/v2"
 )
 
 const systemSender = "6969"
-
-func SetupRoutes(router fiber.Router) {
-	router.Post("/send", sendMessage)
-	router.Post("/delete", deleteMessage)
-	router.Post("/list_after", listAfter)
-	router.Post("/list_before", listBefore)
-	router.Post("/get", get)
-}
 
 // Stored system messages
 const GroupNewAdmin = "group.new_admin"

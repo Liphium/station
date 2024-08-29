@@ -113,6 +113,11 @@ func PostRequestBackend(url string, body map[string]interface{}) (map[string]int
 	return PostRequestTC(BasePath, "/"+ApiVersion+url, body)
 }
 
+// Send a post request (with TC protection encryption)
+func PostRequestBackendServer(server string, url string, body map[string]interface{}) (map[string]interface{}, error) {
+	return PostRequestTC(server, "/"+ApiVersion+url, body)
+}
+
 // Domain -> *rsa.PublicKey
 var publicKeyCache = &sync.Map{}
 

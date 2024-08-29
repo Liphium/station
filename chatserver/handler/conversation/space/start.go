@@ -3,11 +3,12 @@ package space
 import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/util/localization"
+	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 )
 
 // Action: spc_start
-func start(ctx pipeshandler.Context) {
+func start(c *pipeshandler.Context, data interface{}) pipes.Event {
 
 	/*
 		TODO: Re-enable
@@ -18,14 +19,13 @@ func start(ctx pipeshandler.Context) {
 	*/
 
 	// Create space
-	roomId, appToken, valid := caching.CreateSpace(ctx.Client.ID)
+	roomId, appToken, valid := caching.CreateSpace(c.Client.ID)
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
 	// Send space info
-	pipeshandler.NormalResponse(ctx, map[string]interface{}{
+	return pipeshandler.NormalResponse(c, map[string]interface{}{
 		"success": true,
 		"id":      roomId,
 		"token":   appToken,

@@ -3,40 +3,35 @@ package account
 import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/util/localization"
+	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 )
 
+type statusRespondAction struct {
+	ID     string `json:"id"`
+	Token  string `json:"token"`
+	Status string `json:"status"`
+	Data   string `json:"data"`
+}
+
 // Action: st_res
-func respondToStatus(ctx pipeshandler.Context) {
-
-	if ctx.ValidateForm("id", "token", "status", "data") {
-		pipeshandler.ErrorResponse(ctx, localization.InvalidRequest)
-		return
-	}
-
-	id := ctx.Data["id"].(string)
-	token := ctx.Data["token"].(string)
-	status := ctx.Data["status"].(string)
-	data := ctx.Data["data"].(string)
+func respondToStatus(c *pipeshandler.Context, action statusRespondAction) pipes.Event {
 
 	// Get from cache
-	convToken, err := caching.ValidateToken(id, token)
+	convToken, err := caching.ValidateToken(action.ID, action.Token)
 	if err != nil {
-		pipeshandler.ErrorResponse(ctx, localization.InvalidRequest)
-		return
+		return pipeshandler.ErrorResponse(c, localization.InvalidRequest, err)
 	}
 
 	// Check if this is a valid conversation
 	members, err := caching.LoadMembers(convToken.Conversation)
 	if err != nil {
-		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 	}
 
 	// Make sure it's a private conversation
 	if len(members) > 2 {
-		pipeshandler.ErrorResponse(ctx, localization.InvalidRequest)
-		return
+		return pipeshandler.ErrorResponse(c, localization.InvalidRequest, nil)
 	}
 
 	// Get the other member to send the status to
@@ -48,10 +43,9 @@ func respondToStatus(ctx pipeshandler.Context) {
 	}
 
 	// Send the event
-	if err := caching.SendEventToMembers([]caching.StoredMember{otherMember}, StatusEvent(status, data, convToken.Conversation, convToken.ID, ":a")); err != nil {
-		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
-		return
+	if err := caching.SendEventToMembers([]caching.StoredMember{otherMember}, StatusEvent(action.Status, action.Data, convToken.Conversation, convToken.ID, ":a")); err != nil {
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 	}
 
-	pipeshandler.SuccessResponse(ctx)
+	return pipeshandler.SuccessResponse(c)
 }

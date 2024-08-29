@@ -7,7 +7,7 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
-	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
+	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
@@ -61,8 +61,8 @@ func HandleDemoteToken(c *fiber.Ctx, token conversations.ConversationToken, user
 	userToken.Rank = rankToDemote
 
 	// Send a system message to let everyone know about the rank change
-	err = message_routes.SendSystemMessage(token.Conversation, message_routes.GroupRankChange, []string{fmt.Sprintf("%d", prevRank), fmt.Sprintf("%d", userToken.Rank),
-		message_routes.AttachAccount(userToken.Data), message_routes.AttachAccount(token.Data)})
+	err = message_actions.SendSystemMessage(token.Conversation, message_actions.GroupRankChange, []string{fmt.Sprintf("%d", prevRank), fmt.Sprintf("%d", userToken.Rank),
+		message_actions.AttachAccount(userToken.Data), message_actions.AttachAccount(token.Data)})
 	if err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}

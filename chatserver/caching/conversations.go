@@ -27,9 +27,11 @@ func ValidateToken(id string, token string) (conversations.ConversationToken, er
 	return conversationToken, nil
 }
 
-func ValidateTokens(tokens *[]conversations.SentConversationToken) ([]conversations.ConversationToken, []string, error) {
+// Returns: conversationTokens, missingTokens, tokenIds, err
+func ValidateTokens(tokens *[]conversations.SentConversationToken) ([]conversations.ConversationToken, []string, []string, error) {
 	foundTokens := []conversations.ConversationToken{}
 
+	// Convert all tokens to data types they can be used with
 	tokensMap := map[string]conversations.SentConversationToken{}
 	tokenIds := []string{}
 	for _, token := range *tokens {
@@ -40,30 +42,29 @@ func ValidateTokens(tokens *[]conversations.SentConversationToken) ([]conversati
 	// Get tokens from database
 	var conversationTokens []conversations.ConversationToken
 	if err := database.DBConn.Model(&conversations.ConversationToken{}).Where("id IN ?", tokenIds).Find(&conversationTokens).Error; err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
+	// Check if the tokens are actually there and sort them into the lists accordinly
+	missingTokens := []string{}
 	for _, token := range conversationTokens {
 		if token.Token == tokensMap[token.ID].Token {
+
+			// Add the token to the found tokens list
 			tokensMap[token.ID] = conversations.SentConversationToken{
 				ID:    "-",
 				Token: "-",
 			}
 			foundTokens = append(foundTokens, token)
 		} else {
+
+			// Add the token to the missing tokens list
+			missingTokens = append(missingTokens, token.ID)
 			util.Log.Println("not found")
 		}
 	}
 
-	// Get all missing tokens to delete those conversations from the client
-	missingTokens := []string{}
-	for id, token := range tokensMap {
-		if token.ID != "-" {
-			missingTokens = append(missingTokens, id)
-		}
-	}
-
-	return foundTokens, missingTokens, nil
+	return foundTokens, missingTokens, tokenIds, nil
 }
 
 // Get a conversation token

@@ -7,7 +7,7 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
-	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
+	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
@@ -44,7 +44,7 @@ func HandleGenerateToken(c *fiber.Ctx, token conversations.ConversationToken, da
 
 	// Generate a new token
 	generated := conversations.ConversationToken{
-		ID:           util.GenerateToken(util.ConversationTokenIDLength),
+		ID:           util.GenerateToken(util.ConversationTokenIDLength) + "@" + integration.BasePath,
 		Token:        util.GenerateToken(util.ConversationTokenLength),
 		Activated:    false,
 		Conversation: token.Conversation,
@@ -57,7 +57,7 @@ func HandleGenerateToken(c *fiber.Ctx, token conversations.ConversationToken, da
 	}
 
 	// Send a system message to let everyone know
-	err = message_routes.SendSystemMessage(token.Conversation, message_routes.GroupMemberInvite, []string{message_routes.AttachAccount(token.Data), message_routes.AttachAccount(generated.Data)})
+	err = message_actions.SendSystemMessage(token.Conversation, message_actions.GroupMemberInvite, []string{message_actions.AttachAccount(token.Data), message_actions.AttachAccount(generated.Data)})
 	if err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}

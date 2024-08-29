@@ -4,7 +4,7 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
-	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
+	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
@@ -70,7 +70,7 @@ func HandleTokenActivation(c *fiber.Ctx, token conversations.ConversationToken, 
 		}
 
 		// Send a system message to tell the group members about the new member
-		err := message_routes.SendSystemMessage(token.Conversation, message_routes.GroupMemberJoin, []string{message_routes.AttachAccount(token.Data)})
+		err := message_actions.SendSystemMessage(token.Conversation, message_actions.GroupMemberJoin, []string{message_actions.AttachAccount(token.Data)})
 		if err != nil {
 			return integration.FailedRequest(c, localization.ErrorServer, err)
 		}

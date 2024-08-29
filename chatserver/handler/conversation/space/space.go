@@ -2,10 +2,11 @@ package space
 
 import (
 	"github.com/Liphium/station/chatserver/caching"
+	"github.com/Liphium/station/pipeshandler"
 )
 
 func SetupActions() {
-	caching.CSInstance.RegisterHandler("spc_start", start)
-	caching.CSInstance.RegisterHandler("spc_join", joinCall)
-	caching.CSInstance.RegisterHandler("spc_leave", leaveCall)
+	pipeshandler.CreateHandlerFor(caching.CSInstance, "spc_start", start)
+	pipeshandler.CreateHandlerFor(caching.CSInstance, "spc_join", joinCall)
+	pipeshandler.CreateHandlerFor(caching.CSInstance, "spc_leave", leaveCall)
 }

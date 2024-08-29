@@ -77,7 +77,7 @@ func openConversation(c *fiber.Ctx) error {
 		convToken := util.GenerateToken(util.ConversationTokenLength)
 
 		tk := conversations.ConversationToken{
-			ID:           util.GenerateToken(util.ConversationTokenIDLength),
+			ID:           util.GenerateToken(util.ConversationTokenIDLength) + "@" + integration.BasePath,
 			Conversation: conv.ID,
 			Activated:    false,
 			Token:        convToken,
@@ -97,7 +97,7 @@ func openConversation(c *fiber.Ctx) error {
 	}
 
 	adminToken := conversations.ConversationToken{
-		ID:           util.GenerateToken(util.ConversationTokenIDLength),
+		ID:           util.GenerateToken(util.ConversationTokenIDLength) + "@" + integration.BasePath,
 		Token:        util.GenerateToken(util.ConversationTokenLength),
 		Activated:    true,
 		Conversation: conv.ID,

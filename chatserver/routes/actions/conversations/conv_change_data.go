@@ -4,7 +4,7 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
-	message_routes "github.com/Liphium/station/chatserver/routes/conversations/message"
+	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
@@ -46,8 +46,8 @@ func HandleChangeData(c *fiber.Ctx, token conversations.ConversationToken, data 
 	}
 
 	// Send a system to everyone to tell them about the change of the data
-	if err := message_routes.SendSystemMessage(token.Conversation, message_routes.ConversationEdited, []string{
-		message_routes.AttachAccount(token.Data),
+	if err := message_actions.SendSystemMessage(token.Conversation, message_actions.ConversationEdited, []string{
+		message_actions.AttachAccount(token.Data),
 	}); err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}

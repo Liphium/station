@@ -1,4 +1,4 @@
-package message_routes
+package message_actions
 
 import (
 	"time"
@@ -13,72 +13,38 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type MessageSendRequest struct {
-	Conversation string `json:"conversation"`
-	TokenID      string `json:"token_id"`
-	Token        string `json:"token"`
-	Timestamp    uint64 `json:"timestamp"`
-	Data         string `json:"data"`
+type MessageSendAction struct {
+	Timestamp uint64 `json:"timestamp"`
+	Data      string `json:"data"`
 }
 
-func (r *MessageSendRequest) Validate() bool {
-	return len(r.Conversation) > 0 && len(r.Data) > 0 && len(r.Token) == util.ConversationTokenLength
-}
-
-// Route: /conversations/message/send
-func sendMessage(c *fiber.Ctx) error {
-
-	var req MessageSendRequest
-	if err := integration.BodyParser(c, &req); err != nil {
-		return integration.InvalidRequest(c, err.Error())
-	}
+// Action: msg_send
+func HandleSend(c *fiber.Ctx, token conversations.ConversationToken, action MessageSendAction) error {
 
 	// Validate request
-	if !req.Validate() {
+	if len(action.Data) == 0 {
 		return integration.InvalidRequest(c, "request is invalid")
 	}
 
-	if conversations.CheckSize(req.Data) {
+	// Check if message is too big
+	if conversations.CheckSize(action.Data) {
 		return integration.FailedRequest(c, "too.big", nil)
-	}
-
-	// Validate conversation token
-	token, err := caching.ValidateToken(req.TokenID, req.Token)
-	if err != nil {
-		return integration.InvalidRequest(c, "token id is invalid")
-	}
-
-	// Load members
-	members, err := caching.LoadMembers(req.Conversation)
-	if err != nil {
-		return integration.FailedRequest(c, localization.ErrorServer, nil)
-	}
-
-	found := false
-	for _, member := range members {
-		if member.TokenID == token.ID {
-			found = true
-		}
-	}
-
-	if !found {
-		return integration.InvalidRequest(c, "member token wasn't found "+req.Token+" "+req.Conversation)
 	}
 
 	// Generate an id and certificate for the message
 	messageId := util.GenerateToken(32)
-	certificate, err := conversations.GenerateCertificate(messageId, req.Conversation, token.ID)
+	certificate, err := conversations.GenerateCertificate(messageId, token.Conversation, token.ID)
 	if err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	message := conversations.Message{
 		ID:           messageId,
-		Conversation: req.Conversation,
+		Conversation: token.Conversation,
 		Certificate:  certificate,
-		Data:         req.Data,
+		Data:         action.Data,
 		Sender:       token.ID,
-		Creation:     int64(req.Timestamp),
+		Creation:     int64(action.Timestamp),
 		Edited:       false,
 	}
 
@@ -88,7 +54,13 @@ func sendMessage(c *fiber.Ctx) error {
 	}
 
 	// Update the read state to prevent the message sender from being notified about the message
-	if err := database.DBConn.Model(&conversations.ConversationToken{}).Where("conversation = ? AND id = ?", req.Conversation, req.TokenID).Update("last_read", time.Now().UnixMilli()+1).Error; err != nil {
+	if err := database.DBConn.Model(&conversations.ConversationToken{}).Where("conversation = ? AND id = ?", token.Conversation, token.ID).Update("last_read", time.Now().UnixMilli()+1).Error; err != nil {
+		return integration.FailedRequest(c, localization.ErrorServer, err)
+	}
+
+	// Load the members of the conversation
+	members, err := caching.LoadMembers(token.Conversation)
+	if err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 

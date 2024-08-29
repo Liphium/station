@@ -1,8 +1,11 @@
 package account
 
-import "github.com/Liphium/station/chatserver/caching"
+import (
+	"github.com/Liphium/station/chatserver/caching"
+	"github.com/Liphium/station/pipeshandler"
+)
 
 func SetupActions() {
-	caching.CSInstance.RegisterHandler("st_send", sendStatus)
-	caching.CSInstance.RegisterHandler("st_res", respondToStatus)
+	pipeshandler.CreateHandlerFor(caching.CSInstance, "st_send", sendStatus)
+	pipeshandler.CreateHandlerFor(caching.CSInstance, "st_res", respondToStatus)
 }

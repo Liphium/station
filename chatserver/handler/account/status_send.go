@@ -3,33 +3,37 @@ package account
 import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
+	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/database/fetching"
-	"github.com/Liphium/station/chatserver/handler/conversation"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 )
 
-// Action: st_send
-func sendStatus(ctx pipeshandler.Context) {
+type sendStatusAction struct {
+	Tokens []conversations.SentConversationToken `json:"tokens"`
+	Status string                                `json:"status"`
+	Data   string                                `json:"data"`
+}
 
-	if ctx.ValidateForm("tokens", "status", "data") {
-		pipeshandler.ErrorResponse(ctx, localization.InvalidRequest)
-		return
-	}
+// Action: st_send
+func sendStatus(c *pipeshandler.Context, action sendStatusAction) pipes.Event {
 
 	// Save in database
-	statusMessage := ctx.Data["status"].(string)
-	data := ctx.Data["data"].(string)
-	if err := database.DBConn.Model(&fetching.Status{}).Where("id = ?", ctx.Client.ID).Update("data", statusMessage).Error; err != nil {
-		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
-		return
+	if err := database.DBConn.Model(&fetching.Status{}).Where("id = ?", c.Client.ID).Update("data", action.Data).Error; err != nil {
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 	}
 
-	// Send to other people
-	conversationTokens, _, members, _, ok := conversation.PrepareConversationTokens(ctx)
-	if !ok {
-		return
+	// Validate all the tokens
+	conversationTokens, _, tokenIds, err := caching.ValidateTokens(&action.Tokens)
+	if err != nil {
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
+	}
+
+	// Grab all the members
+	members, err := caching.LoadMembersArray(tokenIds)
+	if err != nil {
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 	}
 
 	for _, token := range conversationTokens {
@@ -48,13 +52,13 @@ func sendStatus(ctx pipeshandler.Context) {
 		}
 
 		// Send the status event
-		caching.SendEventToMembers([]caching.StoredMember{otherMember}, StatusEvent(statusMessage, data, token.Conversation, token.ID, ""))
+		caching.SendEventToMembers([]caching.StoredMember{otherMember}, StatusEvent(action.Status, action.Data, token.Conversation, token.ID, ""))
 	}
 
 	// Send the status to other devices
-	caching.CSNode.SendClient(ctx.Client.ID, StatusEvent(statusMessage, data, "", ctx.Client.ID, ":o"))
+	caching.CSNode.SendClient(c.Client.ID, StatusEvent(action.Status, action.Data, "", c.Client.ID, ":o"))
 
-	pipeshandler.SuccessResponse(ctx)
+	return pipeshandler.SuccessResponse(c)
 }
 
 func StatusEvent(st string, data string, conversation string, ownToken string, suffix string) pipes.Event {

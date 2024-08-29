@@ -18,7 +18,6 @@ import (
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 	pipesfroutes "github.com/Liphium/station/pipeshandler/routes"
-	"github.com/bytedance/sonic"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 )
@@ -236,7 +235,7 @@ type ExtraClientData struct {
 }
 
 // Middleware for pipes-fiber to add encryption support
-func EncryptionDecodingMiddleware(client *pipeshandler.Client, instance *pipeshandler.Instance, bytes []byte) (pipeshandler.Message, error) {
+func EncryptionDecodingMiddleware(client *pipeshandler.Client, instance *pipeshandler.Instance, bytes []byte) ([]byte, error) {
 
 	// Handle potential errors
 	defer func() {
@@ -247,19 +246,7 @@ func EncryptionDecodingMiddleware(client *pipeshandler.Client, instance *pipesha
 
 	// Decrypt the message using AES
 	key := client.Data.(ExtraClientData).Key
-	messageEncoded, err := integration.DecryptAES(key, bytes)
-	if err != nil {
-		return pipeshandler.Message{}, err
-	}
-
-	// Unmarshal the message using sonic
-	var message pipeshandler.Message
-	err = sonic.Unmarshal(messageEncoded, &message)
-	if err != nil {
-		return pipeshandler.Message{}, err
-	}
-
-	return message, nil
+	return integration.DecryptAES(key, bytes)
 }
 
 // Middleware for pipes-fiber to add encryption support (in encoding)
