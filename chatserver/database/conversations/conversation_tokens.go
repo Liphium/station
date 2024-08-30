@@ -10,6 +10,13 @@ type ConversationToken struct {
 	LastRead     int64  `json:"-" gorm:"not null"` // Last time the user read the conversation
 }
 
+func (t *ConversationToken) ToSent() SentConversationToken {
+	return SentConversationToken{
+		ID:    t.ID,
+		Token: t.Token,
+	}
+}
+
 type SentConversationToken struct {
 	ID    string `json:"id"`
 	Token string `json:"token"`

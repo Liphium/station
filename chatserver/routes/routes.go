@@ -157,12 +157,6 @@ func setupPipesFiber(router fiber.Router) {
 				util.Log.Println("Client disconnected:", client.ID)
 			}
 
-			// Remove all adapters from pipes
-			err := caching.DeleteAdapters(client.ID)
-			if err != nil {
-				util.Log.Println("COULDN'T DELETE ADAPTERS:", err.Error())
-			}
-
 			// Cancel all zap transactions
 			zapshare.CancelTransactionByAccount(client.ID)
 

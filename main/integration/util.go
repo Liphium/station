@@ -72,6 +72,7 @@ func grabServerPublicKey() error {
 
 var Protocol = "http://"
 var BasePath = "http://localhost:3000"
+var Domain = "localhost:3000"
 var ServerPublicKey *rsa.PublicKey // Public key from the backend server
 
 // * Important
@@ -123,6 +124,11 @@ var publicKeyCache = &sync.Map{}
 
 // Send a post request (with TC protection encryption, public key will be cached and retrieved)
 func PostRequestTC(server string, path string, body map[string]interface{}) (map[string]interface{}, error) {
+
+	// Make sure there is a protocol specified on the server
+	if !strings.HasPrefix(server, "http://") && !strings.HasPrefix(server, "https://") {
+		server = "https://" + server
+	}
 
 	// Check if there is a public key for that specific server
 	obj, valid := publicKeyCache.Load(server)

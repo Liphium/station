@@ -11,8 +11,8 @@ import (
 	"strconv"
 )
 
-var Testing = false
-var FilePath = "env/"
+// Whether the chat node is allowed to connect to unsafe instances
+var AllowUnsafe = false
 
 const StatusOnline = 0
 const StatusOffline = 1

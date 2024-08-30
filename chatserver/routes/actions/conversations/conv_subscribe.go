@@ -1,12 +1,15 @@
 package conversation_actions
 
 import (
+	"strings"
+
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
-	"github.com/Liphium/station/chatserver/util"
+	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/pipes"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -24,7 +27,7 @@ func HandleRemoteSubscription(c *fiber.Ctx, action RemoteSubscribeAction) error 
 	}
 
 	// Validate the tokens
-	conversationTokens, missingTokens, tokenIds, err := caching.ValidateTokens(&action.Tokens)
+	conversationTokens, missingTokens, _, err := caching.ValidateTokens(&action.Tokens)
 	if err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
@@ -35,11 +38,39 @@ func HandleRemoteSubscription(c *fiber.Ctx, action RemoteSubscribeAction) error 
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	if database.DBConn.Model(&conversations.ConversationToken{}).Where("id IN ?", tokenIds).Updates(map[string]interface{}{
-		"remote": true,
-		"node":   util.NodeTo64(caching.CSNode.ID),
-	}).Error != nil {
-		return integration.FailedRequest(c, localization.ErrorServer, err)
+	// Add adapters for remote subscription to conversations
+	sender := c.Locals("sender").(string)
+	for _, token := range conversationTokens {
+		if token.Activated {
+
+			// Get the server the token was created on
+			args := strings.Split(token.ID, "@")
+			if len(args) != 2 {
+				continue
+			}
+
+			if args[1] == integration.BasePath {
+				caching.CSNode.AdaptWS(pipes.Adapter{
+					ID: "s-" + token.Token,
+					Receive: func(ctx *pipes.Context) error {
+
+						// Send the event to the token through a remote event channel
+						_, err := action_helpers.SendRemoteAction(sender, "conv_remote_channel", fiber.Map{
+							"token": token.Token,
+							"event": *ctx.Event,
+						})
+						return err
+					},
+
+					// Remove the adapter if there is an error
+					OnError: func(err error) {
+						caching.CSNode.RemoveAdapterWS("s-" + token.Token)
+					},
+				})
+			} else {
+
+			}
+		}
 	}
 
 	return integration.ReturnJSON(c, fiber.Map{

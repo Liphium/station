@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -93,6 +94,10 @@ func Setup(identifier string, loadEnv bool) bool {
 	_, ok := Nodes[identifier]
 	if ok {
 		BasePath = os.Getenv("PROTOCOL") + os.Getenv("BASE_PATH")
+		Domain = extractDomain(BasePath)
+		if strings.HasPrefix(BasePath, "http://") {
+			Domain = "http://" + Domain
+		}
 
 		Log.Println("Grabbing server public key..")
 		err = grabServerPublicKey()
@@ -139,6 +144,10 @@ func Setup(identifier string, loadEnv bool) bool {
 	Log.Println("1. Base Path (e.g. http://localhost:3000)")
 	scanner.Scan()
 	BasePath = scanner.Text()
+	Domain = extractDomain(BasePath)
+	if strings.HasPrefix(BasePath, "http://") {
+		Domain = "http://" + Domain
+	}
 
 	Log.Println("Grabbing server public key..")
 	err = grabServerPublicKey()
@@ -231,6 +240,10 @@ func readData(path string, identifier string) bool {
 
 	scanner.Scan()
 	BasePath = scanner.Text()
+	Domain = extractDomain(BasePath)
+	if strings.HasPrefix(BasePath, "http://") {
+		Domain = "http://" + Domain
+	}
 
 	scanner.Scan()
 	nodeToken := scanner.Text()
@@ -249,4 +262,10 @@ func readData(path string, identifier string) bool {
 	}
 
 	return true
+}
+
+func extractDomain(path string) string {
+	path = strings.ReplaceAll(path, "http://", "")
+	path = strings.ReplaceAll(path, "https://", "")
+	return path
 }

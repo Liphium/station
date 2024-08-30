@@ -60,7 +60,7 @@ func openConversation(c *fiber.Ctx) error {
 
 	// Generate the address for the conversation
 	conv := conversations.Conversation{
-		ID:      util.GenerateToken(util.ConversationIDLength) + "@" + integration.BasePath,
+		ID:      util.GenerateToken(util.ConversationIDLength) + "@" + integration.Domain,
 		Type:    uint(convType),
 		Version: 1,
 		Data:    req.Data,
@@ -77,7 +77,7 @@ func openConversation(c *fiber.Ctx) error {
 		convToken := util.GenerateToken(util.ConversationTokenLength)
 
 		tk := conversations.ConversationToken{
-			ID:           util.GenerateToken(util.ConversationTokenIDLength) + "@" + integration.BasePath,
+			ID:           util.GenerateToken(util.ConversationTokenIDLength) + "@" + integration.Domain,
 			Conversation: conv.ID,
 			Activated:    false,
 			Token:        convToken,
@@ -97,7 +97,7 @@ func openConversation(c *fiber.Ctx) error {
 	}
 
 	adminToken := conversations.ConversationToken{
-		ID:           util.GenerateToken(util.ConversationTokenIDLength) + "@" + integration.BasePath,
+		ID:           util.GenerateToken(util.ConversationTokenIDLength) + "@" + integration.Domain,
 		Token:        util.GenerateToken(util.ConversationTokenLength),
 		Activated:    true,
 		Conversation: conv.ID,

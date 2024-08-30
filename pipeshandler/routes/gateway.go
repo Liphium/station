@@ -125,6 +125,13 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 
 				return nil
 			},
+
+			// Disconnect the user on error
+			OnError: func(err error) {
+
+				// Remove the adapter
+				local.RemoveAdapterWS(tk.Account)
+			},
 		})
 	}
 

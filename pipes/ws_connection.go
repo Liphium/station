@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 type AdoptionRequest struct {

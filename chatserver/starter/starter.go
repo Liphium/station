@@ -28,6 +28,14 @@ func Start(routine bool) {
 		return
 	}
 
+	// Setup environment
+	allowUnsafe := os.Getenv("CN_ALLOW_UNSAFE")
+	if allowUnsafe == "" {
+		util.AllowUnsafe = false
+	} else if allowUnsafe == "true" {
+		util.AllowUnsafe = true
+	}
+
 	// Connect to the database
 	database.Connect()
 	caching.SetupCaches()

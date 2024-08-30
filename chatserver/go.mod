@@ -19,7 +19,6 @@ require (
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/net v0.28.0 // indirect
-	nhooyr.io/websocket v1.8.17 // indirect
 )
 
 require (
@@ -52,6 +51,7 @@ require (
 	github.com/bytedance/sonic/loader v0.2.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
+	github.com/coder/websocket v1.8.12 // indirect
 	github.com/fasthttp/websocket v1.5.10 // indirect
 	github.com/gofiber/websocket/v2 v2.2.1 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect

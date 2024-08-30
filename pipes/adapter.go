@@ -14,6 +14,7 @@ type Adapter struct {
 
 	// Functions
 	Receive func(*Context) error
+	OnError func(error)
 }
 
 type Context struct {
@@ -74,6 +75,12 @@ func (node *LocalNode) AdapterReceiveWeb(ID string, event Event, msg []byte) err
 		Message: msg,
 		Adapter: adapter,
 	})
+
+	// Tell the adapter there was an error
+	if err != nil {
+		adapter.OnError(err)
+	}
+
 	adapter.Mutex.Unlock()
 
 	if err != nil {

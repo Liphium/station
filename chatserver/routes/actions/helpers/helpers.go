@@ -1,11 +1,13 @@
 package action_helpers
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
+	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
@@ -90,6 +92,11 @@ func CreateConversationEndpoint[T any](handler ConversationActionHandlerFunc[T],
 			return integration.InvalidRequest(c, "conversation id is invalid")
 		}
 
+		// Check if the connection is safe (or if unsafe is allowed)
+		if strings.HasPrefix(strings.TrimSpace(args[1]), "http://") && !util.AllowUnsafe {
+			return integration.FailedRequest(c, "not.allowed", errors.New("unsafe requests aren't allowed"))
+		}
+
 		// If the address isn't the current instance, send a remote action
 		if args[1] != integration.BasePath {
 
@@ -122,4 +129,14 @@ func CreateConversationEndpoint[T any](handler ConversationActionHandlerFunc[T],
 		// Let the action handle the request
 		return handler(c, token, req.Data)
 	}
+}
+
+// Sends a remote action to any server
+func SendRemoteAction(server string, action string, data interface{}) (map[string]interface{}, error) {
+	return integration.PostRequestBackendServer(server, "/node/actions/send", fiber.Map{
+		"app_tag": integration.AppTagChatNode,
+		"sender":  integration.BasePath,
+		"action":  action,
+		"data":    data,
+	})
 }
