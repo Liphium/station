@@ -8,49 +8,46 @@ import (
 )
 
 // Action: table_join
-func joinTable(ctx pipeshandler.Context) {
+func joinTable(c *pipeshandler.Context, action struct {
+	Color float64 `json:"color"`
+}) pipes.Event {
 
-	if ctx.ValidateForm("color") {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
-	}
-	color := ctx.Data["color"].(float64)
-
-	err := caching.JoinTable(ctx.Client.Session, ctx.Client.ID, color)
+	err := caching.JoinTable(c.Client.Session, c.Client.ID, action.Color)
 	if err != nil {
-		util.Log.Println("Couldn't join table of room", ctx.Client.Session, ":", err.Error())
-		pipeshandler.ErrorResponse(ctx, "server.error")
-		return
+		util.Log.Println("Couldn't join table of room", c.Client.Session, ":", err.Error())
+		return pipeshandler.ErrorResponse(c, "server.error", err)
 	}
 
-	pipeshandler.SuccessResponse(ctx)
+	// Start a goroutine to stream over all the changes
+	go func(c pipeshandler.Context) {
+		// Send all the objects
+		objects, err := caching.TableObjects(c.Client.Session)
+		if err != nil {
+			util.Log.Println("Couldn't get objects of room", c.Client.Session, ":", err.Error())
+			return
+		}
 
-	// Send all the objects
-	objects, err := caching.TableObjects(ctx.Client.Session)
-	if err != nil {
-		util.Log.Println("Couldn't get objects of room", ctx.Client.Session, ":", err.Error())
-		return
-	}
+		err = caching.SSNode.SendClient(c.Client.ID, pipes.Event{
+			Name: "table_obj",
+			Data: map[string]interface{}{
+				"obj": objects,
+			},
+		})
+		if err != nil {
+			util.Log.Println("Couldn't send objects of room through event", c.Client.Session, ":", err.Error())
+		}
+	}(*c)
 
-	err = caching.SSNode.SendClient(ctx.Client.ID, pipes.Event{
-		Name: "table_obj",
-		Data: map[string]interface{}{
-			"obj": objects,
-		},
-	})
-	if err != nil {
-		util.Log.Println("Couldn't send objects of room through event", ctx.Client.Session, ":", err.Error())
-	}
+	return pipeshandler.SuccessResponse(c)
 }
 
 // Action: table_leave
-func leaveTable(ctx pipeshandler.Context) {
-	err := caching.LeaveTable(ctx.Client.Session, ctx.Client.ID)
+func leaveTable(c *pipeshandler.Context, action interface{}) pipes.Event {
+	err := caching.LeaveTable(c.Client.Session, c.Client.ID)
 	if err != nil {
-		util.Log.Println("Couldn't leave table of room", ctx.Client.Session, ":", err.Error())
-		pipeshandler.ErrorResponse(ctx, "server.error")
-		return
+		util.Log.Println("Couldn't leave table of room", c.Client.Session, ":", err.Error())
+		return pipeshandler.ErrorResponse(c, "server.error", err)
 	}
 
-	pipeshandler.SuccessResponse(ctx)
+	return pipeshandler.SuccessResponse(c)
 }

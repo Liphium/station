@@ -11,7 +11,6 @@ import (
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/spacestation/caching"
-	"github.com/Liphium/station/spacestation/caching/games/launcher"
 	"github.com/Liphium/station/spacestation/handler"
 	"github.com/Liphium/station/spacestation/routes"
 	"github.com/Liphium/station/spacestation/util"
@@ -35,7 +34,6 @@ func Start(loadEnv bool) {
 
 	caching.InitLiveKit()
 
-	launcher.InitGames()
 	util.Log.Println("Starting..")
 
 	// Query current node AND JWT TOKEN

@@ -31,15 +31,11 @@ func LoadMembers(id string) ([]StoredMember, error) {
 			storedMembers[i] = StoredMember{
 				TokenID: member.ID,
 				Token:   "-",
-				Remote:  member.Remote,
-				Node:    member.Node,
 			}
 		} else {
 			storedMembers[i] = StoredMember{
 				TokenID: member.ID,
 				Token:   member.Token,
-				Remote:  member.Remote,
-				Node:    member.Node,
 			}
 		}
 	}
@@ -61,13 +57,11 @@ func LoadMembersArray(ids []string) (map[string][]StoredMember, error) {
 			returnMap[token.Conversation] = append(returnMap[token.Conversation], StoredMember{
 				TokenID: token.ID,
 				Token:   "-",
-				Node:    token.Node,
 			})
 		} else {
 			returnMap[token.Conversation] = append(returnMap[token.Conversation], StoredMember{
 				TokenID: token.ID,
 				Token:   token.Token,
-				Node:    token.Node,
 			})
 		}
 	}

@@ -6,28 +6,24 @@ import (
 	"github.com/Liphium/station/spacestation/caching"
 )
 
-// Action: tc_move
-func moveCursor(ctx pipeshandler.Context) {
+type cursorMoveAction struct {
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
+}
 
-	if ctx.ValidateForm("x", "y") {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
-	}
+// Action: tc_move
+func moveCursor(ctx *pipeshandler.Context, action cursorMoveAction) pipes.Event {
 
 	// Get the connection (for getting the client id)
 	connection, valid := caching.GetConnection(ctx.Client.ID)
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
+		return pipeshandler.ErrorResponse(ctx, "invalid", nil)
 	}
 
 	// Get all the data needed
-	x := ctx.Data["x"].(float64)
-	y := ctx.Data["y"].(float64)
 	member, valid := caching.GetMemberData(ctx.Client.Session, ctx.Client.ID)
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, "server.error")
-		return
+		return pipeshandler.ErrorResponse(ctx, "server.error", nil)
 	}
 
 	// Notify other clients
@@ -35,15 +31,14 @@ func moveCursor(ctx pipeshandler.Context) {
 		Name: "tc_moved",
 		Data: map[string]interface{}{
 			"c":   connection.ClientID,
-			"x":   x,
-			"y":   y,
+			"x":   action.X,
+			"y":   action.Y,
 			"col": member.Color,
 		},
 	})
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, "server.error")
-		return
+		return pipeshandler.ErrorResponse(ctx, "server.error", nil)
 	}
 
-	pipeshandler.SuccessResponse(ctx)
+	return pipeshandler.SuccessResponse(ctx)
 }

@@ -13,7 +13,6 @@ func SetupMemory() {
 	setupRoomsCache()
 	setupRoomConnectionsCache()
 	setupConnectionsCache()
-	setupSessionsCache()
 }
 
 func CloseCaches() {
@@ -21,5 +20,4 @@ func CloseCaches() {
 	roomsCache.Close()
 	roomConnectionsCache.Close()
 	connectionsCache.Close()
-	sessionsCache.Close()
 }

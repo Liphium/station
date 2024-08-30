@@ -3,7 +3,7 @@ module github.com/Liphium/station/pipes
 go 1.23.0
 
 require (
-	github.com/bytedance/sonic v1.12.1
+	github.com/bytedance/sonic v1.12.2
 	github.com/dgraph-io/ristretto v0.1.1
 	nhooyr.io/websocket v1.8.17
 )

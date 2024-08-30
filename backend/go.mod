@@ -3,7 +3,7 @@ module github.com/Liphium/station/backend
 go 1.23.0
 
 require (
-	github.com/bytedance/sonic v1.12.1
+	github.com/bytedance/sonic v1.12.2
 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/joho/godotenv v1.5.1
 	gorm.io/driver/postgres v1.5.9

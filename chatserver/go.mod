@@ -41,7 +41,7 @@ require (
 )
 
 require (
-	github.com/bytedance/sonic v1.12.1
+	github.com/bytedance/sonic v1.12.2
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	golang.org/x/arch v0.9.0 // indirect

@@ -3,8 +3,9 @@ module github.com/Liphium/station/pipeshandler
 go 1.23.0
 
 require (
+	github.com/Liphium/station/chatserver v0.0.0-20240819105432-c6d7be0605b2
 	github.com/Liphium/station/pipes v0.0.0-20240819105432-c6d7be0605b2
-	github.com/bytedance/sonic v1.12.1
+	github.com/bytedance/sonic v1.12.2
 	github.com/dgraph-io/ristretto v0.1.1
 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/gofiber/websocket/v2 v2.2.1
@@ -12,6 +13,7 @@ require (
 )
 
 require (
+	github.com/Liphium/station/main v0.0.0-20240819105432-c6d7be0605b2 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/bytedance/sonic/loader v0.2.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -21,6 +23,7 @@ require (
 	github.com/fasthttp/websocket v1.5.10 // indirect
 	github.com/golang/glog v1.2.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
