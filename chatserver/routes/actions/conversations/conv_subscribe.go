@@ -1,10 +1,11 @@
 package conversation_actions
 
 import (
+	"strings"
+
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
-	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
@@ -39,13 +40,20 @@ func HandleRemoteSubscription(c *fiber.Ctx, action RemoteSubscribeAction) error 
 	// Add adapters for remote subscription to conversations
 	for _, token := range conversationTokens {
 		if token.Activated {
-			sentToken := token.ToSent()
+			// Extract the address (for the adapter)
+			args := strings.Split(token.ID, "@")
+			if len(args) != 2 {
+				continue
+			}
+
 			caching.CSNode.AdaptWS(pipes.Adapter{
 				ID: "s-" + token.Token,
 				Receive: func(ctx *pipes.Context) error {
 
 					// Send the event to the token through a remote event channel
-					_, err := action_helpers.SendConversationAction("conv_remote_channel", sentToken, fiber.Map{
+					_, err := integration.PostRequestTC(args[1], "/event_channel/send", fiber.Map{
+						"id":    token.ID,
+						"token": token.Token,
 						"event": *ctx.Event,
 					})
 					return err
