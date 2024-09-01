@@ -1,6 +1,7 @@
 package conversation
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/Liphium/station/chatserver/caching"
@@ -14,6 +15,12 @@ import (
 	"github.com/Liphium/station/pipeshandler"
 	"github.com/gofiber/fiber/v2"
 )
+
+type conversationSubscribeResponse struct {
+	Success bool                                             `json:"success"`
+	Info    map[string]conversation_actions.ConversationInfo `json:"info"`
+	Missing []string                                         `json:"missing"`
+}
 
 // Action: conv_sub
 func subscribe(c *pipeshandler.Context, action struct {
@@ -46,7 +53,7 @@ func subscribe(c *pipeshandler.Context, action struct {
 
 			// Register adapter for the subscription
 			caching.CSNode.AdaptWS(pipes.Adapter{
-				ID: "s-" + token.Token,
+				ID: "s-" + token.ID,
 				Receive: func(context *pipes.Context) error {
 					client := *c.Client
 					util.Log.Println(context.Adapter.ID, token.Token, client.ID)
@@ -79,16 +86,37 @@ func subscribe(c *pipeshandler.Context, action struct {
 	}
 
 	// Subscribe to all remote tokens
+	var serversWithError []string = []string{}
 	for server, tokens := range remoteTokens {
-		action_helpers.SendRemoteAction(server, "conv_subscribe", fiber.Map{
+		res, err := action_helpers.SendRemoteActionGeneric[conversationSubscribeResponse](server, "conv_subscribe", fiber.Map{
 			"tokens": tokens,
 			"status": action.Status,
 		})
+
+		// Check if there was an error, if so, tell the client
+		if err != nil {
+			serversWithError = append(serversWithError, server)
+		}
+
+		// Add the conversation info from the remote server
+		// This loop is coded this way for security reasons (so the other server couldn't delete a conversation that is not on it)
+		for _, token := range tokens {
+			convInfo[token.ID] = res.Info[token.ID]
+		}
+
+		// Add the missing tokens
+		res.Missing = slices.DeleteFunc(res.Missing, func(element string) bool {
+			return !slices.ContainsFunc(tokens, func(token conversations.SentConversationToken) bool {
+				return token.ID == element
+			})
+		})
+		missingTokens = append(missingTokens, res.Missing...)
 	}
 
 	return pipeshandler.NormalResponse(c, map[string]interface{}{
 		"success": true,
 		"info":    convInfo,
+		"error":   serversWithError,
 		"missing": missingTokens,
 	})
 }

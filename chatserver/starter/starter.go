@@ -35,6 +35,11 @@ func Start(routine bool) {
 	} else if allowUnsafe == "true" {
 		util.AllowUnsafe = true
 	}
+	chatNodePath := os.Getenv("CHAT_NODE")
+	if chatNodePath == "" || strings.Contains(chatNodePath, "http://") || strings.Contains(chatNodePath, "https://") {
+		panic("Please set the CHAT_NODE environment variable to the domain of the chat server. WITHOUT http:// or https://, specify that in the PROTOCOL environment variable.")
+	}
+	util.OwnPath = os.Getenv("PROTOCOL") + os.Getenv("CHAT_NODE")
 
 	// Connect to the database
 	database.Connect()

@@ -14,6 +14,9 @@ import (
 // Whether the chat node is allowed to connect to unsafe instances
 var AllowUnsafe = false
 
+// The domain of the chat server
+var OwnPath = ""
+
 const StatusOnline = 0
 const StatusOffline = 1
 const StatusError = 2

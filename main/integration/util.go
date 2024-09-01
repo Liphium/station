@@ -115,8 +115,18 @@ func PostRequestBackend(url string, body map[string]interface{}) (map[string]int
 }
 
 // Send a post request (with TC protection encryption)
+func PostRequestBackendGeneric[T any](url string, body map[string]interface{}) (T, error) {
+	return PostRequestTCGeneric[T](BasePath, "/"+ApiVersion+url, body)
+}
+
+// Send a post request (with TC protection encryption)
 func PostRequestBackendServer(server string, url string, body map[string]interface{}) (map[string]interface{}, error) {
 	return PostRequestTC(server, "/"+ApiVersion+url, body)
+}
+
+// Send a post request (with TC protection encryption)
+func PostRequestBackendServerGeneric[T any](server string, url string, body map[string]interface{}) (T, error) {
+	return PostRequestTCGeneric[T](server, "/"+ApiVersion+url, body)
 }
 
 // Domain -> *rsa.PublicKey
@@ -124,6 +134,14 @@ var publicKeyCache = &sync.Map{}
 
 // Send a post request (with TC protection encryption, public key will be cached and retrieved)
 func PostRequestTC(server string, path string, body map[string]interface{}) (map[string]interface{}, error) {
+	return PostRequestTCGeneric[map[string]interface{}](server, path, body)
+}
+
+// Send a post request (with TC protection encryption, public key will be cached and retrieved)
+func PostRequestTCGeneric[T any](server string, path string, body map[string]interface{}) (T, error) {
+
+	// Declared here so it can be returned as nil before it's actually used
+	var data T
 
 	// Make sure there is a protocol specified on the server
 	if !strings.HasPrefix(server, "http://") && !strings.HasPrefix(server, "https://") {
@@ -137,16 +155,16 @@ func PostRequestTC(server string, path string, body map[string]interface{}) (map
 		// Send a request to get the public key
 		res, err := PostRequestNoTC(server+"/pub", fiber.Map{})
 		if err != nil {
-			return nil, err
+			return data, err
 		}
 
 		// Get the public key from the request
 		if res["pub"] == nil {
-			return nil, errors.New("public key couldn't be found")
+			return data, errors.New("public key couldn't be found")
 		}
 		obj, err = UnpackageRSAPublicKey(res["pub"].(string))
 		if err != nil {
-			return nil, err
+			return data, err
 		}
 
 		// Cache the key for the next request
@@ -158,17 +176,17 @@ func PostRequestTC(server string, path string, body map[string]interface{}) (map
 
 	byteBody, err := sonic.Marshal(body)
 	if err != nil {
-		return nil, err
+		return data, err
 	}
 
 	// Compute the auth tag
 	aesKey, err := NewAESKey()
 	if err != nil {
-		return nil, err
+		return data, err
 	}
 	authTag, err := EncryptRSA(key, aesKey)
 	if err != nil {
-		return nil, err
+		return data, err
 	}
 	authTagEncoded := base64.StdEncoding.EncodeToString(authTag)
 
@@ -180,20 +198,20 @@ func PostRequestTC(server string, path string, body map[string]interface{}) (map
 	// Encrypt the body using the AES key
 	encryptedBody, err := EncryptAES(aesKey, byteBody)
 	if err != nil {
-		return nil, err
+		return data, err
 	}
 	reader := bytes.NewReader(encryptedBody)
 
 	// Send the request
 	req, err := http.NewRequest(http.MethodPost, server+path, reader)
 	if err != nil {
-		return nil, err
+		return data, err
 	}
 	req.Header = reqHeaders
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, err
+		return data, err
 	}
 
 	// Decrypt the request body
@@ -201,18 +219,17 @@ func PostRequestTC(server string, path string, body map[string]interface{}) (map
 	buf := new(bytes.Buffer)
 	_, err = io.Copy(buf, res.Body)
 	if err != nil {
-		return nil, err
+		return data, err
 	}
 	decryptedBody, err := DecryptAES(aesKey, buf.Bytes())
 	if err != nil {
-		return nil, err
+		return data, err
 	}
 
 	// Parse decrypted body into JSON
-	var data map[string]interface{}
 	err = sonic.Unmarshal(decryptedBody, &data)
 	if err != nil {
-		return nil, err
+		return data, err
 	}
 	return data, nil
 }

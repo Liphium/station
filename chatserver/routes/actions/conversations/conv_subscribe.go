@@ -1,8 +1,6 @@
 package conversation_actions
 
 import (
-	"strings"
-
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
@@ -39,37 +37,25 @@ func HandleRemoteSubscription(c *fiber.Ctx, action RemoteSubscribeAction) error 
 	}
 
 	// Add adapters for remote subscription to conversations
-	sender := c.Locals("sender").(string)
 	for _, token := range conversationTokens {
 		if token.Activated {
+			sentToken := token.ToSent()
+			caching.CSNode.AdaptWS(pipes.Adapter{
+				ID: "s-" + token.Token,
+				Receive: func(ctx *pipes.Context) error {
 
-			// Get the server the token was created on
-			args := strings.Split(token.ID, "@")
-			if len(args) != 2 {
-				continue
-			}
+					// Send the event to the token through a remote event channel
+					_, err := action_helpers.SendConversationAction("conv_remote_channel", sentToken, fiber.Map{
+						"event": *ctx.Event,
+					})
+					return err
+				},
 
-			if args[1] == integration.BasePath {
-				caching.CSNode.AdaptWS(pipes.Adapter{
-					ID: "s-" + token.Token,
-					Receive: func(ctx *pipes.Context) error {
-
-						// Send the event to the token through a remote event channel
-						_, err := action_helpers.SendRemoteAction(sender, "conv_remote_channel", fiber.Map{
-							"token": token.Token,
-							"event": *ctx.Event,
-						})
-						return err
-					},
-
-					// Remove the adapter if there is an error
-					OnError: func(err error) {
-						caching.CSNode.RemoveAdapterWS("s-" + token.Token)
-					},
-				})
-			} else {
-
-			}
+				// Remove the adapter if there is an error
+				OnError: func(err error) {
+					caching.CSNode.RemoveAdapterWS("s-" + token.Token)
+				},
+			})
 		}
 	}
 

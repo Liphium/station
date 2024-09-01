@@ -92,7 +92,9 @@ func encryptedRoutes(router fiber.Router) {
 	router.Post("/adoption/socketless", socketless)
 
 	// Setup the routes for remote actions
-	router.Route("/actions", remote_action_routes.Unauthorized)
+	router.Route("/actions", remote_action_routes.SetupRemoteActions)
+	router.Route("/event_channel", remote_action_routes.SetupEventChannel)
+	router.Route("/conv_actions", remote_action_routes.SetupConversationActions)
 
 	router.Route("/", encryptedAuthorized)
 }
