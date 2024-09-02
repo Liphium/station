@@ -69,8 +69,9 @@ func LoadMembersArray(ids []string) (map[string][]StoredMember, error) {
 func SendEventToMembers(members []StoredMember, event pipes.Event) error {
 
 	// Make slices for a pipes send call
-	memberAdapters := []string{}
-	memberNodes := []string{}
+	memberAmount := len(members)
+	memberAdapters := make([]string, memberAmount)
+	memberNodes := make([]string, memberAmount)
 
 	for i, member := range members {
 		memberAdapters[i] = "s-" + member.TokenID

@@ -23,12 +23,7 @@ type ReturnableMember struct {
 }
 
 // Action: conv_activate
-func HandleTokenActivation(c *fiber.Ctx, token conversations.ConversationToken, action ConnectionActivateAction) error {
-
-	// Validate the action
-	if len(action.ID) == 0 || len(action.Token) == 0 {
-		return integration.InvalidRequest(c, "data in action wasn't valid")
-	}
+func HandleTokenActivation(c *fiber.Ctx, token conversations.ConversationToken, data interface{}) error {
 
 	if token.Activated {
 		return integration.FailedRequest(c, "already.active", nil)

@@ -10,7 +10,7 @@ import (
 	"github.com/bytedance/sonic"
 )
 
-const systemSender = "6969"
+const systemSender = "6969@liphium.com"
 
 // Stored system messages
 const GroupNewAdmin = "group.new_admin"

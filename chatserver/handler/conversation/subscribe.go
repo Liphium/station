@@ -20,6 +20,7 @@ type conversationSubscribeResponse struct {
 	Success bool                                             `json:"success"`
 	Info    map[string]conversation_actions.ConversationInfo `json:"info"`
 	Missing []string                                         `json:"missing"`
+	Node    string                                           `json:"node"`
 }
 
 // Action: conv_sub
@@ -91,26 +92,34 @@ func subscribe(c *pipeshandler.Context, action struct {
 		res, err := action_helpers.SendRemoteActionGeneric[conversationSubscribeResponse](server, "conv_subscribe", fiber.Map{
 			"tokens": tokens,
 			"status": action.Status,
+			"node":   util.OwnPath,
 		})
 
 		// Check if there was an error, if so, tell the client
-		if err != nil {
+		if err != nil || !res.Success {
 			serversWithError = append(serversWithError, server)
+			continue
 		}
 
 		// Add the conversation info from the remote server
-		// This loop is coded this way for security reasons (so the other server couldn't delete a conversation that is not on it)
-		for _, token := range tokens {
-			convInfo[token.ID] = res.Info[token.ID]
+		// This could technically be vulnerable to an attack where a remote node could
+		// artificially increment the notification count, mess with the read dates or
+		// make the client re-fetch the conversation version (just why?). To me, this isn't
+		// of importance and because this would need a lot of code changes to fix, I'll
+		// just leave this reminder here. If anyone finds this in the future, have
+		// fun exploiting this! :D
+		for conv, info := range res.Answer.Info {
+			convInfo[conv] = info
 		}
 
 		// Add the missing tokens
-		res.Missing = slices.DeleteFunc(res.Missing, func(element string) bool {
+		// Make sure remote nodes can't delete tokens they don't have access to (important security fix)
+		res.Answer.Missing = slices.DeleteFunc(res.Answer.Missing, func(element string) bool {
 			return !slices.ContainsFunc(tokens, func(token conversations.SentConversationToken) bool {
 				return token.ID == element
 			})
 		})
-		missingTokens = append(missingTokens, res.Missing...)
+		missingTokens = append(missingTokens, res.Answer.Missing...)
 	}
 
 	return pipeshandler.NormalResponse(c, map[string]interface{}{

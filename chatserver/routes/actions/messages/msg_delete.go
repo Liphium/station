@@ -10,16 +10,11 @@ import (
 	"gorm.io/gorm"
 )
 
-// Request for deleting a message
-type DeleteMessageAction struct {
-	Certificate string `json:"certificate"` // Message certificate
-}
-
 // Action: msg_delete
-func HandleDelete(c *fiber.Ctx, token conversations.ConversationToken, action DeleteMessageAction) error {
+func HandleDelete(c *fiber.Ctx, token conversations.ConversationToken, certificate string) error {
 
 	// Get claims from message certificate
-	claims, valid := conversations.GetCertificateClaims(action.Certificate)
+	claims, valid := conversations.GetCertificateClaims(certificate)
 	if !valid {
 		return integration.InvalidRequest(c, "invalid certificate claims")
 	}

@@ -12,7 +12,7 @@ import (
 func Unauthorized(router fiber.Router) {
 	router.Route("/status", status.Setup)
 	router.Route("/manage", manage.Unauthorized)
-	router.Route("/remote", node_action_routes.Unauthorized)
+	router.Route("/actions", node_action_routes.Unauthorized)
 
 	router.Post("/this", this)
 	router.Post("/disconnect", connect.Disconnect)

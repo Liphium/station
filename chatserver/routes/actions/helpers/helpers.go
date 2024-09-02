@@ -101,24 +101,14 @@ func CreateConversationEndpoint[T any](handler ConversationActionHandlerFunc[T],
 		// If the address isn't the current instance, send a remote action
 		if args[1] != integration.BasePath {
 
-			// Send a remote action to the other instance
-			res, err := integration.PostRequestBackendServer(args[1], "/node/actions/"+action, fiber.Map{
-				"app_tag": integration.AppTagChatNode,
-				"sender":  caching.CSNode.SL,
-				"action":  action,
-				"data":    req,
-			})
+			// Send a conversation aciton to the other instance
+			res, err := SendConversationAction(action, req.Token, req.Data)
 			if err != nil {
 				return integration.FailedRequest(c, localization.ErrorServer, err)
 			}
 
-			// Check if the request was successful
-			if !res["success"].(bool) {
-				return integration.FailedRequest(c, localization.ErrorNode, err)
-			}
-
 			// Return the response to the client
-			return integration.ReturnJSON(c, res["answer"])
+			return integration.ReturnJSON(c, res)
 		}
 
 		// Validate the token
@@ -136,7 +126,7 @@ func CreateConversationEndpoint[T any](handler ConversationActionHandlerFunc[T],
 func SendConversationAction(action string, token conversations.SentConversationToken, data interface{}) (map[string]interface{}, error) {
 
 	// Get the address of the chat node
-	node, valid := TokenMap.Load(token.ID)
+	obj, valid := TokenMap.Load(token.ID)
 	if !valid {
 
 		// Extract the address of the main backend from the conversation token
@@ -149,15 +139,16 @@ func SendConversationAction(action string, token conversations.SentConversationT
 		if err := negotiate(args[1], token.ID, token.Token); err != nil {
 			return nil, err
 		}
-		node, valid = TokenMap.Load(token.ID)
+		obj, valid = TokenMap.Load(token.ID)
 	}
 
 	// Make sure the token exists after negotiation
 	if !valid {
 		return nil, errors.New("token couldn't be found")
 	}
+	node := obj.(*TokenData)
 
-	return integration.PostRequestTC(node.(string), "/conv_actions/"+action, fiber.Map{
+	return integration.PostRequestTC(node.Node, "/conv_actions/"+action, fiber.Map{
 		"token": token,
 		"data":  data,
 	})
@@ -173,6 +164,15 @@ var TokenMap *sync.Map = &sync.Map{}
 
 // Send a negotiation offer to any node
 func negotiate(server string, id string, token string) error {
+
+	// Make sure this thing can't be crashed
+	defer func() {
+		if err := recover(); err != nil {
+			util.Log.Println("something went seriously wrong with negotiation: ", err)
+		}
+	}()
+
+	// Send the remote action
 	res, err := SendRemoteAction(server, "negotiate", fiber.Map{
 		"id":    id,
 		"token": token,
@@ -184,16 +184,27 @@ func negotiate(server string, id string, token string) error {
 		return err
 	}
 	if !res["success"].(bool) {
-		return errors.New("negotiation was declined: " + res["error"].(string))
+		return errors.New("remote action couldn't be sent: " + res["error"].(string))
+	}
+
+	// Extract the answer
+	answer := res["answer"].(map[string]interface{})
+	if !answer["success"].(bool) {
+		return errors.New("negotiation was declined: " + answer["error"].(string))
 	}
 
 	// Store the data from the request in the token map
-	TokenMap.Store(id, &TokenData{
-		Token: token,
-		Node:  res["node"].(string),
-	})
+	StoreToken(conversations.SentConversationToken{ID: id, Token: token}, answer["node"].(string))
 
 	return nil
+}
+
+// Store any conversation token in the token map (make sure it can be reached from outside)
+func StoreToken(token conversations.SentConversationToken, node string) {
+	TokenMap.Store(token.ID, &TokenData{
+		Token: token.Token,
+		Node:  node,
+	})
 }
 
 // Sends a remote action to any server
@@ -206,9 +217,14 @@ func SendRemoteAction(server string, action string, data interface{}) (map[strin
 	})
 }
 
+type remoteActionResponse[T any] struct {
+	Success bool `json:"success"`
+	Answer  T    `json:"answer"`
+}
+
 // Sends a remote action to any server using a generic response type
-func SendRemoteActionGeneric[T any](server string, action string, data interface{}) (T, error) {
-	return integration.PostRequestBackendServerGeneric[T](server, "/node/actions/send", fiber.Map{
+func SendRemoteActionGeneric[T any](server string, action string, data interface{}) (remoteActionResponse[T], error) {
+	return integration.PostRequestBackendServerGeneric[remoteActionResponse[T]](server, "/node/actions/send", fiber.Map{
 		"app_tag": integration.AppTagChatNode,
 		"sender":  integration.BasePath,
 		"action":  action,
