@@ -49,6 +49,9 @@ func setupPipesFiber(router fiber.Router) {
 				util.Log.Println("Client disconnected:", client.ID)
 			}
 
+			// Remove from the table
+			caching.LeaveTable(client.Session, client.ID)
+
 			// Remove from room
 			caching.RemoveMember(client.Session, client.ID)
 			caching.DeleteConnection(client.ID)

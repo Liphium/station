@@ -14,19 +14,29 @@ import (
 )
 
 // Action: setup
-func setup(c *pipeshandler.Context, data string) pipes.Event {
+func setup(c *pipeshandler.Context, action struct {
+	Data  string  `json:"data"`
+	Color float64 `json:"color"`
+}) pipes.Event {
 
 	// Generate new connection
 	connection := caching.EmptyConnection(c.Client.ID, c.Client.Session)
 
 	// Insert data
-	if !caching.SetMemberData(c.Client.Session, c.Client.ID, connection.ClientID, data) {
+	if !caching.SetMemberData(c.Client.Session, c.Client.ID, connection.ClientID, action.Data) {
 		return pipeshandler.ErrorResponse(c, "invalid", nil)
 	}
 
 	// Send the update to all members in the room
 	if !SendRoomData(c.Client.Session) {
 		return pipeshandler.ErrorResponse(c, integration.ErrorServer, nil)
+	}
+
+	// Have the guy join the table
+	err := caching.JoinTable(c.Client.Session, c.Client.ID, action.Color)
+	if err != nil {
+		util.Log.Println("Couldn't join table of room", c.Client.Session, ":", err.Error())
+		return pipeshandler.ErrorResponse(c, "server.error", err)
 	}
 
 	// Check if livekit room already exists

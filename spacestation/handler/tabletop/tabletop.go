@@ -10,8 +10,8 @@ import (
 func SetupHandler() {
 
 	// Table member management
-	pipeshandler.CreateHandlerFor(caching.SSInstance, "table_join", joinTable)
-	pipeshandler.CreateHandlerFor(caching.SSInstance, "table_leave", leaveTable)
+	pipeshandler.CreateHandlerFor(caching.SSInstance, "table_enable", enableTable)
+	pipeshandler.CreateHandlerFor(caching.SSInstance, "table_disable", disableTable)
 
 	// Table object management
 	pipeshandler.CreateHandlerFor(caching.SSInstance, "tobj_create", createObject)
@@ -30,6 +30,12 @@ func SetupHandler() {
 // Send an event to all table members
 func SendEventToMembers(room string, event pipes.Event) bool {
 	valid := caching.RangeOverTableMembers(room, func(tm *caching.TableMember) bool {
+
+		// Only send the event when the member actually wants it
+		if !tm.Enabled {
+			return true
+		}
+
 		if err := caching.SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
 			Channel: pipes.BroadcastChannel([]string{tm.Client}),
 			Local:   true,

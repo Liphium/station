@@ -7,15 +7,12 @@ import (
 	"github.com/Liphium/station/spacestation/util"
 )
 
-// Action: table_join
-func joinTable(c *pipeshandler.Context, action struct {
-	Color float64 `json:"color"`
-}) pipes.Event {
+// Action: table_enable
+func enableTable(c *pipeshandler.Context, _ interface{}) pipes.Event {
 
-	err := caching.JoinTable(c.Client.Session, c.Client.ID, action.Color)
-	if err != nil {
-		util.Log.Println("Couldn't join table of room", c.Client.Session, ":", err.Error())
-		return pipeshandler.ErrorResponse(c, "server.error", err)
+	// Enable the member
+	if err := caching.ChangeTableMemberState(c.Client.Session, c.Client.ID, true); err != nil {
+		return pipeshandler.ErrorResponse(c, err.Error(), err)
 	}
 
 	// Start a goroutine to stream over all the changes
@@ -41,11 +38,11 @@ func joinTable(c *pipeshandler.Context, action struct {
 	return pipeshandler.SuccessResponse(c)
 }
 
-// Action: table_leave
-func leaveTable(c *pipeshandler.Context, action interface{}) pipes.Event {
-	err := caching.LeaveTable(c.Client.Session, c.Client.ID)
+// Action: table_disable
+func disableTable(c *pipeshandler.Context, action interface{}) pipes.Event {
+	err := caching.ChangeTableMemberState(c.Client.Session, c.Client.ID, false)
 	if err != nil {
-		util.Log.Println("Couldn't leave table of room", c.Client.Session, ":", err.Error())
+		util.Log.Println("Couldn't disable table of room", c.Client.Session, "for", c.Client.ID, ":", err.Error())
 		return pipeshandler.ErrorResponse(c, "server.error", err)
 	}
 

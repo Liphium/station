@@ -16,6 +16,7 @@ var tablesCache *sync.Map = &sync.Map{}
 var (
 	ErrTableNotFound            = errors.New("tabletop.not_found")
 	ErrClientAlreadyJoinedTable = errors.New("tabletop.already_joined")
+	ErrClientNotFound           = errors.New("tabletop.client_not_found")
 	ErrCouldntCreateTable       = errors.New("tabletop.couldnt_create")
 	ErrObjectNotFound           = errors.New("tabletop.object_not_found")
 	ErrObjectAlreadyHeld        = errors.New("tabletop.object_already_held")
@@ -35,6 +36,7 @@ type TableMember struct {
 	Client         string  // Client ID
 	Color          float64 // Color of their cursor
 	SelectedObject string  // The id of the currently selected object
+	Enabled        bool    // If events should currently be sent to the member
 }
 
 // * Table management
@@ -65,10 +67,36 @@ func JoinTable(room string, client string, color float64) error {
 		return ErrClientAlreadyJoinedTable
 	}
 	table.Members.Store(client, &TableMember{
-		Client: client,
-		Color:  color,
+		Client:  client,
+		Color:   color,
+		Enabled: false,
 	})
 	table.MemberCount++
+
+	return nil
+}
+
+// Change the enabled state for a member
+func ChangeTableMemberState(room string, client string, enabled bool) error {
+
+	// Get the table
+	obj, valid := tablesCache.Load(room)
+	if !valid {
+		return ErrTableNotFound
+	}
+	table := obj.(*TableData)
+
+	// Make sure the table isn't modified concurrently
+	table.Mutex.Lock()
+	defer table.Mutex.Unlock()
+
+	// Get the member
+	obj, valid = table.Members.Load(client)
+	if !valid {
+		return ErrClientNotFound
+	}
+	member := obj.(*TableMember)
+	member.Enabled = enabled
 
 	return nil
 }
