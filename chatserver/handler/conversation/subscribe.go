@@ -6,6 +6,7 @@ import (
 
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database/conversations"
+	"github.com/Liphium/station/chatserver/handler/account"
 	conversation_actions "github.com/Liphium/station/chatserver/routes/actions/conversations"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	"github.com/Liphium/station/chatserver/util"
@@ -27,10 +28,11 @@ type conversationSubscribeResponse struct {
 func subscribe(c *pipeshandler.Context, action struct {
 	Tokens []conversations.SentConversationToken `json:"tokens"`
 	Status string                                `json:"status"`
+	Data   string                                `json:"data"`
 }) pipes.Event {
 
 	// Validate the tokens
-	conversationTokens, missingTokens, _, err := caching.ValidateTokens(&action.Tokens)
+	conversationTokens, missingTokens, tokenIds, err := caching.ValidateTokens(&action.Tokens)
 	if err != nil {
 		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 	}
@@ -121,6 +123,37 @@ func subscribe(c *pipeshandler.Context, action struct {
 		})
 		missingTokens = append(missingTokens, res.Answer.Missing...)
 	}
+
+	// Send the status to everyone in a goroutine
+	go func() {
+
+		// Grab all the members
+		members, err := caching.LoadMembersArray(tokenIds)
+		if err != nil {
+			util.Log.Println("couldn't load members for status transmission: " + err.Error())
+			return
+		}
+
+		// Send the status to all the conversations
+		for _, token := range conversationTokens {
+
+			// Make sure it's only send to private conversations
+			if len(members[token.Conversation]) > 2 {
+				continue
+			}
+
+			// Get the other member to send the status to
+			var otherMember caching.StoredMember
+			for _, member := range members[token.Conversation] {
+				if member.TokenID != token.ID {
+					otherMember = member
+				}
+			}
+
+			// Send the status event
+			caching.SendEventToMembers([]caching.StoredMember{otherMember}, account.StatusEvent(action.Status, action.Data, token.Conversation, token.ID, ""))
+		}
+	}()
 
 	return pipeshandler.NormalResponse(c, map[string]interface{}{
 		"success": true,

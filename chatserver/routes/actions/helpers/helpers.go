@@ -87,7 +87,7 @@ func CreateConversationEndpoint[T any](handler ConversationActionHandlerFunc[T],
 			return integration.InvalidRequest(c, "request was invalid")
 		}
 
-		// Parse the conversation to extract the address
+		// Parse the conversation token id to extract the address
 		args := strings.Split(req.Token.ID, "@")
 		if len(args) != 2 {
 			return integration.InvalidRequest(c, "conversation id is invalid")
@@ -104,6 +104,12 @@ func CreateConversationEndpoint[T any](handler ConversationActionHandlerFunc[T],
 			// Send a conversation aciton to the other instance
 			res, err := SendConversationAction(action, req.Token, req.Data)
 			if err != nil {
+
+				// Check if it's an error that happend on the other server
+				if strings.Contains(err.Error(), "other server error:") {
+					return integration.FailedRequest(c, localization.ErrorOtherServer, err)
+				}
+
 				return integration.FailedRequest(c, localization.ErrorServer, err)
 			}
 
@@ -137,7 +143,7 @@ func SendConversationAction(action string, token conversations.SentConversationT
 
 		// Negotiate with the chat server to get its address
 		if err := negotiate(args[1], token.ID, token.Token); err != nil {
-			return nil, err
+			return nil, errors.New("other server error: " + err.Error())
 		}
 		obj, valid = TokenMap.Load(token.ID)
 	}
@@ -148,10 +154,17 @@ func SendConversationAction(action string, token conversations.SentConversationT
 	}
 	node := obj.(*TokenData)
 
-	return integration.PostRequestTC(node.Node, "/conv_actions/"+action, fiber.Map{
+	// Send the action
+	var res map[string]interface{}
+	var err error
+	if res, err = integration.PostRequestTC(node.Node, "/conv_actions/"+action, fiber.Map{
 		"token": token,
 		"data":  data,
-	})
+	}); err != nil {
+		return nil, errors.New("other server error: " + err.Error())
+	}
+
+	return res, nil
 }
 
 type TokenData struct {

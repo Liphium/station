@@ -7,15 +7,13 @@ import (
 	"github.com/Liphium/station/pipeshandler"
 )
 
-type statusRespondAction struct {
+// Action: st_res
+func respondToStatus(c *pipeshandler.Context, action struct {
 	ID     string `json:"id"`
 	Token  string `json:"token"`
 	Status string `json:"status"`
 	Data   string `json:"data"`
-}
-
-// Action: st_res
-func respondToStatus(c *pipeshandler.Context, action statusRespondAction) pipes.Event {
+}) pipes.Event {
 
 	// Get from cache
 	convToken, err := caching.ValidateToken(action.ID, action.Token)

@@ -3,6 +3,7 @@ package localization
 // All translations to be implemented in the client
 const InvalidRequest = "invalid"
 const ErrorServer = "server.error"
+const ErrorOtherServer = "other.server.error"
 const ErrorNode = "node.error"
 const MailError = "mail.error"
 const InvalidCredentials = "invalid.credentials"
