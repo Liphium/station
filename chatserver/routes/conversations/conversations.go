@@ -20,6 +20,7 @@ func Authorized(router fiber.Router) {
 	router.Post("/kick_member", action_helpers.CreateConversationEndpoint(conversation_actions.HandleKick, "conv_kick"))
 	router.Post("/leave", action_helpers.CreateConversationEndpoint(conversation_actions.HandleLeave, "conv_leave"))
 	router.Post("/change_data", action_helpers.CreateConversationEndpoint(conversation_actions.HandleChangeData, "conv_data"))
+	router.Post("/answer_status", action_helpers.CreateConversationEndpoint(conversation_actions.HandleStatusResponse, "conv_st_res"))
 
 	// Setup all message routes
 	router.Post("/message/send", action_helpers.CreateConversationEndpoint(message_actions.HandleSend, "msg_send"))

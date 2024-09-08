@@ -59,6 +59,7 @@ func SetupConversationActions(router fiber.Router) {
 	router.Post("/conv_gen_token", conversationHandler(conversation_actions.HandleGenerateToken))
 	router.Post("/conv_kick", conversationHandler(conversation_actions.HandleKick))
 	router.Post("/conv_leave", conversationHandler(conversation_actions.HandleLeave))
+	router.Post("/conv_status_res", conversationHandler(conversation_actions.HandleStatusResponse))
 
 	// Actions for message management
 	router.Post("/msg_delete", conversationHandler(message_actions.HandleDelete))

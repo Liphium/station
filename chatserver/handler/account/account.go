@@ -7,7 +7,6 @@ import (
 )
 
 func SetupActions() {
-	pipeshandler.CreateHandlerFor(caching.CSInstance, "st_res", respondToStatus)
 	pipeshandler.CreateHandlerFor(caching.CSInstance, "st_validate", statusValidateAction)
 }
 
