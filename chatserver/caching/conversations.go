@@ -27,16 +27,16 @@ func ValidateToken(id string, token string) (conversations.ConversationToken, er
 	return conversationToken, nil
 }
 
-// Returns: conversationTokens, missingTokens, tokenIds, err
+// Returns: conversationTokens, missingTokens, conversationIds, err
 func ValidateTokens(tokens *[]conversations.SentConversationToken) ([]conversations.ConversationToken, []string, []string, error) {
 	foundTokens := []conversations.ConversationToken{}
 
 	// Convert all tokens to data types they can be used with
+	tokenIds := make([]string, len(*tokens))
 	tokensMap := map[string]conversations.SentConversationToken{}
-	tokenIds := []string{}
-	for _, token := range *tokens {
+	for i, token := range *tokens {
 		tokensMap[token.ID] = token
-		tokenIds = append(tokenIds, token.ID)
+		tokenIds[i] = token.ID
 	}
 
 	// Get tokens from database
@@ -47,6 +47,7 @@ func ValidateTokens(tokens *[]conversations.SentConversationToken) ([]conversati
 
 	// Check if the tokens are actually there and sort them into the lists accordinly
 	missingTokens := []string{}
+	conversationIds := []string{}
 	for _, token := range conversationTokens {
 		if token.Token == tokensMap[token.ID].Token {
 
@@ -62,9 +63,10 @@ func ValidateTokens(tokens *[]conversations.SentConversationToken) ([]conversati
 			missingTokens = append(missingTokens, token.ID)
 			util.Log.Println("not found")
 		}
+		conversationIds = append(conversationIds, token.Conversation)
 	}
 
-	return foundTokens, missingTokens, tokenIds, nil
+	return foundTokens, missingTokens, conversationIds, nil
 }
 
 // Get a conversation token

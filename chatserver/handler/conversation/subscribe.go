@@ -31,8 +31,53 @@ func subscribe(c *pipeshandler.Context, action struct {
 	Data   string                                `json:"data"`
 }) pipes.Event {
 
+	// Filter out all the remote tokens and register adapters
+	localTokens := []conversations.SentConversationToken{}
+	remoteTokens := map[string][]conversations.SentConversationToken{}
+	for _, token := range action.Tokens {
+
+		// Register adapter for the subscription
+		caching.CSNode.AdaptWS(pipes.Adapter{
+			ID: "s-" + token.ID,
+			Receive: func(context *pipes.Context) error {
+				client := *c.Client
+				util.Log.Println(context.Adapter.ID, token.Token, client.ID)
+				err := caching.CSNode.SendClient(c.Client.ID, *context.Event)
+				if err != nil {
+					util.Log.Println("COULDN'T SEND:", err.Error())
+				}
+				return err
+			},
+
+			// Remove the adapter if there was an error (and disconnect the user)
+			OnError: func(err error) {
+				caching.CSNode.RemoveAdapterWS("s-" + token.ID)
+				caching.CSInstance.Disconnect(c.Client.ID, c.Client.Session)
+			},
+		})
+
+		// Extract the address
+		args := strings.Split(token.ID, "@")
+		if len(args) != 2 {
+			continue
+		}
+
+		// Check if a remote subscription should be registered
+		if args[1] != integration.Domain {
+
+			// Add the token to the remote tokens for that instance
+			if remoteTokens[args[1]] == nil {
+				remoteTokens[args[1]] = []conversations.SentConversationToken{token}
+			} else {
+				remoteTokens[args[1]] = append(remoteTokens[args[1]], token)
+			}
+		} else {
+			localTokens = append(localTokens, token)
+		}
+	}
+
 	// Validate the tokens
-	conversationTokens, missingTokens, tokenIds, err := caching.ValidateTokens(&action.Tokens)
+	conversationTokens, missingTokens, conversationIds, err := caching.ValidateTokens(&localTokens)
 	if err != nil {
 		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 	}
@@ -43,57 +88,13 @@ func subscribe(c *pipeshandler.Context, action struct {
 		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 	}
 
-	// Register all the adapters
-	remoteTokens := map[string][]conversations.SentConversationToken{}
-	for _, token := range conversationTokens {
-		if token.Activated {
-
-			// Extract the address
-			args := strings.Split(token.ID, "@")
-			if len(args) != 2 {
-				continue
-			}
-
-			// Register adapter for the subscription
-			caching.CSNode.AdaptWS(pipes.Adapter{
-				ID: "s-" + token.ID,
-				Receive: func(context *pipes.Context) error {
-					client := *c.Client
-					util.Log.Println(context.Adapter.ID, token.Token, client.ID)
-					err := caching.CSNode.SendClient(c.Client.ID, *context.Event)
-					if err != nil {
-						util.Log.Println("COULDN'T SEND:", err.Error())
-					}
-					return err
-				},
-
-				// Remove the adapter if there was an error (and disconnect the user)
-				OnError: func(err error) {
-					caching.CSNode.RemoveAdapterWS("s-" + token.Token)
-					caching.CSInstance.Disconnect(c.Client.ID, c.Client.Session)
-				},
-			})
-
-			// Check if a remote subscription should be registered
-			if args[1] != integration.Domain {
-				sentToken := token.ToSent()
-
-				// Add the token to the remote tokens for that instance
-				if remoteTokens[args[1]] == nil {
-					remoteTokens[args[1]] = []conversations.SentConversationToken{sentToken}
-				} else {
-					remoteTokens[args[1]] = append(remoteTokens[args[1]], sentToken)
-				}
-			}
-		}
-	}
-
 	// Subscribe to all remote tokens
 	var serversWithError []string = []string{}
 	for server, tokens := range remoteTokens {
 		res, err := action_helpers.SendRemoteActionGeneric[conversationSubscribeResponse](server, "conv_subscribe", fiber.Map{
 			"tokens": tokens,
 			"status": action.Status,
+			"data":   action.Data,
 			"node":   util.OwnPath,
 		})
 
@@ -128,9 +129,8 @@ func subscribe(c *pipeshandler.Context, action struct {
 	go func() {
 
 		// Grab all the members
-		members, err := caching.LoadMembersArray(tokenIds)
+		members, err := caching.LoadMembersArray(conversationIds)
 		if err != nil {
-			util.Log.Println("couldn't load members for status transmission: " + err.Error())
 			return
 		}
 
