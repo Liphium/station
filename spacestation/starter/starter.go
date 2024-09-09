@@ -1,7 +1,6 @@
 package spacestation_starter
 
 import (
-	"encoding/base64"
 	"fmt"
 	"os"
 	"reflect"
@@ -19,7 +18,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
-func Start(loadEnv bool) {
+func Start(loadEnv bool) bool {
 
 	// Setup memory
 	caching.SetupMemory()
@@ -29,10 +28,13 @@ func Start(loadEnv bool) {
 	app.Use(logger.New())
 
 	if !integration.Setup(integration.IdentifierSpaceNode, loadEnv) {
-		return
+		return false
 	}
 
-	caching.InitLiveKit()
+	worked := caching.InitLiveKit()
+	if !worked {
+		return false
+	}
 
 	util.Log.Println("Starting..")
 
@@ -67,16 +69,16 @@ func Start(loadEnv bool) {
 	util.Port, err = strconv.Atoi(os.Getenv("SPACE_NODE_PORT"))
 	if err != nil {
 		util.Log.Println("Error: Couldn't parse port of current node")
-		return
+		return false
 	}
 
-	// Test encryption
+	// Test encryption (to make sure they don't produce the same outcome)
 	first := testEncryption()
 	second := testEncryption()
 
 	if reflect.DeepEqual(first, second) {
 		util.Log.Println("Error: Encryption is not working properly")
-		return
+		return false
 	}
 
 	util.Log.Println("Encryption is working properly!")
@@ -90,7 +92,7 @@ func Start(loadEnv bool) {
 		amount, err := strconv.Atoi(os.Getenv("TESTING_AMOUNT"))
 		if err != nil {
 			util.Log.Println("Error: Couldn't parse testing amount")
-			return
+			return false
 		}
 
 		for i := 0; i < amount; i++ {
@@ -99,7 +101,7 @@ func Start(loadEnv bool) {
 			valid := caching.JoinRoom("id", connection.ClientID)
 			if !valid {
 				util.Log.Println("Error: Couldn't join room")
-				return
+				return false
 			}
 			util.Log.Println("--- TESTING CLIENT ---")
 			util.Log.Println(connection.ClientID + ":" + connection.KeyBase64())
@@ -126,26 +128,26 @@ func Start(loadEnv bool) {
 	if err != nil {
 		panic(err)
 	}
+
+	return true
 }
 
 // This function is used to test if the encryption is working properly and always different
 func testEncryption() []byte {
 
-	encrypted, err := caching.SSNode.Encrypt(caching.SSNode.ID, []byte("H"))
+	// Encrypt something
+	encrypted, err := caching.SSNode.Encrypt(caching.SSNode.ID, []byte("Hello world"))
 	if err != nil {
 		util.Log.Println("Error: Couldn't encrypt message")
 		return nil
 	}
 
-	util.Log.Println("Encrypted message: " + base64.StdEncoding.EncodeToString(encrypted))
-
-	decrypted, err := caching.SSNode.Decrypt(caching.SSNode.ID, encrypted)
+	// Test the decryption as well
+	_, err = caching.SSNode.Decrypt(caching.SSNode.ID, encrypted)
 	if err != nil {
 		util.Log.Println("Error: Couldn't decrypt message")
 		return nil
 	}
-
-	util.Log.Println("Decrypted message: " + string(decrypted))
 
 	return encrypted
 }

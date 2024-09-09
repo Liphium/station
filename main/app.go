@@ -151,7 +151,12 @@ func main() {
 
 	// Start space station
 	printWithPrefix("Starting space station..")
-	spacestation_starter.Start(false)
+	worked := spacestation_starter.Start(false)
+	if !worked {
+
+		// Just block the main thread for infinity until paused (this should be enough)
+		time.Sleep(time.Hour * 30000)
+	}
 }
 
 func printWithPrefix(s string) {

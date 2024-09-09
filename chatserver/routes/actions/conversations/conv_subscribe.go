@@ -1,6 +1,8 @@
 package conversation_actions
 
 import (
+	"time"
+
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
@@ -65,6 +67,9 @@ func HandleRemoteSubscription(c *fiber.Ctx, action RemoteSubscribeAction) error 
 	// Send the status to everyone in a goroutine
 	go func() {
 
+		// Wait a little bit for this because the other node could still be processing the response
+		time.Sleep(time.Second * 2)
+
 		// Grab all the members
 		members, err := caching.LoadMembersArray(conversationIds)
 		if err != nil {
@@ -78,8 +83,6 @@ func HandleRemoteSubscription(c *fiber.Ctx, action RemoteSubscribeAction) error 
 			if len(members[token.Conversation]) > 2 {
 				continue
 			}
-
-			util.Log.Println("member length", len(members[token.Conversation]), members, token.ID, conversationIds)
 
 			// Get the other member to send the status to
 			var otherMember caching.StoredMember

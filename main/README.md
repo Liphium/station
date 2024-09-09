@@ -34,7 +34,11 @@ TC_PUBLIC_KEY="KEY_HERE"
 TC_PRIVATE_KEY="KEY_HERE"
 
 # File storage folder (choose some path that exists)
-FILE_REPO = "/home/julian/Documents/repo/cloud"
+FILE_REPO_TYPE = "local" # "r2" or "local" (s3 might be added in the future)
+FILE_REPO = "/home/julian/Documents/repo/cloud" # File path or bucket URL
+# FILE_REPO_KEY_ID = "KEY_ID_HERE"
+# FILE_REPO_KEY = "KEY_SECRET_HERE"
+# FILE_REPO_BUCKET = "BUCKET_HERE"
 
 # File upload settings (defaults are fine, make sure to change nginx if modified)
 MAX_UPLOAD_SIZE = "10" # in MB

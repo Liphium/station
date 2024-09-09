@@ -68,7 +68,9 @@ func Start(routine bool) {
 
 	caching.CSNode.SetupSocketless(domain + "/adoption/socketless")
 
-	app.Use(logger.New())
+	app.Use(logger.New(logger.Config{
+		Format: "chat | " + logger.ConfigDefault.Format,
+	}))
 	app.Route("/", routes.Setup)
 
 	// Create handlers

@@ -1,16 +1,23 @@
 package files
 
 import (
+	"context"
 	"strings"
 
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gofiber/fiber/v2"
 )
 
 // Route: /account/files/download/:id
 func downloadFile(c *fiber.Ctx) error {
+
+	if disabled {
+		return util.FailedRequest(c, "file.disabled", nil)
+	}
 
 	id := c.Params("id")
 	if id == "" {
@@ -28,6 +35,27 @@ func downloadFile(c *fiber.Ctx) error {
 		return util.FailedRequest(c, "file.not_found", err)
 	}
 
-	// Send the file (it's encrypted so there is no checking of permissions required)
-	return c.SendFile(saveLocation+id, true)
+	// Send the file from the right location
+	if fileRepoType == repoTypeR2 {
+		// Retrieve file from R2
+		obj, err := s3Client.GetObject(context.TODO(), &s3.GetObjectInput{
+			Bucket: aws.String(bucketName),
+			Key:    aws.String(id),
+		})
+		if err != nil {
+			return util.FailedRequest(c, "file.not_found", err)
+		}
+
+		// Set headers for file download
+		c.Set(fiber.HeaderContentType, *obj.ContentType)
+		c.Set(fiber.HeaderContentDisposition, `attachment; filename="`+id+`"`)
+
+		// Stream the file to the client
+		return c.SendStream(obj.Body)
+	} else if fileRepoType == repoTypeLocal {
+		// Send the file (it's encrypted so there is no checking of permissions required)
+		return c.SendFile(saveLocation+id, true)
+	} else {
+		return util.FailedRequest(c, "file.disabled", nil)
+	}
 }

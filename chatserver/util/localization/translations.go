@@ -5,6 +5,7 @@ const InvalidRequest = "invalid"
 const ErrorServer = "server.error"
 const ErrorOtherServer = "other.server.error"
 const ErrorNode = "node.error"
+const ErrorSpacesNotSetup = "spaces.not.setup"
 const MailError = "mail.error"
 const InvalidCredentials = "invalid.credentials"
 

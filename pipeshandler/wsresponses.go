@@ -27,7 +27,7 @@ func ErrorResponse(ctx *Context, message string, err error) pipes.Event {
 
 	return Response(ctx, map[string]interface{}{
 		"success": false,
-		"message": err,
+		"message": message,
 	}, ctx.Instance)
 }
 
