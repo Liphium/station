@@ -7,6 +7,7 @@ import (
 	"github.com/Liphium/station/backend/entities/app"
 	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -35,19 +36,19 @@ func sendNodeAction(c *fiber.Ctx) error {
 	// Get the node with the lowest load to handle the request on
 	var lowest node.Node
 	if err := database.DBConn.Model(&node.Node{}).Where("app_id = ? AND status = ?", application.ID, node.StatusStarted).Order("load DESC").Take(&lowest).Error; err != nil {
-		return util.FailedRequest(c, "not.setup", nil)
+		return util.FailedRequest(c, localization.ErrorNotSetup, nil)
 	}
 
 	// Get public key of node
 	res, err := util.PostRequestNoTC(util.NodeProtocol+lowest.Domain+"/pub", fiber.Map{})
 	if err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Unpackage the public key
 	publicKey, err := util.UnpackageRSAPublicKey(res["pub"].(string))
 	if err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Send the remote action to the node
@@ -59,7 +60,7 @@ func sendNodeAction(c *fiber.Ctx) error {
 		"data":   req.Data,
 	})
 	if err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.ReturnJSON(c, fiber.Map{

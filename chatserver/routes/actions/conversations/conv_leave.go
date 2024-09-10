@@ -6,8 +6,8 @@ import (
 	"github.com/Liphium/station/chatserver/database/conversations"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
-	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -35,7 +35,7 @@ func HandleLeave(c *fiber.Ctx, token conversations.ConversationToken, _ interfac
 
 		// Delete the conversation
 		if err := action_helpers.DeleteConversation(conversation.ID); err != nil {
-			return integration.FailedRequest(c, integration.ErrorServer, err)
+			return integration.FailedRequest(c, localization.ErrorServer, err)
 		}
 
 		return integration.SuccessfulRequest(c)

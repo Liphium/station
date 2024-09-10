@@ -5,6 +5,7 @@ import (
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -32,17 +33,17 @@ func getAccountNode(c *fiber.Ctx) error {
 	// Get account
 	var acc account.Account
 	if err := database.DBConn.Select("username", "tag").Where("id = ?", req.ID).Take(&acc).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	var pub account.PublicKey
 	if err := database.DBConn.Select("key").Where("id = ?", req.ID).Take(&pub).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	var signaturePub account.SignatureKey
 	if err := database.DBConn.Select("key").Where("id = ?", req.ID).Take(&signaturePub).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.ReturnJSON(c, fiber.Map{

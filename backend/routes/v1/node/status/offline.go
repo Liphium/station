@@ -5,6 +5,7 @@ import (
 	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -30,7 +31,7 @@ func offline(c *fiber.Ctx) error {
 	nodes.TurnOff(&requested, node.StatusStopped)
 
 	if err := database.DBConn.Save(&requested).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.SuccessfulRequest(c)

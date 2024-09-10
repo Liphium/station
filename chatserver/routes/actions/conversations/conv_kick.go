@@ -8,8 +8,8 @@ import (
 	"github.com/Liphium/station/chatserver/database/conversations"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
-	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -40,12 +40,12 @@ func HandleKick(c *fiber.Ctx, token conversations.ConversationToken, target stri
 	}
 
 	if conversation.Type != conversations.TypeGroup {
-		return integration.FailedRequest(c, "no.group", nil)
+		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Check if the token has the permission
 	if token.Rank <= targetToken.Rank {
-		return integration.FailedRequest(c, localization.KickNoPermission, nil)
+		return integration.FailedRequest(c, localization.ErrorKickNoPermission, nil)
 	}
 
 	// Increment the version by one to save the modification

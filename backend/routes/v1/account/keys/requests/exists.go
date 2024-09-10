@@ -7,6 +7,7 @@ import (
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -34,7 +35,7 @@ func exists(c *fiber.Ctx) error {
 	var keyRequest properties.KeyRequest
 	err := database.DBConn.Where("session = ?", session.ID).Take(&keyRequest).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return util.FailedRequest(c, util.ErrorServer, err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.ReturnJSON(c, fiber.Map{

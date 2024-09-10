@@ -7,6 +7,7 @@ import (
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -26,13 +27,13 @@ func getProfile(c *fiber.Ctx) error {
 	// Get account (to notify about name & tag changes)
 	var acc account.Account
 	if err := database.DBConn.Where("id = ?", req.ID).Take(&acc).Error; err != nil {
-		return util.FailedRequest(c, util.ErrorServer, err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Get profile (to update profile picture, description, ...)
 	var profile properties.Profile = properties.Profile{}
 	if err := database.DBConn.Where("id = ?", req.ID).Take(&profile).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return util.FailedRequest(c, util.ErrorServer, err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.ReturnJSON(c, fiber.Map{

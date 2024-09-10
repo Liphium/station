@@ -5,6 +5,7 @@ import (
 	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -37,7 +38,7 @@ func online(c *fiber.Ctx) error {
 		AppID:  requested.AppID,
 		Status: node.StatusStarted,
 	}).Find(&foundNodes).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	for _, n := range foundNodes {

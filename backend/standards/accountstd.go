@@ -6,6 +6,7 @@ import (
 
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
+	"github.com/Liphium/station/main/localization"
 )
 
 // * Email standard
@@ -52,45 +53,45 @@ const MaxUsernameLength = 16
 const UsernameAllowedCharacters = "^[\\p{Ll}\\p{N}_\\-]+$"
 
 // Check the requirements for a username
-func CheckUsername(username string) (bool, string) {
+func CheckUsername(username string) (bool, localization.Translations) {
 
 	// Check length of the username
 	if len(username) < MinUsernameLength {
-		return false, "username.invalid"
+		return false, localization.ErrorUsernameMinLength(MinUsernameLength)
 	}
 
 	if len(username) > MaxUsernameLength {
-		return false, "username.invalid"
+		return false, localization.ErrorUsernameMaxLength(MaxUsernameLength)
 	}
 
 	// Check if the username is valid
 	match, err := regexp.Match(UsernameAllowedCharacters, []byte(username))
 	if !match || err != nil {
-		return false, "username.invalid"
+		return false, localization.ErrorUsernameInvalid
 	}
 
 	// Check if username is available
 	if database.DBConn.Where("username = ?", username).Take(&account.Account{}).RowsAffected > 0 {
-		return false, "username.taken"
+		return false, localization.ErrorUsernameTaken
 	}
 
-	return true, ""
+	return true, localization.None()
 }
 
 // * Account display name standard
 const MaxDisplayNameLength = 32 // is 32 now cause it is encoded with base64 and utf8
 
 // Check the requirements for a display name
-func CheckDisplayName(username string) (bool, string) {
+func CheckDisplayName(username string) (bool, localization.Translations) {
 
 	// Check length of the username
 	if len(username) < MinUsernameLength {
-		return false, "display_name.invalid"
+		return false, localization.ErrorDisplayNameMinLength(MinUsernameLength)
 	}
 
 	if len(username) > MaxDisplayNameLength {
-		return false, "display_name.invalid"
+		return false, localization.ErrorDisplayNameMaxLength(MaxDisplayNameLength)
 	}
 
-	return true, ""
+	return true, localization.None()
 }

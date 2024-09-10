@@ -7,8 +7,8 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/util"
-	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/pipes"
 	"github.com/gofiber/fiber/v2"
 )
@@ -28,7 +28,7 @@ func HandleSend(c *fiber.Ctx, token conversations.ConversationToken, action Mess
 
 	// Check if message is too big
 	if conversations.CheckSize(action.Data) {
-		return integration.FailedRequest(c, "too.big", nil)
+		return integration.FailedRequest(c, localization.ErrorMessageTooLong, nil)
 	}
 
 	// Generate an id and certificate for the message

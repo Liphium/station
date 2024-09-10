@@ -20,7 +20,7 @@ type Message struct {
 }
 
 func CheckSize(message string) bool {
-	return unsafe.Sizeof(message) > 1000*12
+	return unsafe.Sizeof(message) > 1000*6
 }
 
 type CertificateClaims struct {

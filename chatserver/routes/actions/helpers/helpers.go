@@ -9,8 +9,8 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/util"
-	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -95,7 +95,7 @@ func CreateConversationEndpoint[T any](handler ConversationActionHandlerFunc[T],
 
 		// Check if the connection is safe (or if unsafe is allowed)
 		if strings.HasPrefix(strings.TrimSpace(args[1]), "http://") && !util.AllowUnsafe {
-			return integration.FailedRequest(c, "not.allowed", errors.New("unsafe requests aren't allowed"))
+			return integration.FailedRequest(c, localization.ErrorNoUnsafeConnections, errors.New("unsafe requests aren't allowed"))
 		}
 
 		// If the address isn't the current instance, send a remote action

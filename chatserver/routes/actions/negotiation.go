@@ -1,13 +1,12 @@
 package remote_action_routes
 
 import (
-	"errors"
 	"sync"
 
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/util"
-	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -24,14 +23,7 @@ func handleNegotiation(c *fiber.Ctx, action struct {
 	// Validate the token
 	_, err := caching.ValidateToken(action.ID, action.Token)
 	if err != nil {
-
-		// If the token is invalid, return invalid credentials
-		if errors.Is(err, caching.ErrInvalidToken) {
-			return integration.FailedRequest(c, localization.InvalidCredentials, nil)
-		}
-
-		// Otherwise, return a normal server error
-		return integration.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorInvalidCredentials, nil)
 	}
 
 	// Get the sender

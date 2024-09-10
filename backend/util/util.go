@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Liphium/station/main/localization"
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -158,7 +159,7 @@ func ReturnJSON(c *fiber.Ctx, data interface{}) error {
 
 	encoded, err := sonic.Marshal(data)
 	if err != nil {
-		return FailedRequest(c, ErrorServer, err)
+		return FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	if c.Locals("key") == nil {
@@ -166,7 +167,7 @@ func ReturnJSON(c *fiber.Ctx, data interface{}) error {
 	}
 	encrypted, err := EncryptAES(c.Locals("key").([]byte), encoded)
 	if err != nil {
-		return FailedRequest(c, ErrorServer, err)
+		return FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return c.Send(encrypted)

@@ -4,6 +4,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -30,15 +31,15 @@ func removeEntry(c *fiber.Ctx) error {
 	if err := database.DBConn.Where("id = ? AND account = ?", req.ID, accId).Take(&entry).Error; err != nil {
 
 		if err == gorm.ErrRecordNotFound {
-			return util.FailedRequest(c, "not.found", nil)
+			return util.FailedRequest(c, localization.ErrorEntryNotFound, nil)
 		}
 
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Delete entry
 	if err := database.DBConn.Delete(&entry).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.SuccessfulRequest(c)

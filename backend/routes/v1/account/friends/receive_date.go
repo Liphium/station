@@ -4,6 +4,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -27,7 +28,7 @@ func getReceiveDate(c *fiber.Ctx) error {
 	// Get the friendship from the database
 	var friendship properties.Friendship
 	if err := database.DBConn.Where("id = ? AND account = ?", req.Id, accId).Take(&friendship).Error; err != nil {
-		return util.FailedRequest(c, util.ErrorServer, err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.ReturnJSON(c, map[string]interface{}{
@@ -62,7 +63,7 @@ func updateReceiveDate(c *fiber.Ctx) error {
 	// Get the friendship from the database
 	if err := database.DBConn.Model(&properties.Friendship{}).Where("id = ? AND account = ?", req.Id, accId).
 		Update("last_packet", req.Date).Error; err != nil {
-		return util.FailedRequest(c, util.ErrorServer, err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.SuccessfulRequest(c)

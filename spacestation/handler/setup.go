@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
@@ -24,19 +24,19 @@ func setup(c *pipeshandler.Context, action struct {
 
 	// Insert data
 	if !caching.SetMemberData(c.Client.Session, c.Client.ID, connection.ClientID, action.Data) {
-		return pipeshandler.ErrorResponse(c, "invalid", nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Send the update to all members in the room
 	if !SendRoomData(c.Client.Session) {
-		return pipeshandler.ErrorResponse(c, integration.ErrorServer, nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
 	// Have the guy join the table
-	err := caching.JoinTable(c.Client.Session, c.Client.ID, action.Color)
-	if err != nil {
-		util.Log.Println("Couldn't join table of room", c.Client.Session, ":", err.Error())
-		return pipeshandler.ErrorResponse(c, "server.error", err)
+	msg := caching.JoinTable(c.Client.Session, c.Client.ID, action.Color)
+	if msg != nil {
+		util.Log.Println("Couldn't join table of room", c.Client.Session, ":", msg[localization.DefaultLocale])
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Check if livekit room already exists
@@ -44,7 +44,7 @@ func setup(c *pipeshandler.Context, action struct {
 		Names: []string{c.Client.Session},
 	})
 	if err != nil {
-		return pipeshandler.ErrorResponse(c, integration.ErrorServer, err)
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 	}
 
 	if len(rooms.Rooms) > 0 {
@@ -60,7 +60,7 @@ func setup(c *pipeshandler.Context, action struct {
 
 		jwtToken, err := token.ToJWT()
 		if err != nil {
-			return pipeshandler.ErrorResponse(c, integration.ErrorServer, err)
+			return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 		}
 
 		return pipeshandler.NormalResponse(c, map[string]interface{}{
@@ -81,7 +81,7 @@ func setup(c *pipeshandler.Context, action struct {
 		MaxParticipants: 100,
 	})
 	if err != nil {
-		return pipeshandler.ErrorResponse(c, integration.ErrorServer, err)
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 	}
 
 	// Generate livekit token
@@ -93,7 +93,7 @@ func setup(c *pipeshandler.Context, action struct {
 	token.SetIdentity(connection.ClientID)
 	jwtToken, err := token.ToJWT()
 	if err != nil {
-		return pipeshandler.ErrorResponse(c, integration.ErrorServer, err)
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 	}
 
 	return pipeshandler.NormalResponse(c, map[string]interface{}{

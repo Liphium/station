@@ -3,8 +3,8 @@ package message_actions
 import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
-	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -34,7 +34,7 @@ func HandleDelete(c *fiber.Ctx, token conversations.ConversationToken, certifica
 	}
 	var justHereForNoNilPointer conversations.Message
 	if err := database.DBConn.Where("data = ? AND conversation = ?", contentJson, claims.Conversation).Select("id").Take(&justHereForNoNilPointer).Error; err == nil {
-		return integration.FailedRequest(c, "already.deleted", nil)
+		return integration.FailedRequest(c, localization.ErrorMessageAlreadyDeleted, nil)
 	}
 
 	// Delete the message in the database

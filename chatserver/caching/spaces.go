@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/Liphium/station/chatserver/util"
-	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
 	"github.com/dgraph-io/ristretto"
 	"github.com/google/uuid"
@@ -104,7 +103,7 @@ func CreateSpace(accId string) (string, util.AppToken, error) {
 
 	if os.Getenv("SPACES_APP") == "" {
 		util.Log.Println("Spaces is currently disabled. Please set SPACES_APP in your .env file to enable it.")
-		return "", util.AppToken{}, errors.New(localization.ErrorSpacesNotSetup)
+		return "", util.AppToken{}, errors.New("spaces is not set up")
 	}
 
 	// Get new space
@@ -112,12 +111,6 @@ func CreateSpace(accId string) (string, util.AppToken, error) {
 	roomId := util.GenerateToken(16)
 	token, err := util.ConnectToApp(connId, roomId, spaceApp) // Use accId as roomId so it's unique
 	if err != nil {
-
-		// Check if spaces is just not setup currently
-		if err.Error() == "not.setup" || err.Error() == "node.error" {
-			return "", util.AppToken{}, errors.New(localization.ErrorSpacesNotSetup)
-		}
-
 		util.Log.Println("Error while connecting to Spaces:", err)
 		return "", util.AppToken{}, err
 	}

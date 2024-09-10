@@ -6,8 +6,8 @@ import (
 	remote_event_channel "github.com/Liphium/station/chatserver/routes/actions/event_channel"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
-	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -30,7 +30,7 @@ func SetupRemoteActions(router fiber.Router) {
 
 		// Check if the data is valid
 		if req["id"] != caching.CSNode.ID || req["token"] != caching.CSNode.Token {
-			return integration.FailedRequest(c, localization.InvalidCredentials, nil)
+			return integration.FailedRequest(c, localization.ErrorInvalidCredentials, nil)
 		}
 
 		return c.Next()

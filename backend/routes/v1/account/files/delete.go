@@ -8,6 +8,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gofiber/fiber/v2"
@@ -21,7 +22,7 @@ type deleteRequest struct {
 func deleteFile(c *fiber.Ctx) error {
 
 	if disabled {
-		return util.FailedRequest(c, "file.disabled", nil)
+		return util.FailedRequest(c, localization.ErrorFileDisabled, nil)
 	}
 
 	var req deleteRequest
@@ -36,7 +37,7 @@ func deleteFile(c *fiber.Ctx) error {
 	// Get file
 	var file account.CloudFile
 	if database.DBConn.Where("account = ? AND id = ?", accId, req.Id).First(&file).Error != nil {
-		return util.FailedRequest(c, "file.not_found", nil)
+		return util.FailedRequest(c, localization.ErrorFileNotFound, nil)
 	}
 
 	// Check for potential malicious requests
@@ -53,22 +54,22 @@ func deleteFile(c *fiber.Ctx) error {
 			Key:    aws.String(file.Id),
 		})
 		if err != nil {
-			return util.FailedRequest(c, "server.error", err)
+			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 	} else if fileRepoType == repoTypeLocal {
 
 		// Delete file from local file system
 		err := os.Remove(saveLocation + req.Id)
 		if err != nil {
-			return util.FailedRequest(c, "server.error", err)
+			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 	} else {
-		return util.FailedRequest(c, "file.disabled", nil)
+		return util.FailedRequest(c, localization.ErrorFileDisabled, nil)
 	}
 
 	// Delete file from DB
 	if err := database.DBConn.Delete(&file).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.SuccessfulRequest(c)

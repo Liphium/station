@@ -10,6 +10,7 @@ import (
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
+	"github.com/Liphium/station/main/localization"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gofiber/fiber/v2"
@@ -19,7 +20,7 @@ import (
 func uploadFile(c *fiber.Ctx) error {
 
 	if disabled {
-		return util.FailedRequest(c, "file.disabled", nil)
+		return util.FailedRequest(c, localization.ErrorFileDisabled, nil)
 	}
 
 	// Form data
@@ -58,17 +59,17 @@ func uploadFile(c *fiber.Ctx) error {
 
 	// Check file size
 	if file.Size > maxUploadSize {
-		return util.FailedRequest(c, fmt.Sprintf("file.too_large:%d", maxUploadSize/1_000_000), nil)
+		return util.FailedRequest(c, localization.ErrorFileTooLarge(maxUploadSize), nil)
 	}
 
 	// Check total storage
 	totalStorage, err := CountTotalStorage(accId)
 	if err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	if totalStorage+file.Size > maxTotalStorage {
-		return util.FailedRequest(c, "file.storage_limit", nil)
+		return util.FailedRequest(c, localization.ErrorFileStorageLimit(maxUploadSize), nil)
 	}
 
 	// Generate file name Format: a-[timestamp]-[objectIdentifier].[extension]
@@ -83,7 +84,7 @@ func uploadFile(c *fiber.Ctx) error {
 		System:  false,
 		Size:    file.Size,
 	}).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Save the file to whatever repository is selected
@@ -92,7 +93,7 @@ func uploadFile(c *fiber.Ctx) error {
 		// Open the file
 		f, err := file.Open()
 		if err != nil {
-			return util.FailedRequest(c, "server.error", err)
+			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 
 		// Save the file to R2
@@ -102,17 +103,17 @@ func uploadFile(c *fiber.Ctx) error {
 			Body:   f,
 		})
 		if err != nil {
-			return util.FailedRequest(c, "server.error", err)
+			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 	} else if fileRepoType == repoTypeLocal {
 
 		// Save the file to local file storage
 		err = c.SaveFile(file, saveLocation+fileId)
 		if err != nil {
-			return util.FailedRequest(c, "server.error", err)
+			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 	} else {
-		return util.FailedRequest(c, "file.disabled", nil)
+		return util.FailedRequest(c, localization.ErrorFileDisabled, nil)
 	}
 
 	// Not encrypted cause this doesn't matter (and it's an unencrypted route)

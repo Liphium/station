@@ -3,8 +3,8 @@ package remote_event_channel
 import (
 	"github.com/Liphium/station/chatserver/caching"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
-	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/pipes"
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"

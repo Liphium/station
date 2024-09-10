@@ -6,11 +6,7 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/util"
-	"github.com/Liphium/station/chatserver/util/localization"
 )
-
-// Errors
-var ErrInvalidToken = errors.New(localization.InvalidRequest)
 
 // This does database requests and stuff
 func ValidateToken(id string, token string) (conversations.ConversationToken, error) {
@@ -21,7 +17,7 @@ func ValidateToken(id string, token string) (conversations.ConversationToken, er
 	}
 
 	if conversationToken.Token != token {
-		return conversations.ConversationToken{}, ErrInvalidToken
+		return conversations.ConversationToken{}, errors.New("token is invalid")
 	}
 
 	return conversationToken, nil

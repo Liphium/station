@@ -6,8 +6,8 @@ import (
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
 	"github.com/Liphium/station/chatserver/util"
-	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -26,7 +26,7 @@ type ReturnableMember struct {
 func HandleTokenActivation(c *fiber.Ctx, token conversations.ConversationToken, data interface{}) error {
 
 	if token.Activated {
-		return integration.FailedRequest(c, "already.active", nil)
+		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Activate token

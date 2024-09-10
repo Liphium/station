@@ -1,7 +1,7 @@
 package pipeshandler
 
 import (
-	"github.com/Liphium/station/chatserver/util/localization"
+	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/pipes"
 	pipeshutil "github.com/Liphium/station/pipeshandler/util"
 	"github.com/bytedance/sonic"
@@ -10,6 +10,7 @@ import (
 type Context struct {
 	Client     *Client
 	Action     string // The action to perform
+	Locale     string // The locale of the client
 	ResponseId string
 	Data       []byte
 	Node       *pipes.LocalNode
@@ -23,7 +24,7 @@ func CreateHandlerFor[T any](instance *Instance, action string, handler func(*Co
 		// Parse the action
 		var action Message[T]
 		if err := sonic.Unmarshal(c.Data, &action); err != nil {
-			return ErrorResponse(c, localization.InvalidRequest, err)
+			return ErrorResponse(c, localization.ErrorInvalidRequest, err)
 		}
 
 		// Let the handler handle it (literally)
@@ -49,7 +50,7 @@ func (instance *Instance) route(ctx *Context) {
 	defer func() {
 		if err := recover(); err != nil {
 			pipeshutil.Log.Println("recovered from error in action", ctx.Action, "by", ctx.Client.ID, ":", err)
-			if err := instance.SendEventToOne(ctx.Client, ErrorResponse(ctx, localization.InvalidRequest, nil)); err != nil {
+			if err := instance.SendEventToOne(ctx.Client, ErrorResponse(ctx, localization.ErrorInvalidRequest, nil)); err != nil {
 				pipeshutil.Log.Println("couldn't send invalid event to connection after recover:", err)
 			}
 		}

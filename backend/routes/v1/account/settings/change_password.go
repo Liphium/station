@@ -5,6 +5,7 @@ import (
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -28,30 +29,30 @@ func changePassword(c *fiber.Ctx) error {
 	}
 	var authentication account.Authentication
 	if err := database.DBConn.Where("account = ? AND type = ?", accId, account.TypePassword).Take(&authentication).Error; err != nil {
-		return util.FailedRequest(c, util.ErrorServer, err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Check password
 	if match, err := auth.ComparePasswordAndHash(req.Current, accId, authentication.Secret); err != nil || !match {
-		return util.FailedRequest(c, util.PasswordInvalid, err)
+		return util.FailedRequest(c, localization.ErrorPasswordInvalid(8), err)
 	}
 
 	// Log out all devices
 	// TODO: Disconnect all sessions
 	if err := database.DBConn.Where("account = ?", accId).Delete(&account.Session{}).Error; err != nil {
-		return util.FailedRequest(c, util.ErrorServer, err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Change password
 	hash, err := auth.HashPassword(req.New, accId)
 	if err != nil {
-		return util.FailedRequest(c, util.ErrorServer, err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	err = database.DBConn.Model(&account.Authentication{}).Where("account = ? AND type = ?", accId, account.TypePassword).
 		Update("secret", hash).Error
 	if err != nil {
-		return util.FailedRequest(c, util.ErrorServer, err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// TODO: Send a mail here in the future (Stuff required: Rate limiting)

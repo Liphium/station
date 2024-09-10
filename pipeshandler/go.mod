@@ -10,10 +10,10 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/gofiber/websocket/v2 v2.2.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/Liphium/station/main v0.0.0-20240819105432-c6d7be0605b2
 )
 
 require (
-	github.com/Liphium/station/main v0.0.0-20240819105432-c6d7be0605b2 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/bytedance/sonic/loader v0.2.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -44,7 +44,7 @@ require (
 
 replace github.com/Liphium/station/pipes => ../pipes
 
-replace github.com/Liphium/station/pipeshandler => ../pipeshandler
+replace github.com/Liphium/station/main => ../main
 
 replace github.com/Liphium/station/chatserver => ../chatserver
 

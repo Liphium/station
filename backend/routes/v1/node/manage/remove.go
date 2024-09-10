@@ -4,6 +4,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -25,12 +26,12 @@ func removeNode(c *fiber.Ctx) error {
 	}
 
 	if req.Node == 0 {
-		return util.FailedRequest(c, "invalid", nil)
+		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Delete node
 	if err := database.DBConn.Delete(node.Node{}, req.Node).Error; err != nil {
-		return util.FailedRequest(c, "invalid", err)
+		return util.FailedRequest(c, localization.ErrorInvalidRequest, err)
 	}
 
 	return util.SuccessfulRequest(c)

@@ -7,6 +7,7 @@ import (
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -45,7 +46,7 @@ func setProfilePicture(c *fiber.Ctx) error {
 	// Get the profile picture file
 	var file account.CloudFile
 	if err := database.DBConn.Where("id = ?", req.File).Take(&file).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Check if the file extension is correct
@@ -69,7 +70,7 @@ func setProfilePicture(c *fiber.Ctx) error {
 
 	// Only return if there was an error with the database (exclude not found)
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Check if the profile was found (error has to be gorm.ErrRecordNotFound here cause excluded before)
@@ -77,7 +78,7 @@ func setProfilePicture(c *fiber.Ctx) error {
 
 		// Make previous profile picture no longer saved when it wasn't found
 		if err := database.DBConn.Model(&account.CloudFile{}).Where("id = ?", profile.Picture).Update("system", false).Error; err != nil {
-			return util.FailedRequest(c, "server.error", err)
+			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 	}
 
@@ -89,12 +90,12 @@ func setProfilePicture(c *fiber.Ctx) error {
 
 	// Save new profile
 	if err := database.DBConn.Save(&profile).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Mark new profile picture as system file
 	if err := database.DBConn.Model(&account.CloudFile{}).Where("id = ?", req.File).Update("system", true).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.SuccessfulRequest(c)

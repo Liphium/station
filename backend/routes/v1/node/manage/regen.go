@@ -5,6 +5,7 @@ import (
 	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -26,18 +27,18 @@ func regenToken(c *fiber.Ctx) error {
 	}
 
 	if req.Node == 0 {
-		return util.FailedRequest(c, "invalid", nil)
+		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	var node node.Node
 	if err := database.DBConn.Take(&node, req.Node).Error; err != nil {
-		return util.FailedRequest(c, "not.found", err)
+		return util.FailedRequest(c, localization.ErrorInvalidRequest, err)
 	}
 
 	node.Token = auth.GenerateToken(300)
 
 	if err := database.DBConn.Save(&node).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.SuccessfulRequest(c)

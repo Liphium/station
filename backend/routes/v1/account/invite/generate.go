@@ -5,6 +5,7 @@ import (
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -32,13 +33,13 @@ func generateInvite(c *fiber.Ctx) error {
 		Creator: accId,
 	}
 	if err := database.DBConn.Create(&invite).Error; err != nil {
-		return util.FailedRequest(c, util.ErrorServer, err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Retract one from the invite count of the account
 	inviteCount.Count -= 1
 	if err := database.DBConn.Save(&inviteCount).Error; err != nil {
-		return util.FailedRequest(c, util.ErrorServer, err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.ReturnJSON(c, fiber.Map{

@@ -13,6 +13,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.11
+	github.com/Liphium/station/main v0.0.0-20240819105432-c6d7be0605b2
 )
 
 require (

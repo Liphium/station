@@ -86,7 +86,6 @@ func encryptedRoutes(router fiber.Router, serverPublicKey *rsa.PublicKey, server
 	// Unauthorized routes
 	router.Route("/auth", auth.Unauthorized)
 	router.Route("/node", node.Unauthorized)
-	router.Route("/app", app.Unauthorized)
 	router.Route("/account", account.Unauthorized)
 
 	router.Route("/", authorizedRoutes)

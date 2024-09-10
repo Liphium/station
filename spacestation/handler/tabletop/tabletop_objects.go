@@ -3,6 +3,7 @@ package tabletop_handlers
 import (
 	"sync"
 
+	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
@@ -23,7 +24,7 @@ func createObject(c *pipeshandler.Context, action struct {
 	// Get the connection (for the client id)
 	connection, valid := caching.GetConnection(c.Client.ID)
 	if !valid {
-		return pipeshandler.ErrorResponse(c, "invalid", nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Create the object here so the data is still there when we send it down below
@@ -42,9 +43,9 @@ func createObject(c *pipeshandler.Context, action struct {
 	}
 
 	// Add the object to the table
-	err := caching.AddObjectToTable(c.Client.Session, object)
-	if err != nil {
-		return pipeshandler.ErrorResponse(c, err.Error(), err)
+	msg := caching.AddObjectToTable(c.Client.Session, object)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Notify other clients about the object creation
@@ -63,7 +64,7 @@ func createObject(c *pipeshandler.Context, action struct {
 		},
 	})
 	if !valid {
-		return pipeshandler.ErrorResponse(c, "server.error", nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
 	return pipeshandler.NormalResponse(c, map[string]interface{}{
@@ -75,9 +76,9 @@ func createObject(c *pipeshandler.Context, action struct {
 // Action: tobj_delete
 func deleteObject(c *pipeshandler.Context, id string) pipes.Event {
 
-	err := caching.RemoveObjectFromTable(c.Client.Session, id)
-	if err != nil {
-		return pipeshandler.ErrorResponse(c, err.Error(), err)
+	msg := caching.RemoveObjectFromTable(c.Client.Session, id)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Notify other clients
@@ -88,7 +89,7 @@ func deleteObject(c *pipeshandler.Context, id string) pipes.Event {
 		},
 	})
 	if !valid {
-		return pipeshandler.ErrorResponse(c, "server.error", nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
 	return pipeshandler.SuccessResponse(c)
@@ -99,13 +100,13 @@ func selectObject(c *pipeshandler.Context, id string) pipes.Event {
 
 	connection, valid := caching.GetConnection(c.Client.ID)
 	if !valid {
-		return pipeshandler.ErrorResponse(c, "invalid", nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Grab hold of it
-	err := caching.SelectTableObject(c.Client.Session, id, connection.ClientID)
-	if err != nil {
-		return pipeshandler.ErrorResponse(c, err.Error(), err)
+	msg := caching.SelectTableObject(c.Client.Session, id, connection.ClientID)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	return pipeshandler.SuccessResponse(c)
@@ -117,13 +118,13 @@ func unselectObject(c *pipeshandler.Context, id string) pipes.Event {
 	// Get the connection (for the client id)
 	connection, valid := caching.GetConnection(c.Client.ID)
 	if !valid {
-		return pipeshandler.ErrorResponse(c, "invalid", nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Grab hold of it
-	err := caching.UnselectTableObject(c.Client.Session, id, connection.ClientID)
-	if err != nil {
-		return pipeshandler.ErrorResponse(c, err.Error(), err)
+	msg := caching.UnselectTableObject(c.Client.Session, id, connection.ClientID)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	return pipeshandler.SuccessResponse(c)
@@ -140,16 +141,16 @@ func modifyObject(c *pipeshandler.Context, action struct {
 	// Get the connection (for the client id)
 	connection, valid := caching.GetConnection(c.Client.ID)
 	if !valid {
-		return pipeshandler.ErrorResponse(c, "invalid", nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Make sure the next client gets to modify the object regardless of errors
 	defer handleNextModification(c.Client.Session, action.ID)
 
 	// Modify the object and return the error if there is one
-	err := caching.ModifyTableObject(c.Client.Session, connection.ClientID, action.ID, action.Data, action.Width, action.Height)
-	if err != nil {
-		return pipeshandler.ErrorResponse(c, err.Error(), err)
+	msg := caching.ModifyTableObject(c.Client.Session, connection.ClientID, action.ID, action.Data, action.Width, action.Height)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Notify other clients
@@ -164,7 +165,7 @@ func modifyObject(c *pipeshandler.Context, action struct {
 		},
 	})
 	if !valid {
-		return pipeshandler.ErrorResponse(c, "server.error", nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
 	// Add the next client to the modification queue (in the defer above)
@@ -181,13 +182,13 @@ func moveObject(c *pipeshandler.Context, action struct {
 	// Get the connection (for the client id)
 	connection, valid := caching.GetConnection(c.Client.ID)
 	if !valid {
-		return pipeshandler.ErrorResponse(c, "invalid", nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Move the actual object
-	err := caching.MoveTableObject(c.Client.Session, connection.ClientID, action.ID, action.X, action.Y)
-	if err != nil {
-		return pipeshandler.ErrorResponse(c, err.Error(), err)
+	msg := caching.MoveTableObject(c.Client.Session, connection.ClientID, action.ID, action.X, action.Y)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Notify other clients
@@ -200,7 +201,7 @@ func moveObject(c *pipeshandler.Context, action struct {
 		},
 	})
 	if !valid {
-		return pipeshandler.ErrorResponse(c, "server.error", nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
 	return pipeshandler.SuccessResponse(c)
@@ -215,16 +216,16 @@ func rotateObject(c *pipeshandler.Context, action struct {
 	// Get the connection (for the client id)
 	connection, valid := caching.GetConnection(c.Client.ID)
 	if !valid {
-		return pipeshandler.ErrorResponse(c, "invalid", nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Make sure the next client gets to modify the object regardless of errors
 	defer handleNextModification(c.Client.Session, action.ID)
 
 	// Rotate the object and return an error (only if one is there)
-	err := caching.RotateTableObject(c.Client.Session, connection.ClientID, action.ID, action.Rotation)
-	if err != nil {
-		return pipeshandler.ErrorResponse(c, err.Error(), err)
+	msg := caching.RotateTableObject(c.Client.Session, connection.ClientID, action.ID, action.Rotation)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Notify other clients about the rotation
@@ -237,7 +238,7 @@ func rotateObject(c *pipeshandler.Context, action struct {
 		},
 	})
 	if !valid {
-		return pipeshandler.ErrorResponse(c, "server.error", nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
 	return pipeshandler.SuccessResponse(c)
@@ -249,13 +250,13 @@ func queueModificationToObject(c *pipeshandler.Context, objectId string) pipes.E
 	// Get the connection (for the client id)
 	connection, valid := caching.GetConnection(c.Client.ID)
 	if !valid {
-		return pipeshandler.ErrorResponse(c, "invalid", nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Queue the modification
-	rightAway, err := caching.QueueTableObjectModification(c.Client.Session, objectId, connection.ClientID)
-	if err != nil {
-		return pipeshandler.ErrorResponse(c, err.Error(), err)
+	rightAway, msg := caching.QueueTableObjectModification(c.Client.Session, objectId, connection.ClientID)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Return whether the modification can be sent right away
@@ -268,16 +269,16 @@ func queueModificationToObject(c *pipeshandler.Context, objectId string) pipes.E
 // Called when a modification is completed to contact the next modifier
 func handleNextModification(room string, object string) {
 	// Remove the current client from the modification queue
-	err := caching.RemoveFromModificationQueue(room, object)
-	if err != nil {
-		util.Log.Println("couldn't remove from modification queue:", err)
+	msg := caching.RemoveFromModificationQueue(room, object)
+	if msg != nil {
+		util.Log.Println("couldn't remove from modification queue:", msg[localization.DefaultLocale])
 		return
 	}
 
 	// Get the next client to modify the object
-	client, err := caching.NextModifier(room, object)
-	if err != nil {
-		util.Log.Println("error during getting next modifier:", err)
+	client, msg := caching.NextModifier(room, object)
+	if msg != nil {
+		util.Log.Println("error during getting next modifier:", msg[localization.DefaultLocale])
 		return
 	}
 
@@ -287,7 +288,7 @@ func handleNextModification(room string, object string) {
 	}
 
 	// Send event to inform the client about their modification being allowed
-	err = caching.SSNode.SendClient(client, pipes.Event{
+	err := caching.SSNode.SendClient(client, pipes.Event{
 		Name: "tobj_mqueue_allowed",
 		Data: map[string]interface{}{
 			"id": object,

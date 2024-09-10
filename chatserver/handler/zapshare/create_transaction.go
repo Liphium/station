@@ -5,6 +5,7 @@ import (
 
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/chatserver/zapshare"
+	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 )
@@ -18,13 +19,13 @@ func createTransaction(context *pipeshandler.Context, action createTransactionAc
 
 	if os.Getenv("CHAT_NODE") == "" {
 		util.Log.Println("Live share is disabled because CHAT_NODE is not set. It should be set to the URL of the chat node.")
-		return pipeshandler.ErrorResponse(context, "invalid", nil)
+		return pipeshandler.ErrorResponse(context, localization.ErrorInvalidRequest, nil)
 	}
 
+	// Create a new transaction
 	transaction, ok := zapshare.NewTransaction(context.Client.ID, action.Name, action.Size)
 	if !ok {
-		// TODO: Better message
-		return pipeshandler.ErrorResponse(context, "failed", nil)
+		return pipeshandler.ErrorResponse(context, localization.ErrorServer, nil)
 	}
 
 	return pipeshandler.NormalResponse(context, map[string]interface{}{

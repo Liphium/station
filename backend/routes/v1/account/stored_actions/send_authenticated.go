@@ -6,6 +6,7 @@ import (
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -45,11 +46,11 @@ func sendAuthenticatedStoredAction(c *fiber.Ctx) error {
 	// Check if stored action limit is reached
 	var storedActionCount int64
 	if err := database.DBConn.Model(&properties.AStoredAction{}).Where("account = ?", acc.ID).Count(&storedActionCount).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	if storedActionCount >= AuthenticatedStoredActionLimit {
-		return util.FailedRequest(c, "limit.reached", nil)
+		return util.FailedRequest(c, localization.ErrorStoredActionLimitReached(AuthenticatedStoredActionLimit), nil)
 	}
 
 	var storedActionKey account.StoredActionKey
@@ -67,7 +68,7 @@ func sendAuthenticatedStoredAction(c *fiber.Ctx) error {
 		Account: storedAction.Account,
 		Payload: storedAction.Payload,
 	}).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Send stored action to account

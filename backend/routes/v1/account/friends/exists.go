@@ -4,6 +4,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -24,7 +25,7 @@ func existsFriend(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 	if err := database.DBConn.Where("account = ? AND hash = ?", accId, req.Hash).Take(&properties.Friendship{}).Error; err != nil {
-		return util.FailedRequest(c, "not.found", nil)
+		return util.FailedRequest(c, localization.ErrorFriendNotFound, nil)
 	}
 
 	return util.SuccessfulRequest(c)

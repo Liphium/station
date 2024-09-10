@@ -6,8 +6,8 @@ import (
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
 	"github.com/Liphium/station/chatserver/util"
-	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -22,7 +22,7 @@ func HandleChangeData(c *fiber.Ctx, token conversations.ConversationToken, data 
 
 	// Check if the form is valid
 	if len(data) > util.MaxConversationDataLength {
-		return integration.FailedRequest(c, localization.GroupDataTooLong, nil)
+		return integration.FailedRequest(c, localization.ErrorGroupDataTooLong, nil)
 	}
 
 	// Get the conversation

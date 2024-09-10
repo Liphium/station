@@ -2,6 +2,7 @@ package files
 
 import (
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -17,7 +18,7 @@ func getStorageUsage(c *fiber.Ctx) error {
 	// Count the account's storage
 	storage, err := CountTotalStorage(accId)
 	if err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Return all the data

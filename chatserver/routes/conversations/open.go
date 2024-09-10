@@ -4,8 +4,8 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/util"
-	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -39,16 +39,16 @@ func openConversation(c *fiber.Ctx) error {
 	}
 
 	if len(req.Members)+1 > util.MaxConversationMembers {
-		return integration.FailedRequest(c, "member.limit", nil)
+		return integration.FailedRequest(c, localization.ErrorGroupMemberLimit(util.MaxConversationMembers), nil)
 	}
 
 	if len(req.AccountData) > util.MaxConversationTokenDataLength {
-		return integration.FailedRequest(c, "data.limit", nil)
+		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	for _, member := range req.Members {
 		if len(member) > util.MaxConversationTokenDataLength {
-			return integration.FailedRequest(c, "data.limit", nil)
+			return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 		}
 	}
 

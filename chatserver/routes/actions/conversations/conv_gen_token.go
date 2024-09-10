@@ -9,8 +9,8 @@ import (
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
 	"github.com/Liphium/station/chatserver/util"
-	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -24,7 +24,7 @@ func HandleGenerateToken(c *fiber.Ctx, token conversations.ConversationToken, da
 	}
 
 	if conversation.Type != conversations.TypeGroup {
-		return integration.FailedRequest(c, localization.GroupInvalidType, nil)
+		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Check requirements for a new token
@@ -34,7 +34,7 @@ func HandleGenerateToken(c *fiber.Ctx, token conversations.ConversationToken, da
 	}
 
 	if len(members) >= 100 {
-		return integration.FailedRequest(c, localization.GroupMemberLimit, nil)
+		return integration.FailedRequest(c, localization.ErrorGroupMemberLimit(100), nil)
 	}
 
 	// Increment the version by one to save the modification

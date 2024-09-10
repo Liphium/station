@@ -5,6 +5,7 @@ import (
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -32,7 +33,7 @@ func Disconnect(c *fiber.Ctx) error {
 	// Disconnect account
 	if database.DBConn.Model(&account.Session{}).Where("id = ?", req.Session).Update("node", 0).Error != nil {
 		util.Log.Println("Failed to disconnect account", req.Session)
-		return util.FailedRequest(c, "server.error", nil)
+		return util.FailedRequest(c, localization.ErrorServer, nil)
 	}
 
 	return util.SuccessfulRequest(c)

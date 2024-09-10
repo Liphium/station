@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
@@ -16,12 +16,12 @@ func update(c *pipeshandler.Context, action struct {
 
 	connection, valid := caching.GetConnection(c.Client.ID)
 	if !valid {
-		return pipeshandler.ErrorResponse(c, "invalid", nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	connections, valid := caching.GetAllConnections(c.Client.Session)
 	if !valid {
-		return pipeshandler.ErrorResponse(c, "invalid", nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	client := connections[c.Client.ID]
@@ -34,7 +34,7 @@ func update(c *pipeshandler.Context, action struct {
 
 	// Send to all
 	if !SendStateUpdate(connection.ClientID, c.Client.Session, client.Muted, client.Deafened) {
-		return pipeshandler.ErrorResponse(c, integration.ErrorServer, nil)
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
 	return pipeshandler.SuccessResponse(c)

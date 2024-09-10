@@ -5,6 +5,7 @@ import (
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -33,7 +34,7 @@ func changeName(c *fiber.Ctx) error {
 	// Change username
 	err := database.DBConn.Model(&account.Account{}).Where("id = ?", accId).Update("username", req.Username).Error
 	if err != nil {
-		return util.FailedRequest(c, "username.taken", err)
+		return util.FailedRequest(c, localization.ErrorUsernameTaken, err)
 	}
 
 	return util.SuccessfulRequest(c)

@@ -6,6 +6,7 @@ import (
 	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -27,20 +28,20 @@ func newNode(c *fiber.Ctx) error {
 	// Check if token is valid
 	var ct node.NodeCreation
 	if err := database.DBConn.Where("token = ?", req.Token).Take(&ct).Error; err != nil {
-		return util.FailedRequest(c, "invalid", nil)
+		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	if req.Domain == "" {
-		return util.FailedRequest(c, "invalid", nil)
+		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	if len(req.Domain) < 3 {
-		return util.FailedRequest(c, "invalid.domain", nil)
+		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	var app app.App
 	if err := database.DBConn.Take(&app, req.App).Error; err != nil {
-		return util.FailedRequest(c, "invalid", nil)
+		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Create node
@@ -54,7 +55,7 @@ func newNode(c *fiber.Ctx) error {
 	}
 
 	if err := database.DBConn.Create(&created).Error; err != nil {
-		return util.FailedRequest(c, "invalid.domain", nil)
+		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	return util.ReturnJSON(c, fiber.Map{

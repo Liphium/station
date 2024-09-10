@@ -8,8 +8,8 @@ import (
 	"github.com/Liphium/station/chatserver/database/conversations"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
-	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -23,7 +23,7 @@ func HandlePromoteToken(c *fiber.Ctx, token conversations.ConversationToken, use
 	}
 
 	if conversation.Type != conversations.TypeGroup {
-		return integration.FailedRequest(c, "no.group", nil)
+		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	if token.Rank == conversations.RankUser {
