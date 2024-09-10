@@ -192,6 +192,7 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 			Data:       message,
 			Action:     args[0],
 			ResponseId: args[1],
+			Locale:     body["lc"].(string), // Parse the locale
 			Node:       local,
 			Instance:   instance,
 		}) {
