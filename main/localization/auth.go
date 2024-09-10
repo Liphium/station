@@ -15,6 +15,9 @@ var (
 	ErrorEmailInvalid = Translations{
 		englishUS: "Your email doesn't match the requirements.",
 	}
+	ErrorSessionNotVerified = Translations{
+		englishUS: "Your session isn't verified, please make sure to transfer the keys from your other devices first.",
+	}
 )
 
 func ErrorPasswordInvalid(minLength int) Translations {

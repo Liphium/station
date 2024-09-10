@@ -47,11 +47,11 @@ func FailedRequest(c *fiber.Ctx, message localization.Translations, err error) e
 
 // Translate any message on a request
 func Translate(c *fiber.Ctx, message localization.Translations) string {
-	locale := c.Locals("locale").(string)
-	if locale == "" {
+	locale := c.Locals("locale")
+	if locale == nil {
 		locale = localization.DefaultLocale
 	}
-	msg, _ := message[locale]
+	msg := message[locale.(string)]
 	return msg
 }
 

@@ -35,6 +35,18 @@ func Router(router fiber.Router) {
 		})
 	})
 
+	// Use a middleware to make sure all the translations work properly
+	router.Use(func(c *fiber.Ctx) error {
+
+		// Set the locale for translations to work properly
+		localeHeader, valid := c.GetReqHeaders()["Locale"]
+		if valid {
+			c.Locals("locale", localeHeader)
+		}
+
+		return c.Next()
+	})
+
 	// Unencrypted account routes (only file upload thing)
 	router.Route("/v1/account", account.Unencrypted)
 

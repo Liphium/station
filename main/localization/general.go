@@ -4,6 +4,9 @@ var (
 	ErrorInvalidRequest = Translations{
 		englishUS: "The request was invalid. Maybe try upgrading to the newest version?",
 	}
+	ErrorInvalidRequestContent = Translations{
+		englishUS: "The content of your request was invalid.",
+	}
 	ErrorServer = Translations{
 		englishUS: "Something went wrong on the server. Please try again later.",
 	}

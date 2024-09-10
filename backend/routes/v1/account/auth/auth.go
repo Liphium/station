@@ -5,6 +5,7 @@ import (
 )
 
 func Unauthorized(router fiber.Router) {
+	router.Post("/refresh", refreshSession)
 }
 
 func Authorized(router fiber.Router) {
