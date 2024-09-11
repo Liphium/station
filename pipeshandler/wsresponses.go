@@ -2,6 +2,7 @@ package pipeshandler
 
 import (
 	"runtime/debug"
+	"strings"
 
 	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/pipes"
@@ -37,7 +38,10 @@ func Translate(c *Context, message localization.Translations) string {
 	if locale == "" {
 		locale = localization.DefaultLocale
 	}
-	msg := message[locale]
+	msg, valid := message[strings.ToLower(locale)]
+	if !valid {
+		msg = message[localization.DefaultLocale]
+	}
 	return msg
 }
 

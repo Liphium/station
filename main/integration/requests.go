@@ -2,6 +2,7 @@ package integration
 
 import (
 	"runtime/debug"
+	"strings"
 
 	"github.com/Liphium/station/main/localization"
 	"github.com/bytedance/sonic"
@@ -45,7 +46,10 @@ func Translate(c *fiber.Ctx, message localization.Translations) string {
 	if locale == nil {
 		locale = localization.DefaultLocale
 	}
-	msg := message[locale.(string)]
+	msg, valid := message[strings.ToLower(locale.(string))]
+	if !valid {
+		msg = message[localization.DefaultLocale]
+	}
 	return msg
 }
 

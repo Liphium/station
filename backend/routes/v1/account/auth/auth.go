@@ -1,4 +1,4 @@
-package auth
+package auth_routes
 
 import (
 	"github.com/gofiber/fiber/v2"

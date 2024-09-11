@@ -3,6 +3,7 @@ package util
 import (
 	"os"
 	"runtime/debug"
+	"strings"
 
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -51,7 +52,10 @@ func Translate(c *fiber.Ctx, message localization.Translations) string {
 	if locale == nil {
 		locale = localization.DefaultLocale
 	}
-	msg := message[locale.(string)]
+	msg, valid := message[strings.ToLower(locale.(string))]
+	if !valid {
+		msg = message[localization.DefaultLocale]
+	}
 	return msg
 }
 

@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/Liphium/station/backend/routes/v1/account"
-	"github.com/Liphium/station/backend/routes/v1/account/auth"
+	auth_routes "github.com/Liphium/station/backend/routes/v1/account/auth"
 	"github.com/Liphium/station/backend/routes/v1/app"
 	"github.com/Liphium/station/backend/routes/v1/node"
 	"github.com/Liphium/station/backend/util"
@@ -96,7 +96,7 @@ func encryptedRoutes(router fiber.Router, serverPublicKey *rsa.PublicKey, server
 	})
 
 	// Unauthorized routes
-	router.Route("/auth", auth.Unauthorized)
+	router.Route("/auth", auth_routes.Unauthorized)
 	router.Route("/node", node.Unauthorized)
 	router.Route("/account", account.Unauthorized)
 
@@ -136,5 +136,5 @@ func authorizedRoutes(router fiber.Router) {
 	router.Route("/account", account.Authorized)
 	router.Route("/node", node.Authorized)
 	router.Route("/app", app.Authorized)
-	router.Route("/auth", auth.Authorized)
+	router.Route("/auth", auth_routes.Authorized)
 }

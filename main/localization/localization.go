@@ -1,9 +1,9 @@
 package localization
 
-const DefaultLocale = "en_US"
+const DefaultLocale = "en_us"
 
 // Predefined locales
-var englishUS = "en_US"
+var englishUS = "en_us"
 
 // var german = "de_DE"
 
