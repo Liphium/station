@@ -10,6 +10,10 @@ type Component interface {
 }
 type Components []Component
 
+const TextStyleHeadline = 0    // Style for the headline above the form
+const TextStyleSeperator = 1   // Style for a seperator between sections
+const TextStyleDescription = 2 // Style for a description or normal text element
+
 type Text struct {
 	Text  localization.Translations // The text itself
 	Style int                       // Style of the text (0 = headline, 1 = description)
@@ -17,21 +21,23 @@ type Text struct {
 
 func (t Text) render(locale string) fiber.Map {
 	return fiber.Map{
-		"text":  t.Text[locale],
+		"type":  "text",
+		"text":  localization.TranslateLocale(locale, t.Text),
 		"style": t.Style,
 	}
 }
 
 type Input struct {
-	Label       localization.Translations // Label above the input
 	Placeholder localization.Translations // Placeholder inside the input on the client
+	Hidden      bool                      // If the characters inside the input should be hidden
 	Name        string                    // Name in the return json
 }
 
 func (i Input) render(locale string) fiber.Map {
 	return fiber.Map{
-		"label":       i.Label[locale],
-		"placeholder": i.Placeholder[locale],
+		"type":        "input",
+		"placeholder": localization.TranslateLocale(locale, i.Placeholder),
+		"hidden":      i.Hidden,
 		"name":        i.Name,
 	}
 }
@@ -42,9 +48,10 @@ type Button struct {
 	Path  string                    `json:"path"`            // The path the request goes to
 }
 
-func (b *Button) render(locale string) fiber.Map {
+func (b Button) render(locale string) fiber.Map {
 	return fiber.Map{
-		"label": b.Label[locale],
+		"type":  "button",
+		"label": localization.TranslateLocale(locale, b.Label),
 		"path":  b.Path,
 	}
 }
@@ -55,6 +62,7 @@ type Link struct {
 
 func (l Link) render(locale string) fiber.Map {
 	return fiber.Map{
-		"label": l.Label[locale],
+		"type":  "link",
+		"label": localization.TranslateLocale(locale, l.Label),
 	}
 }

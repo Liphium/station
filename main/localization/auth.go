@@ -15,8 +15,44 @@ var (
 	ErrorEmailInvalid = Translations{
 		englishUS: "Your email doesn't match the requirements.",
 	}
+	ErrorEmailNotFound = Translations{
+		englishUS: "There is no account with this email address.",
+	}
 	ErrorSessionNotVerified = Translations{
 		englishUS: "Your session isn't verified, please make sure to transfer the keys from your other devices first.",
+	}
+	ErrorPasswordIncorrect = Translations{
+		englishUS: "Your password is incorrect. Please try again.",
+	}
+	ErrorAuthRatelimit = Translations{
+		englishUS: "Please wait a few seconds before trying again.",
+	}
+
+	// Localization for general auth stuff
+	AuthNextStepButton = Translations{
+		englishUS: "Next step",
+	}
+	AuthSubmitButton = Translations{
+		englishUS: "Submit",
+	}
+
+	// Localization for the auth start page
+	AuthStartTitle = Translations{
+		englishUS: "Your email, please.",
+	}
+	AuthStartEmailPlaceholder = Translations{
+		englishUS: "you@email.com",
+	}
+	AuthStartCreateButton = Translations{
+		englishUS: "Create an account",
+	}
+
+	// Localization for the password page
+	LoginPasswordTitle = Translations{
+		englishUS: "Your password, please.",
+	}
+	LoginPasswordPlaceholder = Translations{
+		englishUS: "yourmum123 (don't use this)",
 	}
 )
 

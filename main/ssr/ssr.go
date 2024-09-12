@@ -1,8 +1,6 @@
 package ssr
 
 import (
-	"strings"
-
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -11,23 +9,36 @@ import (
 // Reponse types
 const ResponseRender = "render"
 const ResponseRedirect = "redirect"
-const ResponseError = "error"
+const ResponseSuggest = "suggest"
+const ResponseSuccess = "success"
+
+// Tell the client that the process is finished
+func SuccessResponse(data interface{}) fiber.Map {
+	return fiber.Map{
+		"success": true,
+		"type":    ResponseSuccess,
+		"data":    data,
+	}
+}
 
 // Redirect to a differnet path
-func RedirectResponse(c *fiber.Ctx, path string, token string) fiber.Map {
+func RedirectResponse(path string, token string) fiber.Map {
 	return fiber.Map{
 		"success":  true,
 		"type":     ResponseRedirect,
 		"redirect": path,
+		"token":    token,
 	}
 }
 
-// Return an error on the current path that will be shown client-side above the submit button
-func ErrorResponse(c *fiber.Ctx, err localization.Translations) fiber.Map {
+// Response to suggest going to a different screen (for example register when email not found)
+func SuggestResponse(c *fiber.Ctx, message localization.Translations, button Button) fiber.Map {
+	locale := localization.Locale(c)
 	return fiber.Map{
 		"success": true,
-		"type":    ResponseError,
-		"error":   translate(c, err),
+		"type":    ResponseSuggest,
+		"message": localization.TranslateLocale(locale, message),
+		"button":  button.render(locale),
 	}
 }
 
@@ -41,7 +52,8 @@ func RenderResponse(c *fiber.Ctx, components Components) fiber.Map {
 	}()
 
 	// Render all the components
-	locale := locale(c)
+	locale := localization.Locale(c)
+	util.Log.Println("using locale:", locale)
 	compMap := make([]fiber.Map, len(components))
 	for i, comp := range components {
 		compMap[i] = comp.render(locale)
@@ -53,26 +65,4 @@ func RenderResponse(c *fiber.Ctx, components Components) fiber.Map {
 		"type":    ResponseRender,
 		"render":  compMap,
 	}
-}
-
-// Extract the locale from any request
-func locale(c *fiber.Ctx) string {
-	locale := c.Locals("locale")
-	if locale == nil {
-		locale = localization.DefaultLocale
-	}
-	return strings.ToLower(locale.(string))
-}
-
-// Translate any message on a request
-func translate(c *fiber.Ctx, message localization.Translations) string {
-	locale := c.Locals("locale")
-	if locale == nil {
-		locale = localization.DefaultLocale
-	}
-	msg, valid := message[strings.ToLower(locale.(string))]
-	if !valid {
-		msg = message[localization.DefaultLocale]
-	}
-	return msg
 }
