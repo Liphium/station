@@ -32,7 +32,7 @@ func startAuth(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return util.ReturnJSON(c, ssr.SuggestResponse(c, localization.ErrorEmailNotFound, ssr.Button{
 				Label: localization.AuthStartCreateButton,
-				Path:  "/account/auth/register/start",
+				Path:  "/account/auth/register/email",
 			}))
 		}
 

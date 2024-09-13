@@ -3,6 +3,7 @@ module github.com/Liphium/station/backend
 go 1.23.0
 
 require (
+	github.com/Liphium/station/main v0.0.0-20240819105432-c6d7be0605b2
 	github.com/aws/aws-sdk-go-v2 v1.30.5
 	github.com/aws/aws-sdk-go-v2/config v1.27.33
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.32
@@ -13,7 +14,6 @@ require (
 	github.com/joho/godotenv v1.5.1
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.11
-	github.com/Liphium/station/main v0.0.0-20240819105432-c6d7be0605b2
 )
 
 require (
@@ -34,8 +34,13 @@ require (
 	github.com/bytedance/sonic/loader v0.2.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
+	github.com/markbates/goth v1.80.0 // indirect
+	golang.org/x/oauth2 v0.17.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
+	google.golang.org/appengine v1.6.8 // indirect
+	google.golang.org/protobuf v1.34.2 // indirect
 )
 
 require (

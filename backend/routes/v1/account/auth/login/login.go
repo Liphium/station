@@ -34,7 +34,7 @@ func GenerateLoginToken(acc account.Account) string {
 
 	// Generate a unique token
 	token := auth.GenerateToken(50)
-	for _, valid := kv.Get(token); valid; {
+	for _, valid := kv.Get(loginTokenPrefix + token); valid; {
 		token = auth.GenerateToken(50)
 	}
 

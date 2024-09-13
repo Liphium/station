@@ -13,7 +13,7 @@ var (
 		englishUS: "Your display name doesn't match the requirements.",
 	}
 	ErrorEmailInvalid = Translations{
-		englishUS: "Your email doesn't match the requirements.",
+		englishUS: "Please enter a valid email address.",
 	}
 	ErrorEmailNotFound = Translations{
 		englishUS: "There is no account with this email address.",
@@ -35,6 +35,9 @@ var (
 	AuthSubmitButton = Translations{
 		englishUS: "Submit",
 	}
+	AuthResendEmailButton = Translations{
+		englishUS: "Resend email",
+	}
 
 	// Localization for the auth start page
 	AuthStartTitle = Translations{
@@ -53,6 +56,14 @@ var (
 	}
 	LoginPasswordPlaceholder = Translations{
 		englishUS: "yourmum123 (don't use this)",
+	}
+
+	// Localization for register invite page
+	RegisterInviteTitle = Translations{
+		englishUS: "Your invite, please.",
+	}
+	RegisterInvitePlaceholder = Translations{
+		englishUS: "your-invite-here",
 	}
 )
 

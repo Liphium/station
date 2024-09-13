@@ -20,12 +20,10 @@ func changeDisplayName(c *fiber.Ctx) error {
 
 	var req changeDisplayNameRequest
 	if err := util.BodyParser(c, &req); err != nil {
-		log.Println("requesto invalid")
 		return util.InvalidRequest(c)
 	}
 	accId, valid := util.GetAcc(c)
 	if !valid {
-		log.Println("account id no found")
 		return util.InvalidRequest(c)
 	}
 
