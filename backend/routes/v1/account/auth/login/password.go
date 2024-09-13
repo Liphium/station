@@ -1,6 +1,10 @@
 package login_routes
 
 import (
+	"errors"
+	"strings"
+	"time"
+
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/kv"
@@ -9,6 +13,7 @@ import (
 	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/main/ssr"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 // Route: /account/auth/login/password (SSR)
@@ -54,7 +59,62 @@ func checkPassword(c *fiber.Ctx) error {
 		return util.FailedRequest(c, localization.ErrorPasswordIncorrect, nil)
 	}
 
+	// Remove the login token from the kv
+	kv.Delete(loginTokenPrefix + req.Token)
+
+	// Count the amount of sessions
+	var sessionCount int64 = 0
+	if err := database.DBConn.Model(&account.Session{}).Where("account = ?", state.Account).Count(&sessionCount).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return util.FailedRequest(c, localization.ErrorServer, err)
+	}
+
+	// Create session
+	tk := auth.GenerateToken(100)
+	var createdSession account.Session = account.Session{
+		ID:              auth.GenerateToken(12),
+		Token:           tk,
+		Verified:        sessionCount == 0,
+		Account:         state.Account,
+		PermissionLevel: state.PermissionLevel,
+		Device:          "tbd",
+		LastConnection:  time.UnixMilli(0),
+	}
+
+	// Create the session in a safe way
+	tries := 0
+	for {
+
+		// Make sure to not try too often
+		if tries > 6 {
+			break
+		}
+
+		// Create the session in the database and try again with a new id in case it fails
+		err = database.DBConn.Create(&createdSession).Error
+		if err != nil {
+			if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "constraint failed") {
+				createdSession.ID = auth.GenerateToken(12)
+			} else {
+				break
+			}
+		} else {
+			break
+		}
+		tries++
+	}
+	if err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
+	}
+
+	// Generate jwt token for the session
+	jwtToken, err := util.Token(createdSession.ID, state.Account, state.PermissionLevel, time.Now().Add(time.Hour*24*1))
+	if err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
+	}
+
+	// Return refresh and normal token
 	return util.ReturnJSON(c, ssr.SuccessResponse(fiber.Map{
-		"refresh_token": "ahidhaisusiad",
+		"token":         jwtToken,
+		"refresh_token": tk,
 	}))
 }

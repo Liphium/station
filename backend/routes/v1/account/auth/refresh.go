@@ -31,12 +31,18 @@ func refreshSession(c *fiber.Ctx) error {
 	// Check if session is valid
 	var session account.Session
 	if !requests.GetSession(req.Session, &session) {
-		return util.FailedRequest(c, localization.ErrorInvalidRequestContent, nil)
+		return util.ReturnJSON(c, fiber.Map{
+			"success": false,
+			"valid":   false,
+		})
 	}
 
 	// Check if the session token matches the request
 	if session.Token != req.Token {
-		return util.FailedRequest(c, localization.ErrorInvalidRequestContent, nil)
+		return util.ReturnJSON(c, fiber.Map{
+			"success": false,
+			"valid":   false,
+		})
 	}
 
 	// Check if the session is verified
@@ -45,12 +51,19 @@ func refreshSession(c *fiber.Ctx) error {
 			Payload: "",
 		}
 		if err := database.DBConn.Where("session = ?", session.ID).Take(&request).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return util.FailedRequest(c, localization.ErrorSessionNotVerified, err)
+
+			return util.ReturnJSON(c, fiber.Map{
+				"success":  false,
+				"verified": false,
+			})
 		}
 
 		// Check if the key request has been accepted
 		if request.Payload == "" {
-			return util.FailedRequest(c, localization.ErrorSessionNotVerified, nil)
+			return util.ReturnJSON(c, fiber.Map{
+				"success":  false,
+				"verified": false,
+			})
 		}
 
 		// Update the session to verified in case it has

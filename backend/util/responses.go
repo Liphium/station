@@ -3,7 +3,6 @@ package util
 import (
 	"os"
 	"runtime/debug"
-	"strings"
 
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -42,21 +41,8 @@ func FailedRequest(c *fiber.Ctx, message localization.Translations, err error) e
 
 	return ReturnJSON(c, fiber.Map{
 		"success": false,
-		"error":   Translate(c, message),
+		"error":   localization.Translate(c, message),
 	})
-}
-
-// Translate any message on a request
-func Translate(c *fiber.Ctx, message localization.Translations) string {
-	locale := c.Locals("locale")
-	if locale == nil {
-		locale = localization.DefaultLocale
-	}
-	msg, valid := message[strings.ToLower(locale.(string))]
-	if !valid {
-		msg = message[localization.DefaultLocale]
-	}
-	return msg
 }
 
 func InvalidRequest(c *fiber.Ctx) error {

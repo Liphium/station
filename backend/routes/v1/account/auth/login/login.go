@@ -19,11 +19,12 @@ func Unauthorized(router fiber.Router) {
 }
 
 type LoginState struct {
-	LoginStep    uint        // The step of the login process
-	Account      uuid.UUID   // The account id for the account
-	Mutex        *sync.Mutex // To prevent the rate limit triggering concurrent reads
-	AttemptCount uint        // The count of attempts
-	LastAttempt  time.Time   // The last attempt to get in
+	LoginStep       uint        // The step of the login process
+	Account         uuid.UUID   // The account id for the account
+	PermissionLevel uint        // The permission level of the account
+	Mutex           *sync.Mutex // To prevent the rate limit triggering concurrent reads
+	AttemptCount    uint        // The count of attempts
+	LastAttempt     time.Time   // The last attempt to get in
 }
 
 const loginTokenPrefix = "login_"
@@ -39,11 +40,12 @@ func GenerateLoginToken(acc account.Account) string {
 
 	// Store it as a login token in the kv store
 	kv.Store(loginTokenPrefix+token, &LoginState{
-		LoginStep:    1,
-		Account:      acc.ID,
-		Mutex:        &sync.Mutex{},
-		AttemptCount: 0,
-		LastAttempt:  time.Now(),
+		LoginStep:       1,
+		Account:         acc.ID,
+		PermissionLevel: acc.Rank.Level,
+		Mutex:           &sync.Mutex{},
+		AttemptCount:    0,
+		LastAttempt:     time.Now(),
 	})
 	return token
 }

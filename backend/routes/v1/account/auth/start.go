@@ -26,7 +26,7 @@ func startAuth(c *fiber.Ctx) error {
 
 	// Check if there is an account with this email
 	var acc account.Account
-	if err := database.DBConn.Where("email = ?", req.Email).Take(&acc).Error; err != nil {
+	if err := database.DBConn.Where("email = ?", req.Email).Preload("Rank").Take(&acc).Error; err != nil {
 
 		// If the account wasn't found, redirect to register
 		if errors.Is(err, gorm.ErrRecordNotFound) {
