@@ -26,9 +26,8 @@ func changeName(c *fiber.Ctx) error {
 	}
 
 	// Check username and tag
-	valid, message := standards.CheckUsername(req.Username)
-	if !valid {
-		return util.FailedRequest(c, message, nil)
+	if msg := standards.CheckUsername(req.Username); msg != nil {
+		return util.FailedRequest(c, msg, nil)
 	}
 
 	// Change username

@@ -53,45 +53,45 @@ const MaxUsernameLength = 16
 const UsernameAllowedCharacters = "^[\\p{Ll}\\p{N}_\\-]+$"
 
 // Check the requirements for a username
-func CheckUsername(username string) (bool, localization.Translations) {
+func CheckUsername(username string) localization.Translations {
 
 	// Check length of the username
 	if len(username) < MinUsernameLength {
-		return false, localization.ErrorUsernameMinLength(MinUsernameLength)
+		return localization.ErrorUsernameMinLength(MinUsernameLength)
 	}
 
 	if len(username) > MaxUsernameLength {
-		return false, localization.ErrorUsernameMaxLength(MaxUsernameLength)
+		return localization.ErrorUsernameMaxLength(MaxUsernameLength)
 	}
 
 	// Check if the username is valid
 	match, err := regexp.Match(UsernameAllowedCharacters, []byte(username))
 	if !match || err != nil {
-		return false, localization.ErrorUsernameInvalid
+		return localization.ErrorUsernameInvalid
 	}
 
 	// Check if username is available
 	if database.DBConn.Where("username = ?", username).Take(&account.Account{}).RowsAffected > 0 {
-		return false, localization.ErrorUsernameTaken
+		return localization.ErrorUsernameTaken
 	}
 
-	return true, localization.None()
+	return nil
 }
 
 // * Account display name standard
 const MaxDisplayNameLength = 32 // is 32 now cause it is encoded with base64 and utf8
 
 // Check the requirements for a display name
-func CheckDisplayName(username string) (bool, localization.Translations) {
+func CheckDisplayName(username string) localization.Translations {
 
 	// Check length of the username
 	if len(username) < MinUsernameLength {
-		return false, localization.ErrorDisplayNameMinLength(MinUsernameLength)
+		return localization.ErrorDisplayNameMinLength(MinUsernameLength)
 	}
 
 	if len(username) > MaxDisplayNameLength {
-		return false, localization.ErrorDisplayNameMaxLength(MaxDisplayNameLength)
+		return localization.ErrorDisplayNameMaxLength(MaxDisplayNameLength)
 	}
 
-	return true, localization.None()
+	return nil
 }

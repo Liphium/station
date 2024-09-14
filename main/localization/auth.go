@@ -85,6 +85,26 @@ var (
 	RegisterCodePlaceholder = Translations{
 		englishUS: "111111",
 	}
+	RegisterResendEmailDescription = Translations{
+		englishUS: "We sent you another email. Let's hope this one reached your inbox!",
+	}
+
+	// Localization for username registration form
+	RegisterUsernameTitle = Translations{
+		englishUS: "Create your username.",
+	}
+	RegisterUsernameRequirements = Translations{
+		englishUS: "Your username can only contain lowercase characters, numbers and '_' or '-'.",
+	}
+	RegisterUsernamePlaceholder = Translations{
+		englishUS: "test123",
+	}
+	RegisterDisplayNameRequirements = Translations{
+		englishUS: "Your display name is the name everyone sees. No special requirements.",
+	}
+	RegisterDisplayNamePlaceholder = Translations{
+		englishUS: "Test 123",
+	}
 )
 
 func ErrorPasswordInvalid(minLength int) Translations {
@@ -114,5 +134,11 @@ func ErrorUsernameMinLength(minLength int) Translations {
 func ErrorUsernameMaxLength(maxLength int) Translations {
 	return Translations{
 		englishUS: fmt.Sprintf("Your username has to be shorter than %d characters.", maxLength),
+	}
+}
+
+func AuthRegisterCodeEmailCooldown(seconds int64) Translations {
+	return Translations{
+		englishUS: fmt.Sprintf("Please wait %d seconds before requesting another email.", seconds),
 	}
 }

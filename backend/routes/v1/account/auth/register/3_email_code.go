@@ -1,13 +1,15 @@
 package register_routes
 
 import (
+	"time"
+
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/main/ssr"
 	"github.com/gofiber/fiber/v2"
 )
 
-// Route: /account/auth/register/email_code
+// Route: /account/auth/register/email_code (SSR)
 func checkEmailCode(c *fiber.Ctx) error {
 
 	// Parse the request
@@ -26,7 +28,11 @@ func checkEmailCode(c *fiber.Ctx) error {
 		return util.FailedRequest(c, msg, nil)
 	}
 
-	// TODO: Add rate limiting
+	// Rate limit the entering of codes
+	if !ratelimitHandler(state, 3, time.Second*5) {
+		return util.FailedRequest(c, localization.ErrorAuthRatelimit, nil)
+	}
+
 	// Check the email code and stuff
 	if state.EmailCode != req.Code {
 		return util.FailedRequest(c, localization.ErrorEmailCodeInvalid, nil)
@@ -38,5 +44,31 @@ func checkEmailCode(c *fiber.Ctx) error {
 	}
 
 	// Render the username creation form
-	return util.ReturnJSON(c, ssr.RenderResponse(c, ssr.Components{}))
+	return util.ReturnJSON(c, ssr.RenderResponse(c, ssr.Components{
+		ssr.Text{
+			Text:  localization.RegisterUsernameTitle,
+			Style: ssr.TextStyleHeadline,
+		},
+		ssr.Text{
+			Text:  localization.RegisterUsernameRequirements,
+			Style: ssr.TextStyleDescription,
+		},
+		ssr.Input{
+			Placeholder: localization.RegisterUsernamePlaceholder,
+			Name:        "username",
+		},
+		ssr.Text{
+			Text:  localization.RegisterDisplayNameRequirements,
+			Style: ssr.TextStyleDescription,
+		},
+		ssr.Input{
+			Placeholder: localization.RegisterDisplayNamePlaceholder,
+			Name:        "display_name",
+			UTF8:        true,
+		},
+		ssr.SubmitButton{
+			Label: localization.AuthNextStepButton,
+			Path:  "/account/auth/register/username",
+		},
+	}))
 }

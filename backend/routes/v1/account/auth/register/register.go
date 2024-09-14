@@ -15,6 +15,8 @@ func Unauthorized(router fiber.Router) {
 	router.Post("/email", checkEmail)
 	router.Post("/invite", checkInvite)
 	router.Post("/email_code", checkEmailCode)
+	router.Post("/resend_email", resendEmail)
+	router.Post("/username", checkUsername)
 }
 
 type RegisterState struct {
@@ -30,6 +32,10 @@ type RegisterState struct {
 	Email     string    // The email of the account
 	EmailCode string    // The code required for verification
 	LastEmail time.Time // The last time an email was sent
+
+	// Rate limiting for whatever endpoint the guy is on right now
+	AttemptCount uint      // The count of attempts
+	LastAttempt  time.Time // The last attempt to get in
 }
 
 const registerTokenPrefix = "register_"
@@ -90,5 +96,36 @@ func upgradeToken(token string, step uint) localization.Translations {
 	defer state.Mutex.Unlock()
 	state.Step = step
 
+	// Also reset rate limiting
+	state.AttemptCount = 0
+	state.LastAttempt = time.Now()
+
 	return nil
+}
+
+// Make sure the user doesn't go over the rate limit
+func ratelimitHandler(state *RegisterState, maxAttempts int, cooldown time.Duration) bool {
+
+	// Prevent concurrent reads/writes
+	state.Mutex.Lock()
+	defer state.Mutex.Unlock()
+
+	// Check if there have been too many attempts
+	if state.AttemptCount > 3 {
+
+		// Check if the rate limit can already be reset
+		if time.Since(state.LastAttempt) > cooldown {
+			state.AttemptCount = 0
+			state.LastAttempt = time.Now()
+			return true
+		}
+
+		return false
+	}
+
+	// Update the rate limit data
+	state.AttemptCount++
+	state.LastAttempt = time.Now()
+
+	return true
 }

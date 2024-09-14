@@ -28,7 +28,7 @@ func changeDisplayName(c *fiber.Ctx) error {
 	}
 
 	// Make sure the name isn't weird data
-	if valid, message := standards.CheckDisplayName(req.Name); !valid {
+	if message := standards.CheckDisplayName(req.Name); message != nil {
 		return util.FailedRequest(c, message, nil)
 	}
 
