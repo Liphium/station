@@ -45,6 +45,20 @@ func (i Input) render(locale string) fiber.Map {
 }
 
 // The submit button, when this is clicked it's over
+type SubmitButton struct {
+	Label localization.Translations // Label on the button
+	Path  string                    // The path the request goes to
+}
+
+func (b SubmitButton) render(locale string) fiber.Map {
+	return fiber.Map{
+		"type":  "submit",
+		"label": localization.TranslateLocale(locale, b.Label),
+		"path":  b.Path,
+	}
+}
+
+// A regular button, when this is clicked an action can be completed (popup, error, etc.)
 type Button struct {
 	Label localization.Translations // Label on the button
 	Link  bool                      // If the button is actually a link (to a website)
@@ -53,7 +67,7 @@ type Button struct {
 
 func (b Button) render(locale string) fiber.Map {
 	return fiber.Map{
-		"type":  "button",
+		"type":  "submit",
 		"link":  b.Link,
 		"label": localization.TranslateLocale(locale, b.Label),
 		"path":  b.Path,

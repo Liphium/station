@@ -13,6 +13,8 @@ import (
 func Unauthorized(router fiber.Router) {
 	router.Post("/start", startRegister)
 	router.Post("/email", checkEmail)
+	router.Post("/invite", checkInvite)
+	router.Post("/email_code", checkEmailCode)
 }
 
 type RegisterState struct {
@@ -66,4 +68,27 @@ func validateToken(token string, step uint) (*RegisterState, localization.Transl
 	}
 
 	return state, nil
+}
+
+// Upgrade a token to a higher step
+func upgradeToken(token string, step uint) localization.Translations {
+
+	// Get the token from the key-value store
+	obj, valid := kv.Get(registerTokenPrefix + token)
+	if !valid {
+		return localization.ErrorInvalidRequest
+	}
+
+	// Check if the user can access that endpoint
+	state := obj.(*RegisterState)
+	if state.Step != step {
+		return localization.ErrorInvalidRequest
+	}
+
+	// Lock the mutex to prevent modification and update
+	state.Mutex.Lock()
+	defer state.Mutex.Unlock()
+	state.Step = step
+
+	return nil
 }

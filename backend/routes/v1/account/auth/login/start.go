@@ -34,7 +34,7 @@ func startLogin(c *fiber.Ctx) error {
 			Hidden:      true,
 			Name:        "password",
 		},
-		ssr.Button{
+		ssr.SubmitButton{
 			Label: localization.AuthSubmitButton,
 			Path:  "/account/auth/login/password",
 		},

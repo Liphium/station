@@ -19,8 +19,13 @@ func startRegister(c *fiber.Ctx) error {
 	}
 
 	// Validate the token
-	state, msg := validateToken(req.Token, 1)
+	_, msg := validateToken(req.Token, 1)
 	if msg != nil {
+		return util.FailedRequest(c, msg, nil)
+	}
+
+	// Upgrade the token to step 2
+	if msg := upgradeToken(req.Token, 2); msg != nil {
 		return util.FailedRequest(c, msg, nil)
 	}
 
@@ -31,21 +36,12 @@ func startRegister(c *fiber.Ctx) error {
 			Style: ssr.TextStyleHeadline,
 		},
 		ssr.Input{
-			Placeholder: localization.AuthStartEmailPlaceholder,
-			Value:       state.Email,
-			Name:        "email",
-		},
-		ssr.Input{
 			Placeholder: localization.RegisterInvitePlaceholder,
 			Name:        "invite",
 		},
-		ssr.Button{
+		ssr.SubmitButton{
 			Label: localization.AuthNextStepButton,
 			Path:  "/account/auth/register/invite",
-		},
-		ssr.Button{
-			Label: localization.AuthResendEmailButton,
-			Path:  "/account/auth/register/resend_email",
 		},
 	}))
 }

@@ -18,7 +18,7 @@ func getStartForm(c *fiber.Ctx) error {
 			Placeholder: localization.AuthStartEmailPlaceholder,
 			Name:        "email",
 		},
-		ssr.Button{
+		ssr.SubmitButton{
 			Label: localization.AuthNextStepButton,
 			Path:  "/account/auth/start",
 		},

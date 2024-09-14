@@ -15,8 +15,14 @@ var (
 	ErrorEmailInvalid = Translations{
 		englishUS: "Please enter a valid email address.",
 	}
+	ErrorEmailAlreadyInUse = Translations{
+		englishUS: "The email address you entered is already in use, please try to use a different one.",
+	}
 	ErrorEmailNotFound = Translations{
 		englishUS: "There is no account with this email address.",
+	}
+	ErrorEmailCodeInvalid = Translations{
+		englishUS: "The code you entered doesn't match the one in your email, try again.",
 	}
 	ErrorSessionNotVerified = Translations{
 		englishUS: "Your session isn't verified, please make sure to transfer the keys from your other devices first.",
@@ -26,6 +32,9 @@ var (
 	}
 	ErrorAuthRatelimit = Translations{
 		englishUS: "Please wait a few seconds before trying again.",
+	}
+	ErrorInviteInvalid = Translations{
+		englishUS: "This invite isn't valid, maybe it's already been used by someone else?",
 	}
 
 	// Localization for general auth stuff
@@ -58,12 +67,23 @@ var (
 		englishUS: "yourmum123 (don't use this)",
 	}
 
-	// Localization for register invite page
+	// Localization for register invite form
 	RegisterInviteTitle = Translations{
 		englishUS: "Your invite, please.",
 	}
 	RegisterInvitePlaceholder = Translations{
 		englishUS: "your-invite-here",
+	}
+
+	// Localization for the email validate form
+	RegisterCodeTitle = Translations{
+		englishUS: "Verify your email.",
+	}
+	RegisterCodeDescription = Translations{
+		englishUS: "We sent you an email containing a verification code in the title and text. In case you entered the wrong email address in the beginning, you can still change it by using the input field below. If the email didn't reach your inbox, try clicking the resend button below.",
+	}
+	RegisterCodePlaceholder = Translations{
+		englishUS: "111111",
 	}
 )
 

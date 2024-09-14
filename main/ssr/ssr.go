@@ -11,6 +11,17 @@ const ResponseRender = "render"
 const ResponseRedirect = "redirect"
 const ResponseSuggest = "suggest"
 const ResponseSuccess = "success"
+const ResponsePopup = "popup"
+
+// Show a popup on the client
+func PopupResponse(c *fiber.Ctx, title localization.Translations, content localization.Translations) fiber.Map {
+	return fiber.Map{
+		"success": true,
+		"type":    ResponsePopup,
+		"title":   localization.Translate(c, title),
+		"content": localization.Translate(c, content),
+	}
+}
 
 // Tell the client that the process is finished
 func SuccessResponse(data interface{}) fiber.Map {

@@ -1,6 +1,8 @@
 package register_routes
 
 import (
+	"github.com/Liphium/station/backend/database"
+	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
@@ -23,6 +25,12 @@ func checkEmail(c *fiber.Ctx) error {
 	valid, normalizedEmail := standards.CheckEmail(req.Email)
 	if !valid {
 		return util.FailedRequest(c, localization.ErrorEmailInvalid, nil)
+	}
+
+	// Make sure there is no other account with this email
+	var acc account.Account
+	if err := database.DBConn.Where("email = ?", normalizedEmail).Take(&acc).Error; err == nil {
+		return util.FailedRequest(c, localization.ErrorEmailAlreadyInUse, nil)
 	}
 
 	// Generate a registration token and redirect to start
