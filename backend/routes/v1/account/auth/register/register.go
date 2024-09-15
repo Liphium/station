@@ -11,12 +11,13 @@ import (
 )
 
 func Unauthorized(router fiber.Router) {
-	router.Post("/start", startRegister)
-	router.Post("/email", checkEmail)
-	router.Post("/invite", checkInvite)
-	router.Post("/email_code", checkEmailCode)
-	router.Post("/resend_email", resendEmail)
-	router.Post("/username", checkUsername)
+	router.Post("/email", checkEmail)          // Step 0: Check the email and redirect to save the token
+	router.Post("/start", startRegister)       // Step 1: Render the invite form
+	router.Post("/invite", checkInvite)        // Step 2: Check the invite code
+	router.Post("/email_code", checkEmailCode) // Step 3: Check the email code
+	router.Post("/resend_email", resendEmail)  // Step 3: Resend email endpoint
+	router.Post("/username", checkUsername)    // Step 4: Check the username
+	router.Post("/password", checkPassword)    // Step 5: Check the password & return tokens
 }
 
 type RegisterState struct {
@@ -87,9 +88,6 @@ func upgradeToken(token string, step uint) localization.Translations {
 
 	// Check if the user can access that endpoint
 	state := obj.(*RegisterState)
-	if state.Step != step {
-		return localization.ErrorInvalidRequest
-	}
 
 	// Lock the mutex to prevent modification and update
 	state.Mutex.Lock()
@@ -104,14 +102,14 @@ func upgradeToken(token string, step uint) localization.Translations {
 }
 
 // Make sure the user doesn't go over the rate limit
-func ratelimitHandler(state *RegisterState, maxAttempts int, cooldown time.Duration) bool {
+func ratelimitHandler(state *RegisterState, maxAttempts uint, cooldown time.Duration) bool {
 
 	// Prevent concurrent reads/writes
 	state.Mutex.Lock()
 	defer state.Mutex.Unlock()
 
 	// Check if there have been too many attempts
-	if state.AttemptCount > 3 {
+	if state.AttemptCount > maxAttempts {
 
 		// Check if the rate limit can already be reset
 		if time.Since(state.LastAttempt) > cooldown {

@@ -12,7 +12,10 @@ import (
 func me(c *fiber.Ctx) error {
 
 	// Get session
-	sessionId := util.GetSession(c)
+	sessionId, err := util.GetSession(c)
+	if err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
+	}
 
 	var session account.Session
 	if database.DBConn.Where(&account.Session{ID: sessionId}).Take(&session).Error != nil {

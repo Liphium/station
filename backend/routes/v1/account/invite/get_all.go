@@ -8,6 +8,7 @@ import (
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -20,7 +21,7 @@ func getAllInformation(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
-	var invitesGenerated []string
+	var invitesGenerated []uuid.UUID
 	if err := database.DBConn.Model(&account.Invite{}).Where("creator = ?", accId).Limit(30).Order("created_at DESC").Select("id").Scan(&invitesGenerated).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
@@ -35,9 +36,15 @@ func getAllInformation(c *fiber.Ctx) error {
 		inviteCount.Count = 0
 	}
 
+	// Transform generated invites to string so they can be sent over json
+	transformedInvites := make([]string, len(invitesGenerated))
+	for i, invite := range invitesGenerated {
+		transformedInvites[i] = invite.String()
+	}
+
 	return util.ReturnJSON(c, fiber.Map{
 		"success": true,
-		"invites": invitesGenerated,
+		"invites": transformedInvites,
 		"count":   inviteCount.Count,
 	})
 }

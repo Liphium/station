@@ -36,7 +36,10 @@ func Connect(c *fiber.Ctx) error {
 	if !valid {
 		return util.InvalidRequest(c)
 	}
-	currentSessionId := util.GetSession(c)
+	currentSessionId, err := util.GetSession(c)
+	if err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
+	}
 	tk := req.Token
 
 	var acc account.Account
@@ -55,7 +58,7 @@ func Connect(c *fiber.Ctx) error {
 	}
 	var sessionIds []string
 	for _, session := range acc.Sessions {
-		sessionIds = append(sessionIds, session.ID)
+		sessionIds = append(sessionIds, session.ID.String())
 
 		if session.LastConnection.After(mostRecent.LastConnection) {
 			mostRecent = session
@@ -100,7 +103,7 @@ func Connect(c *fiber.Ctx) error {
 	}
 
 	// Generate a jwt token for the node
-	token, err := util.ConnectionToken(accId, currentSessionId, lowest.ID)
+	token, err := util.ConnectionToken(accId, currentSessionId.String(), lowest.ID)
 	if err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}

@@ -6,6 +6,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
 	login_routes "github.com/Liphium/station/backend/routes/v1/account/auth/login"
+	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/main/ssr"
@@ -24,9 +25,15 @@ func startAuth(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
+	// Validate the email
+	valid, normalizedEmail := standards.CheckEmail(req.Email)
+	if !valid {
+		return util.FailedRequest(c, localization.ErrorEmailInvalid, nil)
+	}
+
 	// Check if there is an account with this email
 	var acc account.Account
-	if err := database.DBConn.Where("email = ?", req.Email).Preload("Rank").Take(&acc).Error; err != nil {
+	if err := database.DBConn.Where("email = ?", normalizedEmail).Preload("Rank").Take(&acc).Error; err != nil {
 
 		// If the account wasn't found, redirect to register
 		if errors.Is(err, gorm.ErrRecordNotFound) {

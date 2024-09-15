@@ -52,11 +52,11 @@ func checkInvite(c *fiber.Ctx) error {
 	// Add the invite to the state
 	state.Mutex.Lock()
 	state.Invite = req.Invite
+	state.EmailCode = auth.GenerateToken(6)
 	state.Mutex.Unlock()
 
 	// Send them an email code
-	emailCode := auth.GenerateToken(6)
-	if err := mail.SendEmail(state.Email, localization.Locale(c), mail.EmailVerification, emailCode); err != nil {
+	if err := mail.SendEmail(state.Email, localization.Locale(c), mail.EmailVerification, state.EmailCode); err != nil {
 		return util.FailedRequest(c, localization.ErrorMail, err)
 	}
 

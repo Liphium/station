@@ -39,7 +39,7 @@ func resendEmail(c *fiber.Ctx) error {
 	// Resend the email with a new code
 	state.Mutex.Lock()
 	state.EmailCode = auth.GenerateToken(6)
-	state.LastAttempt = time.Now()
+	state.LastEmail = time.Now()
 	state.Mutex.Unlock()
 	if err := mail.SendEmail(state.Email, localization.Locale(c), mail.EmailVerification, state.EmailCode); err != nil {
 		return util.FailedRequest(c, localization.ErrorMail, err)

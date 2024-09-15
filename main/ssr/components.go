@@ -69,7 +69,7 @@ type Button struct {
 
 func (b Button) render(locale string) fiber.Map {
 	return fiber.Map{
-		"type":  "submit",
+		"type":  "button",
 		"link":  b.Link,
 		"label": localization.TranslateLocale(locale, b.Label),
 		"path":  b.Path,

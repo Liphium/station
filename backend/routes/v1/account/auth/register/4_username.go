@@ -3,6 +3,8 @@ package register_routes
 import (
 	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
+	"github.com/Liphium/station/main/ssr"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -29,7 +31,7 @@ func checkUsername(c *fiber.Ctx) error {
 	if msg := standards.CheckDisplayName(req.DisplayName); msg != nil {
 		return util.FailedRequest(c, msg, nil)
 	}
-	if msg := standards.CheckUsername(req.DisplayName); msg != nil {
+	if msg := standards.CheckUsername(req.Username); msg != nil {
 		return util.FailedRequest(c, msg, nil)
 	}
 
@@ -44,6 +46,29 @@ func checkUsername(c *fiber.Ctx) error {
 		return util.FailedRequest(c, msg, nil)
 	}
 
-	// TODO: Render next step
-	return util.SuccessfulRequest(c)
+	// Render the password form
+	return util.ReturnJSON(c, ssr.RenderResponse(c, ssr.Components{
+		ssr.Text{
+			Text:  localization.RegisterPasswordTitle,
+			Style: ssr.TextStyleHeadline,
+		},
+		ssr.Text{
+			Text:  localization.RegisterPasswordRequirements,
+			Style: ssr.TextStyleDescription,
+		},
+		ssr.Input{
+			Placeholder: localization.RegisterPasswordPlaceholder,
+			Name:        "password",
+			Hidden:      true,
+		},
+		ssr.Input{
+			Placeholder: localization.RegisterPasswordConfirmPlaceholder,
+			Name:        "confirm_password",
+			Hidden:      true,
+		},
+		ssr.SubmitButton{
+			Label: localization.AuthFinishButton,
+			Path:  "/account/auth/register/password",
+		},
+	}))
 }

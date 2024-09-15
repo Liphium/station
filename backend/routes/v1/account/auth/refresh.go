@@ -11,6 +11,7 @@ import (
 	"github.com/Liphium/station/backend/util/requests"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -28,9 +29,15 @@ func refreshSession(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
+	// Parse the session id
+	id, err := uuid.Parse(req.Session)
+	if err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
+	}
+
 	// Check if session is valid
 	var session account.Session
-	if !requests.GetSession(req.Session, &session) {
+	if !requests.GetSession(id, &session) {
 		return util.ReturnJSON(c, fiber.Map{
 			"success": false,
 			"valid":   false,

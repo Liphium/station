@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/Liphium/station/backend/database"
 	routes_v1 "github.com/Liphium/station/backend/routes/v1"
@@ -13,7 +12,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
 
@@ -111,10 +109,6 @@ func testMode() {
 	}
 
 	util.Log.Println("Test mode enabled.")
-
-	token, _ := util.Token("123", uuid.New(), 100, time.Now().Add(time.Hour*24))
-
-	util.Log.Println("Test token: " + token)
 
 	/* not need for now
 	var foundNodes []node.Node

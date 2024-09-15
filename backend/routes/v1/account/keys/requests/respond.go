@@ -6,6 +6,7 @@ import (
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type respondRequest struct {
@@ -29,9 +30,15 @@ func respond(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
+	// Get the account id
+	sessionId, err := uuid.Parse(req.Session)
+	if err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
+	}
+
 	// Get the key synchronization request
 	var request properties.KeyRequest
-	if err := database.DBConn.Where("session = ? AND account = ?", req.Session, accId).Take(&request).Error; err != nil {
+	if err := database.DBConn.Where("session = ? AND account = ?", sessionId, accId).Take(&request).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 

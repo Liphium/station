@@ -1,6 +1,8 @@
 package localization
 
-import "fmt"
+import (
+	"fmt"
+)
 
 var (
 	ErrorUsernameTaken = Translations{
@@ -30,6 +32,9 @@ var (
 	ErrorPasswordIncorrect = Translations{
 		englishUS: "Your password is incorrect. Please try again.",
 	}
+	ErrorPasswordsDontMatch = Translations{
+		englishUS: "Your passwords don't match. Please try again.",
+	}
 	ErrorAuthRatelimit = Translations{
 		englishUS: "Please wait a few seconds before trying again.",
 	}
@@ -43,6 +48,9 @@ var (
 	}
 	AuthSubmitButton = Translations{
 		englishUS: "Submit",
+	}
+	AuthFinishButton = Translations{
+		englishUS: "Finish",
 	}
 	AuthResendEmailButton = Translations{
 		englishUS: "Resend email",
@@ -105,6 +113,20 @@ var (
 	RegisterDisplayNamePlaceholder = Translations{
 		englishUS: "Test 123",
 	}
+
+	// Localization for the password adding form
+	RegisterPasswordTitle = Translations{
+		englishUS: "Create your password.",
+	}
+	RegisterPasswordRequirements = Translations{
+		englishUS: "No big requirements, just create a password that's longer than 8 characters. And please don't use a bad one!",
+	}
+	RegisterPasswordPlaceholder = Translations{
+		englishUS: "Password",
+	}
+	RegisterPasswordConfirmPlaceholder = Translations{
+		englishUS: "Confirm password",
+	}
 )
 
 func ErrorPasswordInvalid(minLength int) Translations {
@@ -115,13 +137,13 @@ func ErrorPasswordInvalid(minLength int) Translations {
 
 func ErrorDisplayNameMinLength(minLength int) Translations {
 	return Translations{
-		englishUS: fmt.Sprintf("Your username has to be shorter than %d characters.", minLength),
+		englishUS: fmt.Sprintf("Your display name has to be longer than %d characters.", minLength),
 	}
 }
 
 func ErrorDisplayNameMaxLength(maxLength int) Translations {
 	return Translations{
-		englishUS: fmt.Sprintf("Your display name has to be longer than %d characters.", maxLength),
+		englishUS: fmt.Sprintf("Your display name has to be shorter than %d characters.", maxLength),
 	}
 }
 
@@ -134,6 +156,12 @@ func ErrorUsernameMinLength(minLength int) Translations {
 func ErrorUsernameMaxLength(maxLength int) Translations {
 	return Translations{
 		englishUS: fmt.Sprintf("Your username has to be shorter than %d characters.", maxLength),
+	}
+}
+
+func ErrorRegistrationFailed(msg Translations) Translations {
+	return Translations{
+		englishUS: fmt.Sprintf("We're sorry, but registration failed. You may have to try registration again from scratch. %s", msg[englishUS]),
 	}
 }
 

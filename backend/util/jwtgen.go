@@ -3,6 +3,7 @@ package util
 import (
 	"crypto/rsa"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
@@ -66,11 +67,11 @@ func SessionInformationToken(account uuid.UUID, sessions []string) (string, erro
 }
 
 // Generate a normal authenticated token
-func Token(session string, account uuid.UUID, lvl uint, exp time.Time) (string, error) {
+func Token(session uuid.UUID, account uuid.UUID, lvl uint, exp time.Time) (string, error) {
 
 	// Create jwt token
 	tk := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
-		"ses": session,
+		"ses": session.String(),
 		"e_u": exp.Unix(), // Expiration unix
 		"acc": account.String(),
 		"lvl": lvl,
@@ -125,14 +126,20 @@ func Permission(c *fiber.Ctx, perm string) bool {
 }
 
 // Get session from JWT token (only use on authorized routes)
-func GetSession(c *fiber.Ctx) string {
+func GetSession(c *fiber.Ctx) (uuid.UUID, error) {
 	if c.Locals("user") == nil || reflect.TypeOf(c.Locals("user")).String() != "*jwt.Token" {
-		return ""
+		return uuid.UUID{}, errors.New("token wasn't found")
 	}
 	user := c.Locals("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 
-	return claims["ses"].(string)
+	// Parse the uuid
+	id, err := uuid.Parse(claims["ses"].(string))
+	if err != nil {
+		return uuid.UUID{}, err
+	}
+
+	return id, nil
 }
 
 // Get account from JWT token (only use on authorized routes)
