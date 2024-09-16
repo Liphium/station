@@ -41,6 +41,9 @@ var (
 	ErrorInviteInvalid = Translations{
 		englishUS: "This invite isn't valid, maybe it's already been used by someone else?",
 	}
+	ErrorSSONotCompleted = Translations{
+		englishUS: "SSO hasn't been completed yet.",
+	}
 
 	// Localization for general auth stuff
 	AuthNextStepButton = Translations{
@@ -101,11 +104,17 @@ var (
 	RegisterUsernameTitle = Translations{
 		englishUS: "Create your username.",
 	}
+	RegisterUsername = Translations{
+		englishUS: "Username",
+	}
 	RegisterUsernameRequirements = Translations{
 		englishUS: "Your username can only contain lowercase characters, numbers and '_' or '-'.",
 	}
 	RegisterUsernamePlaceholder = Translations{
 		englishUS: "test123",
+	}
+	RegisterDisplayName = Translations{
+		englishUS: "Display name",
 	}
 	RegisterDisplayNameRequirements = Translations{
 		englishUS: "Your display name is the name everyone sees. No special requirements.",
@@ -126,6 +135,23 @@ var (
 	}
 	RegisterPasswordConfirmPlaceholder = Translations{
 		englishUS: "Confirm password",
+	}
+
+	// Localization for SSO start
+	RegisterSSOTitle = Translations{
+		englishUS: "Sign in with SSO.",
+	}
+	RegisterSSODescription = Translations{
+		englishUS: "This Liphium town uses SSO for accounts. If you don't know what to do from here, please ask the owner of your town. We'll check if you finished SSO sign-in automatically.",
+	}
+	RegisterSSOButton = Translations{
+		englishUS: "Open auth provider",
+	}
+	RegisterSSOStatus = Translations{
+		englishUS: "SSO sign-in",
+	}
+	RegisterSSOComplete = Translations{
+		englishUS: "SSO has been completed. You can now safely return to the app.",
 	}
 )
 

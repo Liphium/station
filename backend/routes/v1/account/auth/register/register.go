@@ -15,6 +15,7 @@ func Unauthorized(router fiber.Router) {
 	router.Post("/start", startRegister)       // Step 1: Render the invite form
 	router.Post("/invite", checkInvite)        // Step 2: Check the invite code
 	router.Post("/email_code", checkEmailCode) // Step 3: Check the email code
+	router.Post("/from_sso", fromSSO)          // Step 3 from SSO: Render the username form (everything before was already done)
 	router.Post("/resend_email", resendEmail)  // Step 3: Resend email endpoint
 	router.Post("/username", checkUsername)    // Step 4: Check the username
 	router.Post("/password", checkPassword)    // Step 5: Check the password & return tokens
@@ -37,6 +38,10 @@ type RegisterState struct {
 	// Rate limiting for whatever endpoint the guy is on right now
 	AttemptCount uint      // The count of attempts
 	LastAttempt  time.Time // The last attempt to get in
+
+	// From SSO
+	SSO    bool   // If SSO is enabled (circumvent password)
+	UserID string // The user id for SSO
 }
 
 const registerTokenPrefix = "register_"
@@ -55,6 +60,26 @@ func GenerateRegisterToken(email string) string {
 		Step:  1,
 		Mutex: &sync.Mutex{},
 		Email: email,
+	})
+	return token
+}
+
+// Generate the token required for logging in with SSR
+func GenerateRegisterTokenForSSO(email string, userId string) string {
+
+	// Generate a unique token
+	token := auth.GenerateToken(50)
+	for _, valid := kv.Get(registerTokenPrefix + token); valid; {
+		token = auth.GenerateToken(50)
+	}
+
+	// Store it as a login token in the kv store
+	kv.Store(registerTokenPrefix+token, &RegisterState{
+		Step:   4,
+		Mutex:  &sync.Mutex{},
+		Email:  email,
+		SSO:    true,
+		UserID: userId,
 	})
 	return token
 }

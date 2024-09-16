@@ -75,3 +75,19 @@ func (b Button) render(locale string) fiber.Map {
 		"path":  b.Path,
 	}
 }
+
+// A status fetcher that calls an endpoint every couple of seconds and can redirect
+type StatusFetcher struct {
+	Label     localization.Translations // The label of the status fetcher on the client
+	Path      string                    // The path the request goes to
+	Frequency uint                      // The frequency to refresh at (in seconds)
+}
+
+func (s StatusFetcher) render(locale string) fiber.Map {
+	return fiber.Map{
+		"type":      "fetcher",
+		"label":     localization.TranslateLocale(locale, s.Label),
+		"frequency": s.Frequency,
+		"path":      s.Path,
+	}
+}

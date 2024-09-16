@@ -34,6 +34,16 @@ func SuccessResponse(data interface{}) fiber.Map {
 
 // Redirect to a differnet path
 func RedirectResponse(path string, token string) fiber.Map {
+
+	// Don't return a token if it's not present
+	if token == "" {
+		return fiber.Map{
+			"success":  true,
+			"type":     ResponseRedirect,
+			"redirect": path,
+		}
+	}
+
 	return fiber.Map{
 		"success":  true,
 		"type":     ResponseRedirect,

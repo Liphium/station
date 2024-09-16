@@ -1,9 +1,6 @@
 package login_routes
 
 import (
-	"errors"
-	"time"
-
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/kv"
@@ -12,7 +9,6 @@ import (
 	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/main/ssr"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
 // Route: /account/auth/login/password (SSR)
@@ -61,37 +57,15 @@ func checkPassword(c *fiber.Ctx) error {
 	// Remove the login token from the kv
 	kv.Delete(loginTokenPrefix + req.Token)
 
-	// Count the amount of sessions
-	var sessionCount int64 = 0
-	if err := database.DBConn.Model(&account.Session{}).Where("account = ?", state.Account).Count(&sessionCount).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return util.FailedRequest(c, localization.ErrorServer, err)
-	}
-
-	// Create session
-	tk := auth.GenerateToken(100)
-	var createdSession account.Session = account.Session{
-		Token:           tk,
-		Verified:        sessionCount == 0,
-		Account:         state.Account,
-		PermissionLevel: state.PermissionLevel,
-		Device:          "tbd",
-		LastConnection:  time.UnixMilli(0),
-	}
-
-	// Create the session in a safe way
-	if err = database.DBConn.Create(&createdSession).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
-	}
-
-	// Generate jwt token for the session
-	jwtToken, err := util.Token(createdSession.ID, state.Account, state.PermissionLevel, time.Now().Add(time.Hour*24*1))
+	// Create the session
+	token, refreshToken, err := CreateSession(state.Account, state.PermissionLevel)
 	if err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Return refresh and normal token
 	return util.ReturnJSON(c, ssr.SuccessResponse(fiber.Map{
-		"token":         jwtToken,
-		"refresh_token": tk,
+		"token":         token,
+		"refresh_token": refreshToken,
 	}))
 }

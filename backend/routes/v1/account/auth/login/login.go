@@ -1,15 +1,19 @@
 package login_routes
 
 import (
+	"errors"
 	"sync"
 	"time"
 
+	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/kv"
+	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 // Register all the routes related to logging in with SSR
@@ -96,4 +100,36 @@ func ratelimitHandler(state *LoginState) bool {
 	state.LastAttempt = time.Now()
 
 	return true
+}
+
+// Returns: token, refreshToken, error
+func CreateSession(accId uuid.UUID, permissionLevel uint) (string, string, error) {
+
+	// Count the amount of sessions
+	var sessionCount int64 = 0
+	if err := database.DBConn.Model(&account.Session{}).Where("account = ?", accId).Count(&sessionCount).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return "", "", err
+	}
+
+	// Create session
+	tk := auth.GenerateToken(100)
+	var createdSession account.Session = account.Session{
+		Token:           tk,
+		Verified:        sessionCount == 0,
+		Account:         accId,
+		PermissionLevel: permissionLevel,
+		Device:          "tbd",
+		LastConnection:  time.UnixMilli(0),
+	}
+	if err := database.DBConn.Create(&createdSession).Error; err != nil {
+		return "", "", err
+	}
+
+	// Generate jwt token for the session
+	jwtToken, err := util.Token(createdSession.ID, accId, permissionLevel, time.Now().Add(time.Hour*24*1))
+	if err != nil {
+		return "", "", err
+	}
+
+	return jwtToken, createdSession.Token, nil
 }

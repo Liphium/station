@@ -15,6 +15,7 @@ func Unauthorized(router fiber.Router) {
 	// Setup all the auth routes
 	router.Route("/login", login_routes.Unauthorized)
 	router.Route("/register", register_routes.Unauthorized)
+	router.Route("/sso", sso_routes.Unauthorized)
 }
 
 func Unencrypted(router fiber.Router) {

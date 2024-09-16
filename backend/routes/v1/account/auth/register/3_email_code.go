@@ -43,11 +43,19 @@ func checkEmailCode(c *fiber.Ctx) error {
 		return util.FailedRequest(c, msg, nil)
 	}
 
-	// Render the username creation form
+	return renderUsernameForm(c)
+}
+
+// Render the username creation form
+func renderUsernameForm(c *fiber.Ctx) error {
 	return util.ReturnJSON(c, ssr.RenderResponse(c, ssr.Components{
 		ssr.Text{
 			Text:  localization.RegisterUsernameTitle,
 			Style: ssr.TextStyleHeadline,
+		},
+		ssr.Text{
+			Text:  localization.RegisterUsername,
+			Style: ssr.TextStyleSeperator,
 		},
 		ssr.Text{
 			Text:  localization.RegisterUsernameRequirements,
@@ -56,6 +64,10 @@ func checkEmailCode(c *fiber.Ctx) error {
 		ssr.Input{
 			Placeholder: localization.RegisterUsernamePlaceholder,
 			Name:        "username",
+		},
+		ssr.Text{
+			Text:  localization.RegisterDisplayName,
+			Style: ssr.TextStyleSeperator,
 		},
 		ssr.Text{
 			Text:  localization.RegisterDisplayNameRequirements,

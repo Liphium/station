@@ -46,6 +46,11 @@ func checkUsername(c *fiber.Ctx) error {
 		return util.FailedRequest(c, msg, nil)
 	}
 
+	// Redirect SSO people to step 5 (they don't need a password)
+	if state.SSO {
+		return util.ReturnJSON(c, ssr.RedirectResponse("/account/auth/register/password", ""))
+	}
+
 	// Render the password form
 	return util.ReturnJSON(c, ssr.RenderResponse(c, ssr.Components{
 		ssr.Text{
