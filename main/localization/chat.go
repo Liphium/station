@@ -18,6 +18,9 @@ var (
 	ErrorMessageTooLong = Translations{
 		englishUS: "Your message is too long. Please make sure it fits the requirements.",
 	}
+	ErrorMessageDeleteNoPermission = Translations{
+		englishUS: "You don't have permission to delete this message.",
+	}
 )
 
 func ErrorGroupMemberLimit(limit int) Translations {

@@ -12,6 +12,7 @@ func Authorized(router fiber.Router) {
 	// Setup all conversation routes
 	router.Post("/open", openConversation)
 	router.Post("/read", action_helpers.CreateConversationEndpoint(conversation_actions.HandleRead, "conv_read"))
+	router.Post("/timestamp", action_helpers.CreateConversationEndpoint(conversation_actions.HandleTimestamp, "conv_timestamp"))
 	router.Post("/activate", action_helpers.CreateConversationEndpoint(conversation_actions.HandleTokenActivation, "conv_activate"))
 	router.Post("/promote_token", action_helpers.CreateConversationEndpoint(conversation_actions.HandlePromoteToken, "conv_promote"))
 	router.Post("/demote_token", action_helpers.CreateConversationEndpoint(conversation_actions.HandleDemoteToken, "conv_demote"))

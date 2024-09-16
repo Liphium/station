@@ -8,14 +8,16 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func RemoteId(lvl uint) (string, error) {
+type timestampClaims struct {
+	Creation int64 `json:"c"`
+	jwt.MapClaims
+}
+
+func TimestampToken(time int64) (string, error) {
 
 	// Create jwt token
-	exp := time.Now().Add(time.Hour * 2)
-	tk := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"e_u": exp.Unix(), // Expiration unix
-		"lvl": lvl,
-		"rid": true, // tell the backend that it's a remote id
+	tk := jwt.NewWithClaims(jwt.SigningMethodHS256, timestampClaims{
+		Creation: time,
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
@@ -26,6 +28,22 @@ func RemoteId(lvl uint) (string, error) {
 	}
 
 	return tokenString, nil
+}
+
+func VerifyTimestampToken(timestampToken string) (int64, bool) {
+	token, err := jwt.ParseWithClaims(timestampToken, &timestampClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(integration.JwtSecret), nil
+	}, jwt.WithLeeway(5*time.Minute))
+
+	if err != nil {
+		return 0, false
+	}
+
+	if claims, ok := token.Claims.(*timestampClaims); ok && token.Valid {
+		return claims.Creation, true
+	}
+
+	return 0, false
 }
 
 // IsExpired checks if the token is expired

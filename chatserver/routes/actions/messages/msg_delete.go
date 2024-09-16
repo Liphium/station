@@ -5,45 +5,30 @@ import (
 	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
-	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
 // Action: msg_delete
-func HandleDelete(c *fiber.Ctx, token conversations.ConversationToken, certificate string) error {
+func HandleDelete(c *fiber.Ctx, token conversations.ConversationToken, messageId string) error {
 
-	// Get claims from message certificate
-	claims, valid := conversations.GetCertificateClaims(certificate)
-	if !valid {
-		return integration.InvalidRequest(c, "invalid certificate claims")
+	// Get the message
+	var message conversations.Message
+	if err := database.DBConn.Where("id = ?", messageId).Take(&message).Error; err != nil {
+		return integration.FailedRequest(c, localization.ErrorMessageAlreadyDeleted, err)
 	}
 
-	// Check if certificate is valid for the provided conversation token
-	if !claims.Valid(claims.Message, token.Conversation, token.ID) {
-		return integration.InvalidRequest(c, "no permssion to delete message")
-	}
-
-	// Check if there was already a deletion request
-	contentJson, err := sonic.MarshalString(map[string]interface{}{
-		"c": DeletedMessage,
-		"a": []string{claims.Message},
-	})
-	if err != nil {
-		return integration.FailedRequest(c, localization.ErrorServer, err)
-	}
-	var justHereForNoNilPointer conversations.Message
-	if err := database.DBConn.Where("data = ? AND conversation = ?", contentJson, claims.Conversation).Select("id").Take(&justHereForNoNilPointer).Error; err == nil {
-		return integration.FailedRequest(c, localization.ErrorMessageAlreadyDeleted, nil)
+	// Make sure the deleter is the sender
+	if message.Sender != token.ID {
+		return integration.FailedRequest(c, localization.ErrorMessageDeleteNoPermission, nil)
 	}
 
 	// Delete the message in the database
-	if err := database.DBConn.Where("id = ?", claims.Message).Delete(&conversations.Message{}).Error; err != nil && err != gorm.ErrRecordNotFound {
+	if err := database.DBConn.Where("id = ?", messageId).Delete(&conversations.Message{}).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Send a system message to delete the message on all clients who are storing it
-	if err := SendNotStoredSystemMessage(claims.Conversation, DeletedMessage, []string{claims.Message}); err != nil {
+	if err := SendNotStoredSystemMessage(message.Conversation, DeletedMessage, []string{messageId}); err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 

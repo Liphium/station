@@ -6,7 +6,6 @@ import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
-	"github.com/Liphium/station/chatserver/util"
 	"github.com/bytedance/sonic"
 )
 
@@ -37,18 +36,15 @@ func SendSystemMessage(conversation string, content string, attachments []string
 		return err
 	}
 
-	messageId := util.GenerateToken(32)
 	message := conversations.Message{
-		ID:           messageId,
 		Conversation: conversation,
-		Certificate:  "",
 		Data:         contentJson,
 		Sender:       systemSender,
 		Creation:     time.Now().UnixMilli(),
 		Edited:       false,
 	}
 
-	// Save message to the dat
+	// Save message to the database
 	if err := database.DBConn.Create(&message).Error; err != nil {
 		return err
 	}
@@ -77,11 +73,8 @@ func SendNotStoredSystemMessage(conversation string, content string, attachments
 	}
 
 	// Create the message
-	messageId := util.GenerateToken(32)
 	message := conversations.Message{
-		ID:           messageId,
 		Conversation: conversation,
-		Certificate:  "",
 		Data:         contentJson,
 		Sender:       systemSender,
 		Creation:     time.Now().UnixMilli(),

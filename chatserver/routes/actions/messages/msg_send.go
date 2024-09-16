@@ -14,8 +14,8 @@ import (
 )
 
 type MessageSendAction struct {
-	Timestamp uint64 `json:"timestamp"`
-	Data      string `json:"data"`
+	Token string `json:"token"` // Timestamp token
+	Data  string `json:"data"`
 }
 
 // Action: msg_send
@@ -26,29 +26,30 @@ func HandleSend(c *fiber.Ctx, token conversations.ConversationToken, action Mess
 		return integration.InvalidRequest(c, "request is invalid")
 	}
 
+	// Verify the timestamp token
+	timestamp, valid := util.VerifyTimestampToken(action.Token)
+	if !valid {
+		return integration.InvalidRequest(c, "timestamp token is invalid")
+	}
+
+	// Make sure the timestamp wasn't created too far in the past (2 minutes for now)
+	if time.Duration(time.Now().UnixMilli()-timestamp)*time.Millisecond >= time.Minute*2 {
+		return integration.InvalidRequest(c, "timestamp was created too far in the past")
+	}
+
 	// Check if message is too big
 	if conversations.CheckSize(action.Data) {
 		return integration.FailedRequest(c, localization.ErrorMessageTooLong, nil)
 	}
 
-	// Generate an id and certificate for the message
-	messageId := util.GenerateToken(32)
-	certificate, err := conversations.GenerateCertificate(messageId, token.Conversation, token.ID)
-	if err != nil {
-		return integration.FailedRequest(c, localization.ErrorServer, err)
-	}
-
+	// Create the message and save to db
 	message := conversations.Message{
-		ID:           messageId,
 		Conversation: token.Conversation,
-		Certificate:  certificate,
 		Data:         action.Data,
 		Sender:       token.ID,
-		Creation:     int64(action.Timestamp),
+		Creation:     timestamp,
 		Edited:       false,
 	}
-
-	// Save the message to the database
 	if err := database.DBConn.Create(&message).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}

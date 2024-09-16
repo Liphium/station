@@ -52,6 +52,7 @@ func SetupConversationActions(router fiber.Router) {
 
 	// Actions for conversation management
 	router.Post("/conv_activate", conversationHandler(conversation_actions.HandleTokenActivation))
+	router.Post("/conv_timestamp", conversationHandler(conversation_actions.HandleTimestamp))
 	router.Post("/conv_promote", conversationHandler(conversation_actions.HandlePromoteToken))
 	router.Post("/conv_demote", conversationHandler(conversation_actions.HandleDemoteToken))
 	router.Post("/conv_read", conversationHandler(conversation_actions.HandleRead))
