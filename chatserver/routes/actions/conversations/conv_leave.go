@@ -31,7 +31,7 @@ func HandleLeave(c *fiber.Ctx, token conversations.ConversationToken, _ interfac
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	if conversation.Type == conversations.TypePrivateMessage && len(members) == 1 {
+	if conversation.Type == conversations.TypePrivateMessage {
 
 		// Delete the conversation
 		if err := action_helpers.DeleteConversation(conversation.ID); err != nil {

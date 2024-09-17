@@ -2,10 +2,10 @@ package caching
 
 import (
 	"errors"
+	"slices"
 
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
-	"github.com/Liphium/station/chatserver/util"
 )
 
 // This does database requests and stuff
@@ -42,7 +42,7 @@ func ValidateTokens(tokens *[]conversations.SentConversationToken) ([]conversati
 	}
 
 	// Check if the tokens are actually there and sort them into the lists accordinly
-	missingTokens := []string{}
+	missingTokens := tokenIds
 	conversationIds := []string{}
 	for _, token := range conversationTokens {
 		if token.Token == tokensMap[token.ID].Token {
@@ -53,11 +53,11 @@ func ValidateTokens(tokens *[]conversations.SentConversationToken) ([]conversati
 				Token: "-",
 			}
 			foundTokens = append(foundTokens, token)
-		} else {
 
-			// Add the token to the missing tokens list
-			missingTokens = append(missingTokens, token.ID)
-			util.Log.Println("not found")
+			// Delete the token from the missing tokens slice to make sure it isn't deleted
+			missingTokens = slices.DeleteFunc(missingTokens, func(element string) bool {
+				return element == token.ID
+			})
 		}
 		conversationIds = append(conversationIds, token.Conversation)
 	}

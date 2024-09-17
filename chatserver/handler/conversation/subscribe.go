@@ -1,6 +1,7 @@
 package conversation
 
 import (
+	"log"
 	"slices"
 	"strings"
 
@@ -117,11 +118,13 @@ func subscribe(c *pipeshandler.Context, action struct {
 
 		// Add the missing tokens
 		// Make sure remote nodes can't delete tokens they don't have access to (important security fix)
+		log.Println("remote tokens missing: ", res.Answer.Missing)
 		res.Answer.Missing = slices.DeleteFunc(res.Answer.Missing, func(element string) bool {
 			return !slices.ContainsFunc(tokens, func(token conversations.SentConversationToken) bool {
 				return token.ID == element
 			})
 		})
+		log.Println("after processing: ", res.Answer.Missing)
 		missingTokens = append(missingTokens, res.Answer.Missing...)
 	}
 

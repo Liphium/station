@@ -1,6 +1,7 @@
 package util
 
 import (
+	"log"
 	"time"
 
 	"github.com/Liphium/station/main/integration"
@@ -33,9 +34,9 @@ func TimestampToken(time int64) (string, error) {
 func VerifyTimestampToken(timestampToken string) (int64, bool) {
 	token, err := jwt.ParseWithClaims(timestampToken, &timestampClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(integration.JwtSecret), nil
-	}, jwt.WithLeeway(5*time.Minute))
-
+	})
 	if err != nil {
+		log.Println(timestampToken, err)
 		return 0, false
 	}
 

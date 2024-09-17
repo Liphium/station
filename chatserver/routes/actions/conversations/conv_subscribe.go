@@ -1,6 +1,7 @@
 package conversation_actions
 
 import (
+	"log"
 	"time"
 
 	"github.com/Liphium/station/chatserver/caching"
@@ -96,6 +97,8 @@ func HandleRemoteSubscription(c *fiber.Ctx, action RemoteSubscribeAction) error 
 			caching.SendEventToMembers([]caching.StoredMember{otherMember}, account.StatusEvent(action.Status, action.Data, token.Conversation, token.ID, ""))
 		}
 	}()
+
+	log.Println("missing tokens: ", missingTokens)
 
 	return integration.ReturnJSON(c, fiber.Map{
 		"success": true,
