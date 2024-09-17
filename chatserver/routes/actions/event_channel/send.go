@@ -35,6 +35,11 @@ func HandleRemoteEvent(c *fiber.Ctx) error {
 		return integration.InvalidRequest(c, "token isn't valid")
 	}
 
+	// Make sure the event is actually valid
+	if req.Event.Name != "conv_msg" && req.Event.Name != "acc_st" && req.Event.Name != "acc_st:a" {
+		return integration.InvalidRequest(c, "this event can't be send over the remote event channel")
+	}
+
 	// Marshal the event
 	message, err := sonic.Marshal(req.Event)
 	if err != nil {
