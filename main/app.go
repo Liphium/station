@@ -24,13 +24,11 @@ func main() {
 		// Load environment variables from default location
 		if godotenv.Load() != nil {
 			printWithPrefix("No .env file found")
-			return
 		}
 	} else {
 		// Load environment variables from specified location
 		if godotenv.Load(os.Args[1]) != nil {
 			printWithPrefix("Specified file " + os.Args[1] + " not found")
-			return
 		}
 	}
 
