@@ -48,7 +48,6 @@ func downloadFile(c *fiber.Ctx) error {
 		}
 
 		// Set headers for file download
-		c.Set(fiber.HeaderContentType, *obj.ContentType)
 		c.Set(fiber.HeaderContentDisposition, `attachment; filename="`+id+`"`)
 
 		// Stream the file to the client
