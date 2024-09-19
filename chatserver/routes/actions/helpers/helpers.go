@@ -99,7 +99,7 @@ func CreateConversationEndpoint[T any](handler ConversationActionHandlerFunc[T],
 		}
 
 		// If the address isn't the current instance, send a remote action
-		if args[1] != integration.BasePath {
+		if args[1] != integration.Domain {
 
 			// Send a conversation aciton to the other instance
 			res, err := SendConversationAction(action, req.Token, req.Data)
