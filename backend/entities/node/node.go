@@ -6,7 +6,6 @@ type Node struct {
 	ID uint `json:"id" gorm:"primaryKey"`
 
 	AppID           uint    `json:"app"` // App ID
-	ClusterID       uint    `json:"cluster"`
 	Token           string  `json:"token"`
 	Domain          string  `json:"domain"`
 	Load            float64 `json:"load"`

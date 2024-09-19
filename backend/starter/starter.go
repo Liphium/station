@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/Liphium/station/backend/database"
 	routes_v1 "github.com/Liphium/station/backend/routes/v1"
@@ -13,7 +12,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
 
@@ -28,10 +26,13 @@ func Startup(routine bool) {
 
 	util.TestAES()
 
-	// Load environment variables
-	err := godotenv.Load()
-	if err != nil {
-		util.Log.Fatal("Error loading .env file")
+	// Load environment variables (don't if isolated cause not needed)
+	var err error
+	if !routine {
+		err = godotenv.Load()
+		if err != nil {
+			util.Log.Fatal("Error loading .env file")
+		}
 	}
 	util.JWT_SECRET = os.Getenv("JWT_SECRET")
 
@@ -49,7 +50,7 @@ func Startup(routine bool) {
 	app.Use(logger.New())
 
 	// Handle routing
-	app.Route("/v1", routes_v1.Router)
+	app.Route("/", routes_v1.Router)
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello from the backend, you probably shouldn't be here though.. Anyway, enjoy your time!")
 	})
@@ -108,10 +109,6 @@ func testMode() {
 	}
 
 	util.Log.Println("Test mode enabled.")
-
-	token, _ := util.Token("123", uuid.New(), 100, time.Now().Add(time.Hour*24))
-
-	util.Log.Println("Test token: " + token)
 
 	/* not need for now
 	var foundNodes []node.Node

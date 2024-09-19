@@ -1,6 +1,7 @@
 package files
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -9,6 +10,9 @@ import (
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
+	"github.com/Liphium/station/main/localization"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -16,7 +20,7 @@ import (
 func uploadFile(c *fiber.Ctx) error {
 
 	if disabled {
-		return util.FailedRequest(c, "file.disabled", nil)
+		return util.FailedRequest(c, localization.ErrorFileDisabled, nil)
 	}
 
 	// Form data
@@ -55,21 +59,21 @@ func uploadFile(c *fiber.Ctx) error {
 
 	// Check file size
 	if file.Size > maxUploadSize {
-		return util.FailedRequest(c, fmt.Sprintf("file.too_large:%d", maxUploadSize/1_000_000), nil)
+		return util.FailedRequest(c, localization.ErrorFileTooLarge(maxUploadSize), nil)
 	}
 
 	// Check total storage
 	totalStorage, err := CountTotalStorage(accId)
 	if err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	if totalStorage+file.Size > maxTotalStorage {
-		return util.FailedRequest(c, "file.storage_limit", nil)
+		return util.FailedRequest(c, localization.ErrorFileStorageLimit(maxUploadSize), nil)
 	}
 
-	// Generate file name Format: a-[timestamp]-[accountId]-[objectIdentifier].[extension]
-	fileId := "a-" + fmt.Sprintf("%d", time.Now().UnixMilli()) + "-" + accId.String() + "-" + auth.GenerateToken(16) + "." + extension
+	// Generate file name Format: a-[timestamp]-[objectIdentifier].[extension]
+	fileId := "a-" + fmt.Sprintf("%d", time.Now().UnixMilli()) + "-" + auth.GenerateToken(16) + "." + extension
 	if err := database.DBConn.Create(&account.CloudFile{
 		Id:      fileId,
 		Name:    name,
@@ -80,13 +84,36 @@ func uploadFile(c *fiber.Ctx) error {
 		System:  false,
 		Size:    file.Size,
 	}).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	// Save the file to local file storage
-	err = c.SaveFile(file, saveLocation+fileId)
-	if err != nil {
-		return util.FailedRequest(c, "server.error", err)
+	// Save the file to whatever repository is selected
+	if fileRepoType == repoTypeR2 {
+
+		// Open the file
+		f, err := file.Open()
+		if err != nil {
+			return util.FailedRequest(c, localization.ErrorServer, err)
+		}
+
+		// Save the file to R2
+		_, err = uploader.Upload(context.TODO(), &s3.PutObjectInput{
+			Bucket: aws.String(bucketName),
+			Key:    aws.String(fileId),
+			Body:   f,
+		})
+		if err != nil {
+			return util.FailedRequest(c, localization.ErrorServer, err)
+		}
+	} else if fileRepoType == repoTypeLocal {
+
+		// Save the file to local file storage
+		err = c.SaveFile(file, saveLocation+fileId)
+		if err != nil {
+			return util.FailedRequest(c, localization.ErrorServer, err)
+		}
+	} else {
+		return util.FailedRequest(c, localization.ErrorFileDisabled, nil)
 	}
 
 	// Not encrypted cause this doesn't matter (and it's an unencrypted route)

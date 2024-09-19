@@ -8,6 +8,6 @@ import (
 func Pong(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{
 		"gateway": integration.Nodes[integration.IdentifierChatNode].NodeId,
-		"app":     "chat-node",
+		"app":     integration.AppTagChatNode,
 	})
 }

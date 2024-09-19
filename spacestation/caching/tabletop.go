@@ -1,26 +1,16 @@
 package caching
 
 import (
-	"errors"
 	"slices"
 	"sync"
 
+	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/spacestation/util"
 )
 
 // ! For setting please ALWAYS use cost 1
 // Room ID -> Table
 var tablesCache *sync.Map = &sync.Map{}
-
-// Errors
-var (
-	ErrTableNotFound            = errors.New("tabletop.not_found")
-	ErrClientAlreadyJoinedTable = errors.New("tabletop.already_joined")
-	ErrCouldntCreateTable       = errors.New("tabletop.couldnt_create")
-	ErrObjectNotFound           = errors.New("tabletop.object_not_found")
-	ErrObjectAlreadyHeld        = errors.New("tabletop.object_already_held")
-	ErrObjectNotInQueue         = errors.New("tabletop.object_not_in_queue")
-)
 
 type TableData struct {
 	Mutex       *sync.Mutex
@@ -35,10 +25,11 @@ type TableMember struct {
 	Client         string  // Client ID
 	Color          float64 // Color of their cursor
 	SelectedObject string  // The id of the currently selected object
+	Enabled        bool    // If events should currently be sent to the member
 }
 
 // * Table management
-func JoinTable(room string, client string, color float64) error {
+func JoinTable(room string, client string, color float64) localization.Translations {
 
 	obj, valid := tablesCache.Load(room)
 	var table *TableData
@@ -62,13 +53,39 @@ func JoinTable(room string, client string, color float64) error {
 	defer table.Mutex.Unlock()
 
 	if _, ok := table.Members.Load(client); ok {
-		return ErrClientAlreadyJoinedTable
+		return localization.ErrorTableAlreadyJoined
 	}
 	table.Members.Store(client, &TableMember{
-		Client: client,
-		Color:  color,
+		Client:  client,
+		Color:   color,
+		Enabled: false,
 	})
 	table.MemberCount++
+
+	return nil
+}
+
+// Change the enabled state for a member
+func ChangeTableMemberState(room string, client string, enabled bool) localization.Translations {
+
+	// Get the table
+	obj, valid := tablesCache.Load(room)
+	if !valid {
+		return localization.ErrorTableNotFound
+	}
+	table := obj.(*TableData)
+
+	// Make sure the table isn't modified concurrently
+	table.Mutex.Lock()
+	defer table.Mutex.Unlock()
+
+	// Get the member
+	obj, valid = table.Members.Load(client)
+	if !valid {
+		return localization.ErrorTableClientNotFound
+	}
+	member := obj.(*TableMember)
+	member.Enabled = enabled
 
 	return nil
 }
@@ -98,10 +115,10 @@ func RangeOverTableMembers(room string, rangeFunc func(*TableMember) bool) bool 
 	return true
 }
 
-func LeaveTable(room string, client string) error {
+func LeaveTable(room string, client string) localization.Translations {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
-		return ErrTableNotFound
+		return localization.ErrorTableNotFound
 	}
 	table := obj.(*TableData)
 
@@ -135,10 +152,10 @@ type TableObject struct {
 }
 
 // * Object helpers
-func AddObjectToTable(room string, object *TableObject) error {
+func AddObjectToTable(room string, object *TableObject) localization.Translations {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
-		return ErrTableNotFound
+		return localization.ErrorTableNotFound
 	}
 	table := obj.(*TableData)
 
@@ -160,10 +177,10 @@ func AddObjectToTable(room string, object *TableObject) error {
 	return nil
 }
 
-func RemoveObjectFromTable(room string, object string) error {
+func RemoveObjectFromTable(room string, object string) localization.Translations {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
-		return ErrTableNotFound
+		return localization.ErrorTableNotFound
 	}
 	table := obj.(*TableData)
 
@@ -183,17 +200,17 @@ func RemoveObjectFromTable(room string, object string) error {
 	return nil
 }
 
-func ModifyTableObject(room string, client string, objectId string, data string, width float64, height float64) error {
+func ModifyTableObject(room string, client string, objectId string, data string, width float64, height float64) localization.Translations {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
-		return ErrTableNotFound
+		return localization.ErrorTableNotFound
 	}
 	table := obj.(*TableData)
 
 	// Modify object data
 	tObj, valid := table.Objects.Load(objectId)
 	if !valid {
-		return ErrObjectNotFound
+		return localization.ErrorObjectNotFound
 	}
 	object := tObj.(*TableObject)
 
@@ -203,7 +220,7 @@ func ModifyTableObject(room string, client string, objectId string, data string,
 
 	// Check if the client is in the modification queue
 	if object.ModificationQueue[0] != client {
-		return ErrObjectNotInQueue
+		return localization.ErrorObjectNotInQueue
 	}
 
 	// Modify the data and stuff
@@ -214,23 +231,23 @@ func ModifyTableObject(room string, client string, objectId string, data string,
 	return nil
 }
 
-func MoveTableObject(room string, client string, objectId string, x, y float64) error {
+func MoveTableObject(room string, client string, objectId string, x, y float64) localization.Translations {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
-		return ErrTableNotFound
+		return localization.ErrorTableNotFound
 	}
 	table := obj.(*TableData)
 
 	// Modify object data
 	tObj, valid := table.Objects.Load(objectId)
 	if !valid {
-		return ErrObjectNotFound
+		return localization.ErrorObjectNotFound
 	}
 	object := tObj.(*TableObject)
 
 	// Check if the client is actually holding the object
 	if object.Holder != client {
-		return ErrObjectAlreadyHeld
+		return localization.ErrorObjectAlreadyHeld
 	}
 
 	// Prevent object from being modified at the same time
@@ -243,23 +260,23 @@ func MoveTableObject(room string, client string, objectId string, x, y float64) 
 	return nil
 }
 
-func RotateTableObject(room string, client string, objectId string, rotation float64) error {
+func RotateTableObject(room string, client string, objectId string, rotation float64) localization.Translations {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
-		return ErrTableNotFound
+		return localization.ErrorTableNotFound
 	}
 	table := obj.(*TableData)
 
 	// Modify object data
 	tObj, valid := table.Objects.Load(objectId)
 	if !valid {
-		return ErrObjectNotFound
+		return localization.ErrorObjectNotFound
 	}
 	object := tObj.(*TableObject)
 
 	// Check if the client is in the modification queue
 	if object.ModificationQueue[0] != client {
-		return ErrObjectNotInQueue
+		return localization.ErrorObjectNotInQueue
 	}
 
 	// Prevent object from being modified at the same time
@@ -272,10 +289,10 @@ func RotateTableObject(room string, client string, objectId string, rotation flo
 	return nil
 }
 
-func TableObjects(room string) ([]*TableObject, error) {
+func TableObjects(room string) ([]*TableObject, localization.Translations) {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
-		return nil, ErrTableNotFound
+		return nil, localization.ErrorTableNotFound
 	}
 	table := obj.(*TableData)
 
@@ -283,7 +300,7 @@ func TableObjects(room string) ([]*TableObject, error) {
 	for i, value := range table.ObjectList {
 		object, valid := table.Objects.Load(value)
 		if !valid {
-			return nil, ErrObjectNotFound
+			return nil, localization.ErrorObjectNotFound
 		}
 
 		objects[i] = object.(*TableObject)
@@ -293,23 +310,23 @@ func TableObjects(room string) ([]*TableObject, error) {
 }
 
 // Select a table object (no-one else will be able to modify it)
-func SelectTableObject(room string, objectId string, client string) error {
+func SelectTableObject(room string, objectId string, client string) localization.Translations {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
-		return ErrTableNotFound
+		return localization.ErrorTableNotFound
 	}
 	table := obj.(*TableData)
 
 	// Load the object
 	tObj, valid := table.Objects.Load(objectId)
 	if !valid {
-		return ErrObjectNotFound
+		return localization.ErrorObjectNotFound
 	}
 	object := tObj.(*TableObject)
 
 	// Set the new holder, if possible
 	if object.Holder != "" {
-		return ErrObjectAlreadyHeld
+		return localization.ErrorObjectAlreadyHeld
 	}
 
 	// Prevent object from being modified at the same time
@@ -323,17 +340,17 @@ func SelectTableObject(room string, objectId string, client string) error {
 }
 
 // Unselect a table object
-func UnselectTableObject(room string, objectId string, client string) error {
+func UnselectTableObject(room string, objectId string, client string) localization.Translations {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
-		return ErrTableNotFound
+		return localization.ErrorTableNotFound
 	}
 	table := obj.(*TableData)
 
 	// Load the object
 	tObj, valid := table.Objects.Load(objectId)
 	if !valid {
-		return ErrObjectNotFound
+		return localization.ErrorObjectNotFound
 	}
 	object := tObj.(*TableObject)
 
@@ -348,17 +365,17 @@ func UnselectTableObject(room string, objectId string, client string) error {
 }
 
 // Queue a new modification (returns whether the client can modify right away)
-func QueueTableObjectModification(room string, objectId string, client string) (bool, error) {
+func QueueTableObjectModification(room string, objectId string, client string) (bool, localization.Translations) {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
-		return false, ErrTableNotFound
+		return false, localization.ErrorTableNotFound
 	}
 	table := obj.(*TableData)
 
 	// Load the object
 	tObj, valid := table.Objects.Load(objectId)
 	if !valid {
-		return false, ErrObjectNotFound
+		return false, localization.ErrorObjectNotFound
 	}
 	object := tObj.(*TableObject)
 
@@ -380,17 +397,17 @@ func QueueTableObjectModification(room string, objectId string, client string) (
 }
 
 // Get the next client queued for modification (at index 1)
-func NextModifier(room string, objectId string) (string, error) {
+func NextModifier(room string, objectId string) (string, localization.Translations) {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
-		return "", ErrTableNotFound
+		return "", localization.ErrorTableNotFound
 	}
 	table := obj.(*TableData)
 
 	// Load the object
 	tObj, valid := table.Objects.Load(objectId)
 	if !valid {
-		return "", ErrObjectNotFound
+		return "", localization.ErrorObjectNotFound
 	}
 	object := tObj.(*TableObject)
 
@@ -404,17 +421,17 @@ func NextModifier(room string, objectId string) (string, error) {
 }
 
 // Remove the current client modifying from the queue
-func RemoveFromModificationQueue(room string, objectId string) error {
+func RemoveFromModificationQueue(room string, objectId string) localization.Translations {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
-		return ErrTableNotFound
+		return localization.ErrorTableNotFound
 	}
 	table := obj.(*TableData)
 
 	// Load the object
 	tObj, valid := table.Objects.Load(objectId)
 	if !valid {
-		return ErrObjectNotFound
+		return localization.ErrorObjectNotFound
 	}
 	object := tObj.(*TableObject)
 

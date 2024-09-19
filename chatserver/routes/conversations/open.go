@@ -4,8 +4,8 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/util"
-	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -39,26 +39,28 @@ func openConversation(c *fiber.Ctx) error {
 	}
 
 	if len(req.Members)+1 > util.MaxConversationMembers {
-		return integration.FailedRequest(c, "member.limit", nil)
+		return integration.FailedRequest(c, localization.ErrorGroupMemberLimit(util.MaxConversationMembers), nil)
 	}
 
 	if len(req.AccountData) > util.MaxConversationTokenDataLength {
-		return integration.FailedRequest(c, "data.limit", nil)
+		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	for _, member := range req.Members {
 		if len(member) > util.MaxConversationTokenDataLength {
-			return integration.FailedRequest(c, "data.limit", nil)
+			return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 		}
 	}
 
-	// Create conversation
+	// Determine the conversation type
 	convType := conversations.TypePrivateMessage
 	if len(req.Members) > 1 {
 		convType = conversations.TypeGroup
 	}
+
+	// Generate the address for the conversation
 	conv := conversations.Conversation{
-		ID:      util.GenerateToken(util.ConversationIDLength),
+		ID:      util.GenerateToken(util.ConversationIDLength) + "@" + integration.Domain,
 		Type:    uint(convType),
 		Version: 1,
 		Data:    req.Data,
@@ -75,7 +77,7 @@ func openConversation(c *fiber.Ctx) error {
 		convToken := util.GenerateToken(util.ConversationTokenLength)
 
 		tk := conversations.ConversationToken{
-			ID:           util.GenerateToken(util.ConversationTokenIDLength),
+			ID:           util.GenerateToken(util.ConversationTokenIDLength) + "@" + integration.Domain,
 			Conversation: conv.ID,
 			Activated:    false,
 			Token:        convToken,
@@ -95,7 +97,7 @@ func openConversation(c *fiber.Ctx) error {
 	}
 
 	adminToken := conversations.ConversationToken{
-		ID:           util.GenerateToken(util.ConversationTokenIDLength),
+		ID:           util.GenerateToken(util.ConversationTokenIDLength) + "@" + integration.Domain,
 		Token:        util.GenerateToken(util.ConversationTokenLength),
 		Activated:    true,
 		Conversation: conv.ID,

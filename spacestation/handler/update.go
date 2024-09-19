@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
@@ -8,40 +9,35 @@ import (
 )
 
 // Action: update
-func update(ctx pipeshandler.Context) {
+func update(c *pipeshandler.Context, action struct {
+	Muted    bool `json:"muted"`
+	Deafened bool `json:"deafened"`
+}) pipes.Event {
 
-	if ctx.ValidateForm("muted", "deafened") {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
-	}
-
-	connection, valid := caching.GetConnection(ctx.Client.ID)
+	connection, valid := caching.GetConnection(c.Client.ID)
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
-	connections, valid := caching.GetAllConnections(ctx.Client.Session)
+	connections, valid := caching.GetAllConnections(c.Client.Session)
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
-	client := connections[ctx.Client.ID]
+	client := connections[c.Client.ID]
 	client.ClientID = connection.ClientID
-	client.Muted = ctx.Data["muted"].(bool)
-	client.Deafened = ctx.Data["deafened"].(bool)
+	client.Muted = action.Muted
+	client.Deafened = action.Deafened
 	util.Log.Println("UPDATED CLIENT", client.Data, client.ClientID, connection.ID)
-	connections[ctx.Client.ID] = client
-	caching.SaveConnections(ctx.Client.Session, connections)
+	connections[c.Client.ID] = client
+	caching.SaveConnections(c.Client.Session, connections)
 
 	// Send to all
-	if !SendStateUpdate(connection.ClientID, ctx.Client.Session, client.Muted, client.Deafened) {
-		pipeshandler.ErrorResponse(ctx, "server.error")
-		return
+	if !SendStateUpdate(connection.ClientID, c.Client.Session, client.Muted, client.Deafened) {
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
-	pipeshandler.SuccessResponse(ctx)
+	return pipeshandler.SuccessResponse(c)
 }
 
 func SendStateUpdate(member string, room string, muted bool, deafened bool) bool {

@@ -4,6 +4,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -32,13 +33,13 @@ func listFiles(c *fiber.Ctx) error {
 	// Get files
 	var files []account.CloudFile
 	if database.DBConn.Where("account = ?", accId).Order("created_at").Offset(20*req.Page).Limit(20).Find(&files).Error != nil {
-		return util.FailedRequest(c, "server.error", nil)
+		return util.FailedRequest(c, localization.ErrorServer, nil)
 	}
 
 	// Count files to calculate amount of pages and stuff (on the client)
 	var count int64
 	if database.DBConn.Model(&account.CloudFile{}).Where("account = ?", accId).Count(&count).Error != nil {
-		return util.FailedRequest(c, "server.error", nil)
+		return util.FailedRequest(c, localization.ErrorServer, nil)
 	}
 
 	return util.ReturnJSON(c, fiber.Map{

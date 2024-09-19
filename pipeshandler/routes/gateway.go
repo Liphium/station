@@ -7,9 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 	pipeshutil "github.com/Liphium/station/pipeshandler/util"
+	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
 )
@@ -73,6 +75,12 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 
 	client := instance.AddClient(tk.ToClient(conn, time.Now().Add(instance.Config.SessionDuration)))
 	defer func() {
+
+		// Recover from a failure (in case of a cast issue maybe?)
+		if err := recover(); err != nil {
+			util.Log.Println("connection with", client.ID, "crashed cause of:", err)
+		}
+
 		// Get the client
 		client, valid := instance.Get(tk.Account, tk.Session)
 		if !valid {
@@ -117,6 +125,13 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 
 				return nil
 			},
+
+			// Disconnect the user on error
+			OnError: func(err error) {
+
+				// Remove the adapter
+				local.RemoveAdapterWS(tk.Account)
+			},
 		})
 	}
 
@@ -148,7 +163,7 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 			return
 		}
 
-		// Unmarshal the action
+		// Decode the message
 		message, err := instance.Config.DecodingMiddleware(client, instance, msg)
 		if err != nil {
 			instance.ReportClientError(client, "couldn't decode message", err)
@@ -159,22 +174,29 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 			return
 		}
 
+		// Unmarshal the message to extract a few things
+		var body map[string]interface{}
+		if err := sonic.Unmarshal(message, &body); err != nil {
+			return
+		}
+
 		// Extract the response id from the message
-		args := strings.Split(message.Action, ":")
+		args := strings.Split(body["action"].(string), ":")
 		if len(args) != 2 {
 			return
 		}
 
 		// Handle the action
-		if !instance.Handle(pipeshandler.Context{
+		if !instance.Handle(&pipeshandler.Context{
 			Client:     client,
-			Data:       message.Data,
+			Data:       message,
 			Action:     args[0],
 			ResponseId: args[1],
+			Locale:     body["lc"].(string), // Parse the locale
 			Node:       local,
 			Instance:   instance,
 		}) {
-			instance.ReportClientError(client, "couldn't handle action", errors.New(message.Action))
+			instance.ReportClientError(client, "couldn't handle action", errors.New(body["action"].(string)))
 			return
 		}
 	}

@@ -5,7 +5,7 @@ import (
 
 	"github.com/Liphium/station/pipes/util"
 	"github.com/bytedance/sonic"
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 const ProtocolWS = "ws"

@@ -7,6 +7,7 @@ import (
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -19,17 +20,15 @@ func changeDisplayName(c *fiber.Ctx) error {
 
 	var req changeDisplayNameRequest
 	if err := util.BodyParser(c, &req); err != nil {
-		log.Println("requesto invalid")
 		return util.InvalidRequest(c)
 	}
 	accId, valid := util.GetAcc(c)
 	if !valid {
-		log.Println("account id no found")
 		return util.InvalidRequest(c)
 	}
 
 	// Make sure the name isn't weird data
-	if valid, message := standards.CheckDisplayName(req.Name); !valid {
+	if message := standards.CheckDisplayName(req.Name); message != nil {
 		return util.FailedRequest(c, message, nil)
 	}
 
@@ -45,7 +44,7 @@ func changeDisplayName(c *fiber.Ctx) error {
 
 	// Save new profile
 	if err := database.DBConn.Save(&acc).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.SuccessfulRequest(c)

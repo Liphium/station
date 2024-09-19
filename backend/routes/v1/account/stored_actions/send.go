@@ -7,6 +7,7 @@ import (
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/backend/util/requests"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -55,11 +56,11 @@ func sendStoredAction(c *fiber.Ctx) error {
 		// Check if stored action limit is reached
 		var storedActionCount int64
 		if err := database.DBConn.Model(&properties.AStoredAction{}).Where("account = ?", id).Count(&storedActionCount).Error; err != nil {
-			return util.FailedRequest(c, "server.error", err)
+			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 
 		if storedActionCount >= AuthenticatedStoredActionLimit {
-			return util.FailedRequest(c, "limit.reached", nil)
+			return util.FailedRequest(c, localization.ErrorVaultLimitReached(AuthenticatedStoredActionLimit), nil)
 		}
 
 		var storedActionKey account.StoredActionKey
@@ -77,7 +78,7 @@ func sendStoredAction(c *fiber.Ctx) error {
 			Account: storedAction.Account,
 			Payload: storedAction.Payload,
 		}).Error; err != nil {
-			return util.FailedRequest(c, "server.error", err)
+			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 
 	} else {
@@ -85,16 +86,16 @@ func sendStoredAction(c *fiber.Ctx) error {
 		// Check if stored action limit is reached
 		var storedActionCount int64
 		if err := database.DBConn.Model(&properties.StoredAction{}).Where("account = ?", acc.ID).Count(&storedActionCount).Error; err != nil {
-			return util.FailedRequest(c, "server.error", err)
+			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 
 		if storedActionCount >= StoredActionLimit {
-			return util.FailedRequest(c, "limit.reached", nil)
+			return util.FailedRequest(c, localization.ErrorStoredActionLimitReached(StoredActionLimit), nil)
 		}
 
 		// Save stored action
 		if err := database.DBConn.Create(&storedAction).Error; err != nil {
-			return util.FailedRequest(c, "server.error", err)
+			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 	}
 

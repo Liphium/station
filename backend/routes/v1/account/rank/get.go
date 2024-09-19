@@ -5,6 +5,7 @@ import (
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -35,7 +36,7 @@ func getRank(c *fiber.Ctx) error {
 	// Get rank
 	var rank account.Rank
 	if database.DBConn.Where("id = ?", req.ID).Find(&rank).Error != nil {
-		return util.FailedRequest(c, "server.error", nil)
+		return util.FailedRequest(c, localization.ErrorServer, nil)
 	}
 
 	return util.ReturnJSON(c, fiber.Map{

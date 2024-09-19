@@ -6,7 +6,6 @@ import (
 
 func Unauthorized(router fiber.Router) {
 	router.Post("/new", newNode)
-	router.Post("/clusters", clusterList)
 }
 
 func Authorized(router fiber.Router) {

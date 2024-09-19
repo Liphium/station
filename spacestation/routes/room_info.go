@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/spacestation/caching"
 	"github.com/gofiber/fiber/v2"
 )
@@ -22,7 +23,7 @@ func roomInfo(c *fiber.Ctx) error {
 	room, validRoom := caching.GetRoom(req.Room)
 	members, valid := caching.GetAllConnections(req.Room)
 	if !valid || !validRoom {
-		return integration.FailedRequest(c, "not.found", nil)
+		return integration.FailedRequest(c, localization.ErrorRoomNotFound, nil)
 	}
 
 	returnableMembers := make([]string, len(members))

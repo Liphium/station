@@ -1,4 +1,4 @@
-package auth
+package auth_routes
 
 import (
 	"errors"
@@ -9,7 +9,9 @@ import (
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/requests"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -27,15 +29,27 @@ func refreshSession(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
+	// Parse the session id
+	id, err := uuid.Parse(req.Session)
+	if err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
+	}
+
 	// Check if session is valid
 	var session account.Session
-	if !requests.GetSession(req.Session, &session) {
-		return util.FailedRequest(c, "not.valid", nil)
+	if !requests.GetSession(id, &session) {
+		return util.ReturnJSON(c, fiber.Map{
+			"success": false,
+			"valid":   false,
+		})
 	}
 
 	// Check if the session token matches the request
 	if session.Token != req.Token {
-		return util.FailedRequest(c, "not.valid", nil)
+		return util.ReturnJSON(c, fiber.Map{
+			"success": false,
+			"valid":   false,
+		})
 	}
 
 	// Check if the session is verified
@@ -44,12 +58,19 @@ func refreshSession(c *fiber.Ctx) error {
 			Payload: "",
 		}
 		if err := database.DBConn.Where("session = ?", session.ID).Take(&request).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return util.FailedRequest(c, "session.not_verified", err)
+
+			return util.ReturnJSON(c, fiber.Map{
+				"success":  false,
+				"verified": false,
+			})
 		}
 
 		// Check if the key request has been accepted
 		if request.Payload == "" {
-			return util.FailedRequest(c, "session.not_verified", nil)
+			return util.ReturnJSON(c, fiber.Map{
+				"success":  false,
+				"verified": false,
+			})
 		}
 
 		// Update the session to verified in case it has
@@ -59,14 +80,14 @@ func refreshSession(c *fiber.Ctx) error {
 	// Refresh session
 	session.LastUsage = time.Now().Add(time.Hour * 24 * 7)
 	if err := database.DBConn.Save(&session).Error; err != nil {
-		return util.FailedRequest(c, util.ErrorServer, err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Create new token
 	jwtToken, err := util.Token(session.ID, session.Account, session.PermissionLevel, time.Now().Add(time.Hour*24*3))
 
 	if err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.ReturnJSON(c, fiber.Map{

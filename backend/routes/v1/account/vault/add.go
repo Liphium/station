@@ -5,6 +5,7 @@ import (
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -29,11 +30,11 @@ func addEntry(c *fiber.Ctx) error {
 	}
 	var entryCount int64
 	if err := database.DBConn.Model(&properties.VaultEntry{}).Where("account = ?", accId).Count(&entryCount).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	if entryCount >= MaximumEntries {
-		return util.FailedRequest(c, "limit.reached", nil)
+		return util.FailedRequest(c, localization.ErrorVaultLimitReached(MaximumEntries), nil)
 	}
 
 	// Create vault entry
@@ -44,7 +45,7 @@ func addEntry(c *fiber.Ctx) error {
 		Payload: req.Payload,
 	}
 	if err := database.DBConn.Create(&vaultEntry).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.ReturnJSON(c, fiber.Map{

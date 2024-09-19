@@ -8,6 +8,7 @@ import (
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/fetching"
+	remote_action_routes "github.com/Liphium/station/chatserver/routes/actions"
 	conversation_routes "github.com/Liphium/station/chatserver/routes/conversations"
 	"github.com/Liphium/station/chatserver/routes/ping"
 	zapshare_routes "github.com/Liphium/station/chatserver/routes/zapshare"
@@ -17,7 +18,6 @@ import (
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 	pipesfroutes "github.com/Liphium/station/pipeshandler/routes"
-	"github.com/bytedance/sonic"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 )
@@ -91,11 +91,20 @@ func encryptedRoutes(router fiber.Router) {
 	// No authorization needed for this route
 	router.Post("/adoption/socketless", socketless)
 
-	// Authorized by using a remote id or normal token
+	// Setup the routes for remote actions
+	router.Route("/actions", remote_action_routes.SetupRemoteActions)
+	router.Route("/event_channel", remote_action_routes.SetupEventChannel)
+	router.Route("/conv_actions", remote_action_routes.SetupConversationActions)
+
+	router.Route("/", encryptedAuthorized)
+}
+
+func encryptedAuthorized(router fiber.Router) {
+	// Authorized by using a normal token
 	authorize(router)
 
-	// Authorized routes (for accounts with remote id only)
-	router.Route("/conversations", conversation_routes.SetupRoutes)
+	// Authorized routes
+	router.Route("/conversations", conversation_routes.Authorized)
 }
 
 func authorize(router fiber.Router) {
@@ -150,18 +159,12 @@ func setupPipesFiber(router fiber.Router) {
 				util.Log.Println("Client disconnected:", client.ID)
 			}
 
-			// Remove all adapters from pipes
-			err := caching.DeleteAdapters(client.ID)
-			if err != nil {
-				util.Log.Println("COULDN'T DELETE ADAPTERS:", err.Error())
-			}
-
 			// Cancel all zap transactions
 			zapshare.CancelTransactionByAccount(client.ID)
 
 			// Tell the backend that someone disconnected
 			nodeData := integration.Nodes[integration.IdentifierChatNode]
-			integration.PostRequest("/node/disconnect", map[string]interface{}{
+			integration.PostRequestBackend("/node/disconnect", map[string]interface{}{
 				"node":    nodeData.NodeId,
 				"token":   nodeData.NodeToken,
 				"session": client.Session,
@@ -228,7 +231,7 @@ type ExtraClientData struct {
 }
 
 // Middleware for pipes-fiber to add encryption support
-func EncryptionDecodingMiddleware(client *pipeshandler.Client, instance *pipeshandler.Instance, bytes []byte) (pipeshandler.Message, error) {
+func EncryptionDecodingMiddleware(client *pipeshandler.Client, instance *pipeshandler.Instance, bytes []byte) ([]byte, error) {
 
 	// Handle potential errors
 	defer func() {
@@ -239,19 +242,7 @@ func EncryptionDecodingMiddleware(client *pipeshandler.Client, instance *pipesha
 
 	// Decrypt the message using AES
 	key := client.Data.(ExtraClientData).Key
-	messageEncoded, err := integration.DecryptAES(key, bytes)
-	if err != nil {
-		return pipeshandler.Message{}, err
-	}
-
-	// Unmarshal the message using sonic
-	var message pipeshandler.Message
-	err = sonic.Unmarshal(messageEncoded, &message)
-	if err != nil {
-		return pipeshandler.Message{}, err
-	}
-
-	return message, nil
+	return integration.DecryptAES(key, bytes)
 }
 
 // Middleware for pipes-fiber to add encryption support (in encoding)

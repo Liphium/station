@@ -128,28 +128,6 @@ func listenForCommands() {
 			database.DBConn.Where("account = ?", acc.ID).Delete(&properties.VaultEntry{})
 			database.DBConn.Where("id = ?", acc.ID).Delete(&properties.Profile{})
 
-		case "account-token":
-
-			fmt.Print("Account E-Mail: ")
-			email, _ := reader.ReadString('\n')
-			email = strings.TrimSpace(email)
-
-			// Get account
-			var acc account.Account
-			if err := database.DBConn.Where("email = ?", email).Preload("Rank").Take(&acc).Error; err != nil {
-				fmt.Println("Failed to find account")
-				continue
-			}
-
-			// Generate new token
-			token, err := util.Token("test", acc.ID, acc.Rank.Level, time.Now().Add(time.Hour*24*365))
-			if err != nil {
-				fmt.Println("Failed to generate token")
-				continue
-			}
-
-			fmt.Println("Token:", token)
-
 		case "keypair":
 
 			priv, pub, err := util.GenerateRSAKey(util.StandardKeySize)
@@ -262,7 +240,6 @@ func listenForCommands() {
 			}
 
 			if err := database.DBConn.Create(&account.Authentication{
-				ID:      auth.GenerateToken(5),
 				Account: acc.ID,
 				Type:    account.TypePassword,
 				Secret:  hash,
@@ -278,7 +255,6 @@ func listenForCommands() {
 		case "generate-invite":
 
 			invite := account.Invite{
-				ID:      auth.GenerateToken(32),
 				Creator: util.GetSystemUUID(),
 			}
 			if err := database.DBConn.Create(&invite).Error; err != nil {
@@ -289,7 +265,7 @@ func listenForCommands() {
 
 		case "help":
 			fmt.Println("exit - Exit the application")
-			fmt.Println("create-default - Create default ranks and cluster")
+			fmt.Println("create-default - Create default ranks")
 			fmt.Println("create-app - Create a new app")
 			fmt.Println("increment-version - Increment the version of an app (when a breaking change is made)")
 			fmt.Println("create-node - Get a node token (rest of setup in the CLI of the node)")
@@ -332,11 +308,5 @@ func CreateDefaultObjects() {
 		Level: 100,
 	})
 
-	// Create default cluster
-	database.DBConn.Create(&node.Cluster{
-		Name:    "Default cluster",
-		Country: "DE",
-	})
-
-	fmt.Println("Created default ranks and cluster")
+	fmt.Println("Created default ranks")
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -22,11 +23,11 @@ func getPublicKey(c *fiber.Ctx) error {
 	// Get public key
 	var key account.PublicKey
 	if database.DBConn.Where("id = ?", accId).Take(&key).Error != nil {
-		return util.FailedRequest(c, "not.found", nil)
+		return util.FailedRequest(c, localization.ErrorKeyNotFound, nil)
 	}
 
 	if key.Key == "" {
-		return util.FailedRequest(c, "not.found", nil)
+		return util.FailedRequest(c, localization.ErrorKeyNotFound, nil)
 	}
 
 	return util.ReturnJSON(c, fiber.Map{
@@ -59,7 +60,7 @@ func setPublicKey(c *fiber.Ctx) error {
 	}
 
 	if database.DBConn.Where("id = ?", accId).Take(&account.PublicKey{}).Error == nil {
-		return util.FailedRequest(c, "already.set", nil)
+		return util.FailedRequest(c, localization.ErrorKeyAlreadySet, nil)
 	}
 
 	// Set public key
@@ -67,7 +68,7 @@ func setPublicKey(c *fiber.Ctx) error {
 		ID:  accId,
 		Key: req.Key,
 	}).Error != nil {
-		return util.FailedRequest(c, "server.error", nil)
+		return util.FailedRequest(c, localization.ErrorServer, nil)
 	}
 
 	return util.SuccessfulRequest(c)

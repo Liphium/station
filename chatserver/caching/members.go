@@ -3,7 +3,7 @@ package caching
 import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
-	"github.com/Liphium/station/chatserver/util"
+	"github.com/Liphium/station/pipes"
 )
 
 // TODO: Reimplement caching, but properly this time
@@ -11,7 +11,6 @@ import (
 type StoredMember struct {
 	TokenID string // Conversation token ID
 	Token   string // Conversation token
-	Node    int64
 }
 
 // Does database requests and stuff
@@ -28,13 +27,11 @@ func LoadMembers(id string) ([]StoredMember, error) {
 			storedMembers[i] = StoredMember{
 				TokenID: member.ID,
 				Token:   "-",
-				Node:    member.Node,
 			}
 		} else {
 			storedMembers[i] = StoredMember{
 				TokenID: member.ID,
 				Token:   member.Token,
-				Node:    member.Node,
 			}
 		}
 	}
@@ -56,13 +53,11 @@ func LoadMembersArray(ids []string) (map[string][]StoredMember, error) {
 			returnMap[token.Conversation] = append(returnMap[token.Conversation], StoredMember{
 				TokenID: token.ID,
 				Token:   "-",
-				Node:    token.Node,
 			})
 		} else {
 			returnMap[token.Conversation] = append(returnMap[token.Conversation], StoredMember{
 				TokenID: token.ID,
 				Token:   token.Token,
-				Node:    token.Node,
 			})
 		}
 	}
@@ -70,15 +65,22 @@ func LoadMembersArray(ids []string) (map[string][]StoredMember, error) {
 	return returnMap, nil
 }
 
-func MembersToPipes(members []StoredMember) ([]string, []string) {
+// Send an event to all members in a conversation
+func SendEventToMembers(members []StoredMember, event pipes.Event) error {
 
-	memberAdapters := make([]string, len(members))
-	memberNodes := make([]string, len(members))
+	// Make slices for a pipes send call
+	memberAmount := len(members)
+	memberAdapters := make([]string, memberAmount)
+	memberNodes := make([]string, memberAmount)
 
 	for i, member := range members {
-		memberAdapters[i] = "s-" + member.Token
-		memberNodes[i] = util.Node64(member.Node)
+		memberAdapters[i] = "s-" + member.TokenID
+		memberNodes[i] = CSNode.ID
 	}
 
-	return memberAdapters, memberNodes
+	// Send event using pipes
+	return CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
+		Channel: pipes.Conversation(memberAdapters, memberNodes),
+		Event:   event,
+	})
 }

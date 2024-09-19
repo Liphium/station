@@ -6,9 +6,7 @@ import (
 	"os"
 
 	"github.com/Liphium/station/backend/routes/v1/account"
-	"github.com/Liphium/station/backend/routes/v1/account/auth"
 	"github.com/Liphium/station/backend/routes/v1/app"
-	"github.com/Liphium/station/backend/routes/v1/cluster"
 	"github.com/Liphium/station/backend/routes/v1/node"
 	"github.com/Liphium/station/backend/util"
 	jwtware "github.com/gofiber/contrib/jwt"
@@ -36,10 +34,21 @@ func Router(router fiber.Router) {
 		})
 	})
 
-	// Unencrypted account routes (only file upload thing)
-	router.Route("/account", account.Unencrypted)
+	// Use a middleware to make sure all the translations work properly
+	router.Use(func(c *fiber.Ctx) error {
 
-	router.Route("/", func(router fiber.Router) {
+		// Set the locale for translations to work properly
+		localeHeader, valid := c.GetReqHeaders()["Locale"]
+		if valid {
+			c.Locals("locale", localeHeader[0])
+		}
+
+		return c.Next()
+	})
+
+	// Unencrypted account routes
+	router.Route("/v1/account", account.Unencrypted)
+	router.Route("/v1", func(router fiber.Router) {
 		encryptedRoutes(router, serverPublicKey, serverPrivateKey)
 	})
 }
@@ -85,9 +94,7 @@ func encryptedRoutes(router fiber.Router, serverPublicKey *rsa.PublicKey, server
 	})
 
 	// Unauthorized routes
-	router.Route("/auth", auth.Unauthorized)
 	router.Route("/node", node.Unauthorized)
-	router.Route("/app", app.Unauthorized)
 	router.Route("/account", account.Unauthorized)
 
 	router.Route("/", authorizedRoutes)
@@ -126,6 +133,4 @@ func authorizedRoutes(router fiber.Router) {
 	router.Route("/account", account.Authorized)
 	router.Route("/node", node.Authorized)
 	router.Route("/app", app.Authorized)
-	router.Route("/cluster", cluster.Setup)
-	router.Route("/auth", auth.Authorized)
 }

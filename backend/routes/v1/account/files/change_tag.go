@@ -4,6 +4,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -32,12 +33,12 @@ func changeFileTag(c *fiber.Ctx) error {
 	// Get file
 	var file account.CloudFile
 	if database.DBConn.Where("account = ? AND id = ?", accId, req.Id).First(&file).Error != nil {
-		return util.FailedRequest(c, "file.not_found", nil)
+		return util.FailedRequest(c, localization.ErrorFileNotFound, nil)
 	}
 
 	// Change the tag
 	if err := database.DBConn.Model(&account.CloudFile{}).Where("account = ? AND id = ?", accId, file.Id).Update("tag", req.Tag).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.SuccessfulRequest(c)

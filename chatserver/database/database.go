@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -34,10 +35,15 @@ func Connect() {
 	driver.SetMaxOpenConns(100)
 	driver.SetConnMaxLifetime(time.Hour)
 
+	// Add the uuid extension
+	if err := db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";").Error; err != nil {
+		fmt.Println("uuid extension 'uuid-ossp' not found.")
+		panic(err)
+	}
+
 	// Migrate the schema
 	db.AutoMigrate(&conversations.Conversation{})
 	db.AutoMigrate(&conversations.ConversationToken{})
-	//db.AutoMigrate(&conversations.ConversationSpace{})
 	db.AutoMigrate(&conversations.Message{})
 	db.AutoMigrate(&fetching.Status{})
 

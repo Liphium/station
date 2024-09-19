@@ -19,9 +19,17 @@ import (
 
 func main() {
 
-	if godotenv.Load() != nil {
-		printWithPrefix("No .env file found")
-		return
+	// Check if there is an extra environment file given
+	if len(os.Args) == 1 {
+		// Load environment variables from default location
+		if godotenv.Load() != nil {
+			printWithPrefix("No .env file found")
+		}
+	} else {
+		// Load environment variables from specified location
+		if godotenv.Load(os.Args[1]) != nil {
+			printWithPrefix("Specified file " + os.Args[1] + " not found")
+		}
 	}
 
 	printWithPrefix("Starting Liphium station..")
@@ -36,8 +44,8 @@ func main() {
 		}
 
 		printWithPrefix("Please set the following environment variables in your .env file:")
-		printWithPrefix("TC_PUBLIC_KEY=" + pub)
-		printWithPrefix("TC_PRIVATE_KEY=" + priv)
+		printWithPrefix("TC_PUBLIC_KEY=\"" + pub + "\"")
+		printWithPrefix("TC_PRIVATE_KEY=\"" + priv + "\"")
 
 		return
 	}
@@ -45,7 +53,7 @@ func main() {
 	// Check if a system uuid is set
 	if os.Getenv("SYSTEM_UUID") == "" {
 		printWithPrefix("Please set the following environment variables in your .env file:")
-		printWithPrefix("SYSTEM_UUID=" + uuid.New().String())
+		printWithPrefix("SYSTEM_UUID=\"" + uuid.New().String() + "\"")
 
 		return
 	}
@@ -95,7 +103,6 @@ func main() {
 	if err := database.DBConn.Where("id = ? AND app_id = ?", 1, 1).First(&defaultChatNode).Error; err != nil {
 		defaultChatNode = node.Node{
 			ID:              1,
-			ClusterID:       1,
 			AppID:           1,
 			Load:            0,
 			PeformanceLevel: 1,
@@ -118,7 +125,6 @@ func main() {
 	if err := database.DBConn.Where("id = ? AND app_id = ?", 2, 2).First(&defaultSpaceNode).Error; err != nil {
 		defaultSpaceNode = node.Node{
 			ID:              2,
-			ClusterID:       1,
 			AppID:           2,
 			Load:            0,
 			PeformanceLevel: 1,
@@ -143,7 +149,12 @@ func main() {
 
 	// Start space station
 	printWithPrefix("Starting space station..")
-	spacestation_starter.Start()
+	worked := spacestation_starter.Start(false)
+	if !worked {
+
+		// Just block the main thread for infinity until paused (this should be enough)
+		time.Sleep(time.Hour * 30000)
+	}
 }
 
 func printWithPrefix(s string) {

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/Liphium/station/pipes"
-	"github.com/bytedance/sonic"
 	"github.com/dgraph-io/ristretto"
 )
 
@@ -13,7 +12,7 @@ type Instance struct {
 	Config           Config
 	connectionsCache *ristretto.Cache // ID:Session -> Client
 	sessionsCache    *ristretto.Cache // ID -> Session list
-	routes           map[string]func(Context)
+	routes           map[string]func(*Context) pipes.Event
 }
 
 // ! If the functions aren't implemented pipesfiber will panic
@@ -33,16 +32,16 @@ type Config struct {
 
 	// Codec middleware
 	ClientEncodingMiddleware func(client *Client, instance *Instance, message []byte) ([]byte, error)
-	DecodingMiddleware       func(client *Client, instance *Instance, message []byte) (Message, error)
+	DecodingMiddleware       func(client *Client, instance *Instance, message []byte) ([]byte, error)
 
 	// Error handler
 	ErrorHandler func(err error)
 }
 
 // Message received from the client
-type Message struct {
-	Action string                 `json:"action"`
-	Data   map[string]interface{} `json:"data"`
+type Message[T any] struct {
+	Action string `json:"action"`
+	Data   T      `json:"data"`
 }
 
 // Default pipes-fiber encoding middleware (using JSON)
@@ -51,12 +50,8 @@ func DefaultClientEncodingMiddleware(client *Client, message []byte) ([]byte, er
 }
 
 // Default pipes-fiber decoding middleware (using JSON)
-func DefaultDecodingMiddleware(client *Client, bytes []byte) (Message, error) {
-	var message Message
-	if err := sonic.Unmarshal(bytes, &message); err != nil {
-		return Message{}, err
-	}
-	return message, nil
+func DefaultDecodingMiddleware(client *Client, bytes []byte) ([]byte, error) {
+	return bytes, nil
 }
 
 func Setup(config Config) *Instance {
@@ -64,7 +59,7 @@ func Setup(config Config) *Instance {
 		Config: config,
 	}
 	instance.SetupConnectionsCache(config.ExpectedConnections)
-	instance.routes = make(map[string]func(Context))
+	instance.routes = make(map[string]func(*Context) pipes.Event)
 	return instance
 }
 

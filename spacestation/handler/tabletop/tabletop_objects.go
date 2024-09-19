@@ -3,6 +3,7 @@ package tabletop_handlers
 import (
 	"sync"
 
+	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
@@ -10,326 +11,256 @@ import (
 )
 
 // Action: tobj_create
-func createObject(message pipeshandler.Context) {
-
-	// Validate message integrity
-	if message.ValidateForm("x", "y", "w", "h", "r", "type", "data") {
-		pipeshandler.ErrorResponse(message, "invalid")
-		return
-	}
+func createObject(c *pipeshandler.Context, action struct {
+	X        float64 `json:"x"`
+	Y        float64 `json:"y"`
+	Width    float64 `json:"w"`
+	Height   float64 `json:"h"`
+	Rotation float64 `json:"r"`
+	Type     int     `json:"type"`
+	Data     string  `json:"data"`
+}) pipes.Event {
 
 	// Get the connection (for the client id)
-	connection, valid := caching.GetConnection(message.Client.ID)
+	connection, valid := caching.GetConnection(c.Client.ID)
 	if !valid {
-		pipeshandler.ErrorResponse(message, "invalid")
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
-
-	// Get all data from the message
-	x := message.Data["x"].(float64)
-	y := message.Data["y"].(float64)
-	width := message.Data["w"].(float64)
-	height := message.Data["h"].(float64)
-	rotation := message.Data["r"].(float64)
-	objType := int(message.Data["type"].(float64))
-	objData := message.Data["data"].(string)
 
 	// Create the object here so the data is still there when we send it down below
 	object := &caching.TableObject{
 		Mutex:             &sync.Mutex{},
-		LocationX:         x,
-		LocationY:         y,
-		Width:             width,
-		Height:            height,
-		Rotation:          rotation,
-		Type:              objType,
-		Data:              objData,
-		Creator:           message.Client.ID,
+		LocationX:         action.X,
+		LocationY:         action.Y,
+		Width:             action.Width,
+		Height:            action.Height,
+		Rotation:          action.Rotation,
+		Type:              action.Type,
+		Data:              action.Data,
+		Creator:           c.Client.ID,
 		Holder:            "",
 		ModificationQueue: []string{},
 	}
 
 	// Add the object to the table
-	err := caching.AddObjectToTable(message.Client.Session, object)
-	if err != nil {
-		pipeshandler.ErrorResponse(message, err.Error())
-		return
+	msg := caching.AddObjectToTable(c.Client.Session, object)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Notify other clients about the object creation
-	valid = SendEventToMembers(message.Client.Session, pipes.Event{
+	valid = SendEventToMembers(c.Client.Session, pipes.Event{
 		Name: "tobj_created",
 		Data: map[string]interface{}{
 			"id":   object.ID,
-			"x":    x,
-			"y":    y,
-			"w":    width,
-			"h":    height,
-			"r":    rotation,
-			"type": objType,
-			"data": objData,
+			"x":    action.X,
+			"y":    action.Y,
+			"w":    action.Width,
+			"h":    action.Height,
+			"r":    action.Rotation,
+			"type": action.Type,
+			"data": action.Data,
 			"c":    connection.ClientID,
 		},
 	})
 	if !valid {
-		pipeshandler.ErrorResponse(message, "server.error")
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
-	pipeshandler.NormalResponse(message, map[string]interface{}{
+	return pipeshandler.NormalResponse(c, map[string]interface{}{
 		"success": true,
 		"id":      object.ID, // So the client can set the new id
 	})
 }
 
 // Action: tobj_delete
-func deleteObject(ctx pipeshandler.Context) {
+func deleteObject(c *pipeshandler.Context, id string) pipes.Event {
 
-	if ctx.ValidateForm("id") {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
-	}
-
-	err := caching.RemoveObjectFromTable(ctx.Client.Session, ctx.Data["id"].(string))
-	if err != nil {
-		pipeshandler.ErrorResponse(ctx, err.Error())
-		return
+	msg := caching.RemoveObjectFromTable(c.Client.Session, id)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Notify other clients
-	valid := SendEventToMembers(ctx.Client.Session, pipes.Event{
+	valid := SendEventToMembers(c.Client.Session, pipes.Event{
 		Name: "tobj_deleted",
 		Data: map[string]interface{}{
-			"id": ctx.Data["id"].(string),
+			"id": id,
 		},
 	})
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, "server.error")
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
-	pipeshandler.SuccessResponse(ctx)
+	return pipeshandler.SuccessResponse(c)
 }
 
 // Action: tobj_select
-func selectObject(ctx pipeshandler.Context) {
+func selectObject(c *pipeshandler.Context, id string) pipes.Event {
 
-	if ctx.ValidateForm("id") {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
-	}
-
-	connection, valid := caching.GetConnection(ctx.Client.ID)
+	connection, valid := caching.GetConnection(c.Client.ID)
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Grab hold of it
-	err := caching.SelectTableObject(ctx.Client.Session, ctx.Data["id"].(string), connection.ClientID)
-	if err != nil {
-		pipeshandler.ErrorResponse(ctx, err.Error())
-		return
+	msg := caching.SelectTableObject(c.Client.Session, id, connection.ClientID)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
-	pipeshandler.SuccessResponse(ctx)
+	return pipeshandler.SuccessResponse(c)
 }
 
 // Action: tobj_select
-func unselectObject(ctx pipeshandler.Context) {
-
-	// Validate message integrity
-	if ctx.ValidateForm("id") {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
-	}
+func unselectObject(c *pipeshandler.Context, id string) pipes.Event {
 
 	// Get the connection (for the client id)
-	connection, valid := caching.GetConnection(ctx.Client.ID)
+	connection, valid := caching.GetConnection(c.Client.ID)
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Grab hold of it
-	err := caching.UnselectTableObject(ctx.Client.Session, ctx.Data["id"].(string), connection.ClientID)
-	if err != nil {
-		pipeshandler.ErrorResponse(ctx, err.Error())
-		return
+	msg := caching.UnselectTableObject(c.Client.Session, id, connection.ClientID)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
-	pipeshandler.SuccessResponse(ctx)
+	return pipeshandler.SuccessResponse(c)
 }
 
 // Action: tobj_modify
-func modifyObject(ctx pipeshandler.Context) {
-
-	if ctx.ValidateForm("id", "data", "width", "height") {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
-	}
+func modifyObject(c *pipeshandler.Context, action struct {
+	ID     string  `json:"id"`
+	Data   string  `json:"data"`
+	Width  float64 `json:"width"`
+	Height float64 `json:"height"`
+}) pipes.Event {
 
 	// Get the connection (for the client id)
-	connection, valid := caching.GetConnection(ctx.Client.ID)
+	connection, valid := caching.GetConnection(c.Client.ID)
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
-	// Get the object id from the message
-	objectId := ctx.Data["id"].(string)
-
 	// Make sure the next client gets to modify the object regardless of errors
-	defer handleNextModification(ctx.Client.Session, objectId)
+	defer handleNextModification(c.Client.Session, action.ID)
 
 	// Modify the object and return the error if there is one
-	err := caching.ModifyTableObject(ctx.Client.Session, connection.ClientID, objectId, ctx.Data["data"].(string),
-		ctx.Data["width"].(float64), ctx.Data["height"].(float64))
-	if err != nil {
-		pipeshandler.ErrorResponse(ctx, err.Error())
-		return
+	msg := caching.ModifyTableObject(c.Client.Session, connection.ClientID, action.ID, action.Data, action.Width, action.Height)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Notify other clients
 	util.Log.Println("Sending tobj_modified event")
-	valid = SendEventToMembers(ctx.Client.Session, pipes.Event{
+	valid = SendEventToMembers(c.Client.Session, pipes.Event{
 		Name: "tobj_modified",
 		Data: map[string]interface{}{
-			"id":   ctx.Data["id"].(string),
-			"data": ctx.Data["data"].(string),
-			"w":    ctx.Data["width"].(float64),
-			"h":    ctx.Data["height"].(float64),
+			"id":   action.ID,
+			"data": action.Data,
+			"w":    action.Width,
+			"h":    action.Height,
 		},
 	})
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, "server.error")
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
-	// Add the next client to the modification queue
-
-	pipeshandler.SuccessResponse(ctx)
+	// Add the next client to the modification queue (in the defer above)
+	return pipeshandler.SuccessResponse(c)
 }
 
 // Action: tobj_move
-func moveObject(ctx pipeshandler.Context) {
-
-	// Validate message integrity
-	if ctx.ValidateForm("id", "x", "y") {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
-	}
+func moveObject(c *pipeshandler.Context, action struct {
+	ID string  `json:"id"`
+	X  float64 `json:"x"`
+	Y  float64 `json:"y"`
+}) pipes.Event {
 
 	// Get the connection (for the client id)
-	connection, valid := caching.GetConnection(ctx.Client.ID)
+	connection, valid := caching.GetConnection(c.Client.ID)
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
-	// Get data from the message
-	x := ctx.Data["x"].(float64)
-	y := ctx.Data["y"].(float64)
-
 	// Move the actual object
-	err := caching.MoveTableObject(ctx.Client.Session, connection.ClientID, ctx.Data["id"].(string), x, y)
-	if err != nil {
-		pipeshandler.ErrorResponse(ctx, "server.error")
-		return
+	msg := caching.MoveTableObject(c.Client.Session, connection.ClientID, action.ID, action.X, action.Y)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Notify other clients
-	valid = SendEventToMembers(ctx.Client.Session, pipes.Event{
+	valid = SendEventToMembers(c.Client.Session, pipes.Event{
 		Name: "tobj_moved",
 		Data: map[string]interface{}{
-			"id": ctx.Data["id"].(string),
-			"x":  x,
-			"y":  y,
+			"id": action.ID,
+			"x":  action.X,
+			"y":  action.Y,
 		},
 	})
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, "server.error")
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
-	pipeshandler.SuccessResponse(ctx)
+	return pipeshandler.SuccessResponse(c)
 }
 
 // Action: tobj_rotate
-func rotateObject(ctx pipeshandler.Context) {
-
-	// Validate message integrity
-	if ctx.ValidateForm("id", "r") {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
-	}
+func rotateObject(c *pipeshandler.Context, action struct {
+	ID       string  `json:"id"`
+	Rotation float64 `json:"r"`
+}) pipes.Event {
 
 	// Get the connection (for the client id)
-	connection, valid := caching.GetConnection(ctx.Client.ID)
+	connection, valid := caching.GetConnection(c.Client.ID)
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
-	// Get the data from the message
-	objectId := ctx.Data["id"].(string)
-	rotation := ctx.Data["r"].(float64)
-
 	// Make sure the next client gets to modify the object regardless of errors
-	defer handleNextModification(ctx.Client.Session, objectId)
+	defer handleNextModification(c.Client.Session, action.ID)
 
 	// Rotate the object and return an error (only if one is there)
-	err := caching.RotateTableObject(ctx.Client.Session, connection.ClientID, objectId, rotation)
-	if err != nil {
-		pipeshandler.ErrorResponse(ctx, err.Error())
-		return
+	msg := caching.RotateTableObject(c.Client.Session, connection.ClientID, action.ID, action.Rotation)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Notify other clients about the rotation
-	valid = SendEventToMembers(ctx.Client.Session, pipes.Event{
+	valid = SendEventToMembers(c.Client.Session, pipes.Event{
 		Name: "tobj_rotated",
 		Data: map[string]interface{}{
-			"id": objectId,
+			"id": action.ID,
 			"s":  connection.ClientID,
-			"r":  rotation,
+			"r":  action.Rotation,
 		},
 	})
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, "server.error")
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
-	pipeshandler.SuccessResponse(ctx)
+	return pipeshandler.SuccessResponse(c)
 }
 
 // Action: tobj_mqueue
-func queueModificationToObject(ctx pipeshandler.Context) {
-
-	// Validate message integrity
-	if ctx.ValidateForm("id") {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
-	}
+func queueModificationToObject(c *pipeshandler.Context, objectId string) pipes.Event {
 
 	// Get the connection (for the client id)
-	connection, valid := caching.GetConnection(ctx.Client.ID)
+	connection, valid := caching.GetConnection(c.Client.ID)
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
-	// Get the id of the object from the message
-	objectId := ctx.Data["id"].(string)
-
 	// Queue the modification
-	rightAway, err := caching.QueueTableObjectModification(ctx.Client.Session, objectId, connection.ClientID)
-	if err != nil {
-		pipeshandler.ErrorResponse(ctx, err.Error())
-		return
+	rightAway, msg := caching.QueueTableObjectModification(c.Client.Session, objectId, connection.ClientID)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Return whether the modification can be sent right away
-	pipeshandler.NormalResponse(ctx, map[string]interface{}{
+	return pipeshandler.NormalResponse(c, map[string]interface{}{
 		"success": true,
 		"direct":  rightAway,
 	})
@@ -338,16 +269,16 @@ func queueModificationToObject(ctx pipeshandler.Context) {
 // Called when a modification is completed to contact the next modifier
 func handleNextModification(room string, object string) {
 	// Remove the current client from the modification queue
-	err := caching.RemoveFromModificationQueue(room, object)
-	if err != nil {
-		util.Log.Println("couldn't remove from modification queue:", err)
+	msg := caching.RemoveFromModificationQueue(room, object)
+	if msg != nil {
+		util.Log.Println("couldn't remove from modification queue:", msg[localization.DefaultLocale])
 		return
 	}
 
 	// Get the next client to modify the object
-	client, err := caching.NextModifier(room, object)
-	if err != nil {
-		util.Log.Println("error during getting next modifier:", err)
+	client, msg := caching.NextModifier(room, object)
+	if msg != nil {
+		util.Log.Println("error during getting next modifier:", msg[localization.DefaultLocale])
 		return
 	}
 
@@ -357,7 +288,7 @@ func handleNextModification(room string, object string) {
 	}
 
 	// Send event to inform the client about their modification being allowed
-	err = caching.SSNode.SendClient(client, pipes.Event{
+	err := caching.SSNode.SendClient(client, pipes.Event{
 		Name: "tobj_mqueue_allowed",
 		Data: map[string]interface{}{
 			"id": object,

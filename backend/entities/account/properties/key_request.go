@@ -3,7 +3,7 @@ package properties
 import "github.com/google/uuid"
 
 type KeyRequest struct {
-	Session   string    `gorm:"primaryKey" json:"session"`
+	Session   uuid.UUID `gorm:"primaryKey" json:"session"`
 	Account   uuid.UUID `gorm:"not null" json:"-"`
 	Key       string    `json:"pub"`       // Public key of the session requesting it
 	Signature string    `json:"signature"` // Signature of the session requesting it

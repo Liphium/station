@@ -8,6 +8,7 @@ import (
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -30,7 +31,7 @@ func listStoredActions(c *fiber.Ctx) error {
 	// Get all normal stored actions and add them as non authenticated ones
 	var storedActions []properties.StoredAction
 	if database.DBConn.Where("account = ?", accId).Find(&storedActions).Error != nil {
-		return util.FailedRequest(c, "server.error", nil)
+		return util.FailedRequest(c, localization.ErrorServer, nil)
 	}
 	for _, storedAction := range storedActions {
 		returnables = append(returnables, returnableStoredAction{
@@ -43,7 +44,7 @@ func listStoredActions(c *fiber.Ctx) error {
 	// Get all authenticated stored actions and mark them as such in the returning phase
 	var aStoredActions []properties.AStoredAction
 	if database.DBConn.Where("account = ?", accId).Find(&aStoredActions).Error != nil {
-		return util.FailedRequest(c, "server.error", nil)
+		return util.FailedRequest(c, localization.ErrorServer, nil)
 	}
 	for _, storedAction := range aStoredActions {
 		returnables = append(returnables, returnableStoredAction{
@@ -70,7 +71,7 @@ func listStoredActions(c *fiber.Ctx) error {
 
 		// Save stored action key
 		if err := database.DBConn.Create(&storedActionKey).Error; err != nil {
-			return util.FailedRequest(c, "server.error", err)
+			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 	}
 

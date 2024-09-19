@@ -2,12 +2,12 @@ package integration
 
 import (
 	"runtime/debug"
+	"strings"
 
+	"github.com/Liphium/station/main/localization"
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
 )
-
-const ErrorServer = "server.error"
 
 func SuccessfulRequest(c *fiber.Ctx) error {
 	return ReturnJSON(c, fiber.Map{
@@ -15,17 +15,17 @@ func SuccessfulRequest(c *fiber.Ctx) error {
 	})
 }
 
-func FailedRequest(c *fiber.Ctx, message string, err error) error {
+func FailedRequest(c *fiber.Ctx, message localization.Translations, err error) error {
 
 	// Print error if it isn't nil
 	if err != nil {
-		Log.Println(c.Route().Name + " ERROR: " + message + ":" + err.Error())
+		Log.Println(c.Route().Name + " ERROR: " + message[localization.DefaultLocale] + ":" + err.Error())
 		debug.PrintStack()
 	}
 
 	return ReturnJSON(c, fiber.Map{
 		"success": false,
-		"error":   message,
+		"error":   Translate(c, message),
 	})
 }
 
@@ -40,12 +40,25 @@ func BodyParser(c *fiber.Ctx, data interface{}) error {
 	return sonic.Unmarshal(c.Locals("body").([]byte), data)
 }
 
+// Translate any message on a request
+func Translate(c *fiber.Ctx, message localization.Translations) string {
+	locale := c.Locals("locale")
+	if locale == nil {
+		locale = localization.DefaultLocale
+	}
+	msg, valid := message[strings.ToLower(locale.(string))]
+	if !valid {
+		msg = message[localization.DefaultLocale]
+	}
+	return msg
+}
+
 // Return encrypted json
 func ReturnJSON(c *fiber.Ctx, data interface{}) error {
 
 	encoded, err := sonic.Marshal(data)
 	if err != nil {
-		return FailedRequest(c, ErrorServer, err)
+		return FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	if c.Locals("key") == nil {
@@ -53,7 +66,7 @@ func ReturnJSON(c *fiber.Ctx, data interface{}) error {
 	}
 	encrypted, err := EncryptAES(c.Locals("key").([]byte), encoded)
 	if err != nil {
-		return FailedRequest(c, ErrorServer, err)
+		return FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return c.Send(encrypted)

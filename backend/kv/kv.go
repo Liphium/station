@@ -19,3 +19,8 @@ func Get(key string) (any, bool) {
 func Store(key string, value any) {
 	cache.Store(key, value)
 }
+
+// Delete any key from the key value store
+func Delete(key string) {
+	cache.Delete(key)
+}

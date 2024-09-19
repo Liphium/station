@@ -7,8 +7,14 @@ type ConversationToken struct {
 	Token        string `json:"token" gorm:"not null,unique"` // Long token required to subscribe to the conversation
 	Data         string `json:"data" gorm:"not null"`         // Encrypted data about the user (account id, username, etc.)
 	Rank         uint   `json:"rank" gorm:"not null"`
-	LastRead     int64  `json:"-" gorm:"not null"`    // Last time the user read the conversation
-	Node         int64  `json:"node" gorm:"not null"` // Node ID
+	LastRead     int64  `json:"-" gorm:"not null"` // Last time the user read the conversation
+}
+
+func (t *ConversationToken) ToSent() SentConversationToken {
+	return SentConversationToken{
+		ID:    t.ID,
+		Token: t.Token,
+	}
 }
 
 type SentConversationToken struct {

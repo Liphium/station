@@ -1,14 +1,12 @@
 package account
 
 import (
-	"strings"
-
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/google/uuid"
 )
 
 type Authentication struct {
-	ID string `json:"id" gorm:"primaryKey"`
+	ID uuid.UUID `json:"id" gorm:"primaryKey,type:uuid;default:uuid_generate_v4()"`
 
 	Account uuid.UUID `json:"account"`
 	Type    uint      `json:"type"`
@@ -16,16 +14,12 @@ type Authentication struct {
 }
 
 const TypePassword = 0
-const TypeTOTP = 1
-const TypeRecoveryCode = 2
-const TypePasskey = 3 // Implemented in the future
+const TypeSSO = 1
 
 // Order to autenticate (0 = first, 1 = second, etc.)
 var Order = map[uint]uint{
-	TypePassword:     0,
-	TypePasskey:      5, // Disabled (needs to still be implemented), will eventually be first too
-	TypeTOTP:         1,
-	TypeRecoveryCode: 1,
+	TypePassword: 0,
+	TypeSSO:      0,
 }
 
 // Starting step when authenticating
@@ -50,10 +44,8 @@ func (a *Authentication) Verify(authType uint, secret string, id uuid.UUID) bool
 	switch authType {
 	case TypePassword:
 		return a.checkPassword(secret, id)
-	case TypeTOTP:
+	case TypeSSO:
 		return false // TODO: Implement
-	case TypeRecoveryCode:
-		return strings.Compare(a.Secret, secret) == 0 // TODO: Implement
 	}
 
 	return false

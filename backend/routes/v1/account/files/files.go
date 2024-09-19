@@ -1,6 +1,8 @@
 package files
 
 import (
+	"context"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -8,12 +10,25 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
 
+var fileRepoType string = "local"
+var s3Client *s3.Client
+var bucketName string
+var uploader *manager.Uploader
 var disabled = false
+
+// Constants
+const repoTypeR2 = "r2"
+const repoTypeLocal = "local"
 
 // Configuration
 var maxUploadSize int64 = 10      // 10 MB
@@ -73,6 +88,15 @@ func Unencrypted(router fiber.Router) {
 		},
 	}))
 
+	if os.Getenv("FILE_REPO_TYPE") != "" {
+		fileRepoType = os.Getenv("FILE_REPO_TYPE")
+
+		// Connect to r2 if the file repo is r2
+		if fileRepoType == "r2" {
+			connectToR2()
+		}
+	}
+
 	router.Post("/upload", uploadFile)
 }
 
@@ -118,4 +142,36 @@ func CountTotalStorage(accId uuid.UUID) (int64, error) {
 	}
 
 	return totalStorage, nil
+}
+
+func connectToR2() {
+	bucketName = os.Getenv("FILE_REPO_BUCKET")
+	var url = os.Getenv("FILE_REPO")
+	var accessKeyId = os.Getenv("FILE_REPO_KEY_ID")
+	var accessKeySecret = os.Getenv("FILE_REPO_KEY")
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKeyId, accessKeySecret, "")),
+		config.WithRegion("auto"),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Connect to R2 and make a new uploader
+	s3Client = s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String(url)
+	})
+	uploader = manager.NewUploader(s3Client)
+
+	// Make sure the API works
+	_, err = s3Client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
+		Bucket:  &bucketName,
+		MaxKeys: aws.Int32(10),
+	})
+	if err != nil {
+		util.Log.Fatal(err)
+	}
+
+	util.Log.Println("Successfully connected to Cloudflare R2.")
 }

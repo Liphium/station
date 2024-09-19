@@ -1,32 +1,29 @@
 package space
 
 import (
+	"os"
+
 	"github.com/Liphium/station/chatserver/caching"
-	"github.com/Liphium/station/chatserver/util/localization"
-	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
+	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 )
 
 // Action: spc_start
-func start(ctx pipeshandler.Context) {
+func start(c *pipeshandler.Context, data interface{}) pipes.Event {
 
-	/*
-		TODO: Re-enable
-		if caching.IsInSpace(message.Client.ID) {
-			wshandler.ErrorResponse(message, "already.in.space")
-			return
-		}
-	*/
+	if os.Getenv("SPACES_APP") == "" {
+		return pipeshandler.ErrorResponse(c, localization.ErrorSpacesNotSetup, nil)
+	}
 
 	// Create space
-	roomId, appToken, valid := caching.CreateSpace(ctx.Client.ID, integration.ClusterID)
-	if !valid {
-		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
-		return
+	roomId, appToken, err := caching.CreateSpace(c.Client.ID)
+	if err != nil {
+		return pipeshandler.ErrorResponse(c, localization.ErrorSpacesNotSetup, err)
 	}
 
 	// Send space info
-	pipeshandler.NormalResponse(ctx, map[string]interface{}{
+	return pipeshandler.NormalResponse(c, map[string]interface{}{
 		"success": true,
 		"id":      roomId,
 		"token":   appToken,

@@ -13,7 +13,6 @@ const EmailVerification = "verification"
 // Language -> Email Identifier -> Builder function
 var emailBuilders = map[string]map[string]func([]string) (string, []string){
 	"en_us": enUsTranslations,
-	"de_de": deDeTranslations,
 }
 
 const defaultLocale = "en_us"

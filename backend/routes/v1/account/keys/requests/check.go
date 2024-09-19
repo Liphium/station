@@ -8,6 +8,7 @@ import (
 	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -37,7 +38,7 @@ func check(c *fiber.Ctx) error {
 	var keyRequest properties.KeyRequest = properties.KeyRequest{}
 	err := database.DBConn.Where("session = ?", session.ID).Take(&keyRequest).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return util.FailedRequest(c, util.ErrorServer, err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Check if the request doesn't exist yet
@@ -54,7 +55,7 @@ func check(c *fiber.Ctx) error {
 		}
 
 		if err := database.DBConn.Create(&keyRequest).Error; err != nil {
-			return util.FailedRequest(c, util.ErrorServer, err)
+			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 
 		// Tell the client that the request was created

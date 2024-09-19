@@ -16,57 +16,71 @@ APP_NAME = "Liphium"
 TESTING = "true"
 LISTEN = "127.0.0.1"
 TESTING_AMOUNT = "2"
-PROTOCOL = "http://"
+# PROTOCOL = "http://" (You CAN do this, but https is the default)
 CLI = "true"
+SYSTEM_UUID = "your-uuid" # You can delete this and the app will give you a random one
 
-# Database (for the backend)
+# Database
 DB_USER = "postgres"
 DB_PASSWORD = "deinemutter123"
-DB_DATABASE = "node_backend"
+DB_DATABASE = "backend"
 DB_HOST = "localhost"
 DB_PORT = "5432"
+
+# SSO (if you want it)
+# SSO_ENABLED = "true"
+# SSO_CONFIG = "url"
+# SSO_CLIENT_ID = "id"
+# SSO_CLIENT_SECRET = "secret"
 
 # JWT
 JWT_SECRET = "secret"
 
-# Through Cloudflare Protection (or reverse proxy protection, doesn't help against man in the middle, only trusted reverse proxies)
-TC_PUBLIC_KEY="KEY_HERE"
-TC_PRIVATE_KEY="KEY_HERE"
+# Through Cloudflare Protection
+TC_PUBLIC_KEY = "PUB_KEY_HERE"
+TC_PRIVATE_KEY = "PRIV_KEY_HERE"
 
-# File storage folder (choose some path that exists)
-FILE_REPO = "/home/julian/Documents/repo/cloud"
+# File storage folder
+# If you want local storage
+FILE_REPO_TYPE = "local"
+FILE_REPO = "/home/some_path"
 
-# File upload settings (defaults are fine, make sure to change nginx if modified)
+# If you want to use R2
+# FILE_REPO_TYPE = "r2"
+# FILE_REPO_KEY_ID = "id"
+# FILE_REPO_KEY = "key"
+# FILE_REPO = "https://account.eu.r2.cloudflarestorage.com"
+# FILE_REPO_BUCKET = "your-bucket"
 MAX_UPLOAD_SIZE = "10" # in MB
 MAX_FAVORITE_STORAGE = "500" # in MB
 MAX_TOTAL_STORAGE = "1000" # in MB
 
 # SMTP (for emails)
-SMTP_SERVER = "mail.liphium.app"
-SMTP_PORT = "2587"
-SMTP_IDENTITY = "backend"
-SMTP_FROM = "no-reply@liphium.app"
-SMTP_USER = "user"
+SMTP_SERVER = "mail.example.com"
+SMTP_PORT = "port"
+SMTP_IDENTITY = "identity"
+SMTP_FROM = "no-reply@example.com"
+SMTP_USER = "username"
 SMTP_PW = "password"
 
 
 # CHAT NODE CONFIGURATION
 
-# Database (for the chat node)
+# Config (If you want to allow unsafe locations (http), YOU SHOULD ONLY FOR TESTING)
+# CN_ALLOW_UNSAFE = "true"
+
+# Database
 CN_DB_USER = "postgres"
 CN_DB_PASSWORD = "deinemutter123"
 CN_DB_DATABASE = "chat"
 CN_DB_HOST = "localhost"
 CN_DB_PORT = "5432"
 
-# Live share (choose some path that exists)
-CN_LS_REPO = "/home/julian/Documents/repo/ls"
-
 
 # SPACE STATION CONFIGURATION
 
-# LiveKit (should work if you install a local server according to https://docs.livekit.io/realtime/self-hosting/local/)
-SS_LK_URL = "http://localhost:7880"
+# LiveKit
+SS_LK_URL = "ws://localhost:7880"
 SS_LK_KEY = "devkey"
 SS_LK_SECRET = "secret"
 ```

@@ -2,33 +2,26 @@ package space
 
 import (
 	"github.com/Liphium/station/chatserver/caching"
-	"github.com/Liphium/station/chatserver/util/localization"
-	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
+	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 )
 
 // Action: spc_join
-func joinCall(ctx pipeshandler.Context) {
+func joinCall(c *pipeshandler.Context, id string) pipes.Event {
 
-	if ctx.ValidateForm("id") {
-		pipeshandler.ErrorResponse(ctx, localization.InvalidRequest)
-		return
-	}
-
-	if caching.IsInSpace(ctx.Client.ID) {
-		pipeshandler.ErrorResponse(ctx, "already.in.space")
-		return
+	if caching.IsInSpace(c.Client.ID) {
+		return pipeshandler.ErrorResponse(c, localization.ErrorAlreadyInSpace, nil)
 	}
 
 	// Create space
-	appToken, valid := caching.JoinSpace(ctx.Client.ID, ctx.Data["id"].(string), integration.ClusterID)
+	appToken, valid := caching.JoinSpace(c.Client.ID, id)
 	if !valid {
-		pipeshandler.ErrorResponse(ctx, localization.ErrorServer)
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
 	// Send space info
-	pipeshandler.NormalResponse(ctx, map[string]interface{}{
+	return pipeshandler.NormalResponse(c, map[string]interface{}{
 		"success": true,
 		"token":   appToken,
 	})

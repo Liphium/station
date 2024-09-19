@@ -4,26 +4,25 @@ import (
 	"time"
 
 	"github.com/Liphium/station/chatserver/caching"
-	"github.com/Liphium/station/chatserver/util/localization"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 )
 
-// Action: townsquare_send
-func sendMessage(ctx pipeshandler.Context) {
+type sendMessageAction struct {
+	Content     string `json:"content"`
+	Attachments string `json:"attachments"`
+}
 
-	if ctx.ValidateForm("content", "attachments") {
-		pipeshandler.ErrorResponse(ctx, localization.InvalidRequest)
-		return
-	}
+// Action: townsquare_send
+func sendMessage(c *pipeshandler.Context, action sendMessageAction) pipes.Event {
 
 	id := caching.TownsquareMessageId()
 
 	message := caching.TownsquareMessage{
 		ID:          id,
-		Sender:      ctx.Client.ID,
-		Attachments: ctx.Data["attachments"].(string),
-		Content:     ctx.Data["content"].(string),
+		Sender:      c.Client.ID,
+		Attachments: action.Attachments,
+		Content:     action.Content,
 		Timestamp:   time.Now().UnixMilli(),
 	}
 
@@ -34,10 +33,10 @@ func sendMessage(ctx pipeshandler.Context) {
 		},
 	})
 
-	pipeshandler.SuccessResponse(ctx)
+	return pipeshandler.SuccessResponse(c)
 }
 
 // Action: townsquare_delete
-func deleteMessage(context pipeshandler.Context) {
-
+func deleteMessage(c *pipeshandler.Context, data interface{}) pipes.Event {
+	return pipeshandler.SuccessResponse(c)
 }

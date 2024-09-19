@@ -4,7 +4,9 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type respondRequest struct {
@@ -28,16 +30,22 @@ func respond(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
+	// Get the account id
+	sessionId, err := uuid.Parse(req.Session)
+	if err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
+	}
+
 	// Get the key synchronization request
 	var request properties.KeyRequest
-	if err := database.DBConn.Where("session = ? AND account = ?", req.Session, accId).Take(&request).Error; err != nil {
-		return util.FailedRequest(c, util.ErrorServer, err)
+	if err := database.DBConn.Where("session = ? AND account = ?", sessionId, accId).Take(&request).Error; err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Delete the request, if desired
 	if req.Delete {
 		if err := database.DBConn.Delete(&request).Error; err != nil {
-			return util.FailedRequest(c, util.ErrorServer, err)
+			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 
 		return util.SuccessfulRequest(c)
@@ -46,7 +54,7 @@ func respond(c *fiber.Ctx) error {
 	// Otherwise respond to the request
 	request.Payload = req.Payload
 	if err := database.DBConn.Save(&request).Error; err != nil {
-		return util.FailedRequest(c, util.ErrorServer, err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.SuccessfulRequest(c)

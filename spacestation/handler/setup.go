@@ -4,7 +4,8 @@ import (
 	"context"
 	"os"
 
-	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/main/localization"
+	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
 	"github.com/Liphium/station/spacestation/util"
@@ -13,35 +14,37 @@ import (
 )
 
 // Action: setup
-func setup(ctx pipeshandler.Context) {
-
-	if ctx.ValidateForm("data") {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
-	}
-	data := ctx.Data["data"].(string)
+func setup(c *pipeshandler.Context, action struct {
+	Data  string  `json:"data"`
+	Color float64 `json:"color"`
+}) pipes.Event {
 
 	// Generate new connection
-	connection := caching.EmptyConnection(ctx.Client.ID, ctx.Client.Session)
+	connection := caching.EmptyConnection(c.Client.ID, c.Client.Session)
 
 	// Insert data
-	if !caching.SetMemberData(ctx.Client.Session, ctx.Client.ID, connection.ClientID, data) {
-		pipeshandler.ErrorResponse(ctx, "invalid")
-		return
+	if !caching.SetMemberData(c.Client.Session, c.Client.ID, connection.ClientID, action.Data) {
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
-	if !SendRoomData(ctx.Client.Session) {
-		pipeshandler.ErrorResponse(ctx, integration.ErrorServer)
-		return
+	// Send the update to all members in the room
+	if !SendRoomData(c.Client.Session) {
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
+	}
+
+	// Have the guy join the table
+	msg := caching.JoinTable(c.Client.Session, c.Client.ID, action.Color)
+	if msg != nil {
+		util.Log.Println("Couldn't join table of room", c.Client.Session, ":", msg[localization.DefaultLocale])
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Check if livekit room already exists
 	rooms, err := caching.RoomClient.ListRooms(context.Background(), &livekit.ListRoomsRequest{
-		Names: []string{ctx.Client.Session},
+		Names: []string{c.Client.Session},
 	})
 	if err != nil {
-		pipeshandler.ErrorResponse(ctx, integration.ErrorServer)
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 	}
 
 	if len(rooms.Rooms) > 0 {
@@ -50,18 +53,17 @@ func setup(ctx pipeshandler.Context) {
 		token := caching.RoomClient.CreateToken()
 		token.AddGrant(&auth.VideoGrant{
 			RoomJoin:          true,
-			Room:              ctx.Client.Session,
+			Room:              c.Client.Session,
 			CanPublishSources: []string{"camera", "microphone", "screenshare"},
 		})
 		token.SetIdentity(connection.ClientID)
 
 		jwtToken, err := token.ToJWT()
 		if err != nil {
-			pipeshandler.ErrorResponse(ctx, integration.ErrorServer)
-			return
+			return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 		}
 
-		pipeshandler.NormalResponse(ctx, map[string]interface{}{
+		return pipeshandler.NormalResponse(c, map[string]interface{}{
 			"success": true,
 			"id":      connection.ClientID,
 			"key":     connection.KeyBase64(),
@@ -69,35 +71,32 @@ func setup(ctx pipeshandler.Context) {
 			"url":     os.Getenv("SS_LK_URL"),
 			"token":   jwtToken,
 		})
-		return
 	}
 
-	util.Log.Println("creating new room for", ctx.Client.Session)
+	util.Log.Println("creating new room for", c.Client.Session)
 
 	_, err = caching.RoomClient.CreateRoom(context.Background(), &livekit.CreateRoomRequest{
-		Name:            ctx.Client.Session,
+		Name:            c.Client.Session,
 		EmptyTimeout:    120,
 		MaxParticipants: 100,
 	})
 	if err != nil {
-		pipeshandler.ErrorResponse(ctx, integration.ErrorServer)
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 	}
 
 	// Generate livekit token
 	token := caching.RoomClient.CreateToken()
 	token.AddGrant(&auth.VideoGrant{
 		RoomJoin: true,
-		Room:     ctx.Client.Session,
+		Room:     c.Client.Session,
 	})
 	token.SetIdentity(connection.ClientID)
 	jwtToken, err := token.ToJWT()
 	if err != nil {
-		pipeshandler.ErrorResponse(ctx, integration.ErrorServer)
-		return
+		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 	}
 
-	pipeshandler.NormalResponse(ctx, map[string]interface{}{
+	return pipeshandler.NormalResponse(c, map[string]interface{}{
 		"success": true,
 		"id":      connection.ClientID,
 		"key":     connection.KeyBase64(),

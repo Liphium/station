@@ -14,7 +14,7 @@ type InviteCount struct {
 
 // Invites generated
 type Invite struct {
-	ID        string    `gorm:"primaryKey"` // Invite token itself
+	ID        uuid.UUID `gorm:"primaryKey,type:uuid;default:uuid_generate_v4()"` // Invite token itself
 	Creator   uuid.UUID // Account id of creator
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 }

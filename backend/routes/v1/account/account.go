@@ -1,6 +1,7 @@
 package account
 
 import (
+	auth_routes "github.com/Liphium/station/backend/routes/v1/account/auth"
 	"github.com/Liphium/station/backend/routes/v1/account/files"
 	"github.com/Liphium/station/backend/routes/v1/account/friends"
 	invite_routes "github.com/Liphium/station/backend/routes/v1/account/invite"
@@ -16,13 +17,16 @@ import (
 func Unencrypted(router fiber.Router) {
 	router.Route("/files", files.UnencryptedUnauthorized)
 	router.Route("/files", files.Unencrypted)
+	router.Route("/auth", auth_routes.Unencrypted)
 }
 
 func Unauthorized(router fiber.Router) {
+	router.Route("/auth", auth_routes.Unauthorized)
 	router.Route("/keys", keys.Unauthorized)
 	router.Route("/rank", rank.Unauthorized)
 	router.Route("/stored_actions", stored_actions.Unauthorized)
 
+	router.Post("/get", getAccount)
 	router.Post("/get_node", getAccountNode)
 }
 
@@ -37,5 +41,5 @@ func Authorized(router fiber.Router) {
 	router.Route("/settings", settings_routes.Authorized)
 
 	router.Post("/me", me)
-	router.Post("/get", getAccount)
+	router.Post("/get_name", getAccountByUsername)
 }

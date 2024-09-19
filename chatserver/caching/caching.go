@@ -11,5 +11,4 @@ var CSNode *pipes.LocalNode
 
 func SetupCaches() {
 	setupCallsCache()
-	setupAdapterCache()
 }

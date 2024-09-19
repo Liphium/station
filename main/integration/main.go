@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -24,18 +25,26 @@ type NodeData struct {
 	AppId     uint
 }
 
+// Identifiers for the different node types
 const IdentifierChatNode = "chat"
 const IdentifierSpaceNode = "space"
 
+// App tags for the different node types
+const AppTagChatNode = "liphium_chat"
+const AppTagSpaceNode = "liphium_spaces"
+
 var Nodes map[string]NodeData = make(map[string]NodeData)
 
-func Setup(identifier string) bool {
+func Setup(identifier string, loadEnv bool) bool {
 
 	// Setup environment
-	err := godotenv.Load()
-	if err != nil {
-		Log.Println("Error loading .env file")
-		return false
+	var err error
+	if loadEnv {
+		err = godotenv.Load()
+		if err != nil {
+			Log.Println("Error loading .env file")
+			return false
+		}
 	}
 
 	if os.Getenv("PROTOCOL") == "" {
@@ -85,6 +94,10 @@ func Setup(identifier string) bool {
 	_, ok := Nodes[identifier]
 	if ok {
 		BasePath = os.Getenv("PROTOCOL") + os.Getenv("BASE_PATH")
+		Domain = extractDomain(BasePath)
+		if strings.HasPrefix(BasePath, "http://") {
+			Domain = "http://" + Domain
+		}
 
 		Log.Println("Grabbing server public key..")
 		err = grabServerPublicKey()
@@ -131,6 +144,10 @@ func Setup(identifier string) bool {
 	Log.Println("1. Base Path (e.g. http://localhost:3000)")
 	scanner.Scan()
 	BasePath = scanner.Text()
+	Domain = extractDomain(BasePath)
+	if strings.HasPrefix(BasePath, "http://") {
+		Domain = "http://" + Domain
+	}
 
 	Log.Println("Grabbing server public key..")
 	err = grabServerPublicKey()
@@ -142,19 +159,7 @@ func Setup(identifier string) bool {
 	scanner.Scan()
 	creationToken = scanner.Text()
 
-	Log.Println("Getting clusters..")
-	res, err := PostRequest("/node/manage/clusters", map[string]interface{}{
-		"token": creationToken,
-	})
-
-	if err != nil {
-		Log.Println("Your creation token is invalid.")
-		return false
-	}
-
-	clusterId := setupClusters(res, scanner)
-
-	Log.Println("4. App id (e.g. 1)")
+	Log.Println("3. App id (e.g. 1)")
 	scanner.Scan()
 	appId, err := strconv.Atoi(scanner.Text())
 
@@ -163,11 +168,11 @@ func Setup(identifier string) bool {
 		return false
 	}
 
-	Log.Println("5. The domain of this node (e.g. node-1.example.com)")
+	Log.Println("4. The domain of this node (e.g. node-1.example.com)")
 	scanner.Scan()
 	nodeDomain = scanner.Text()
 
-	Log.Println("6. The performance level (relative to all other nodes) of this node (e.g. 0.75)")
+	Log.Println("5. The performance level (relative to all other nodes) of this node (e.g. 0.75)")
 	scanner.Scan()
 	performanceLevel, err := strconv.ParseFloat(scanner.Text(), 64)
 
@@ -178,12 +183,11 @@ func Setup(identifier string) bool {
 
 	Log.Println("Creating node..")
 
-	res, err = PostRequest("/node/manage/new", map[string]interface{}{
+	res, err := PostRequestBackend("/node/manage/new", map[string]interface{}{
 		"token":             creationToken,
 		"domain":            nodeDomain,
 		"performance_level": performanceLevel,
 		"app":               appId,
-		"cluster":           clusterId,
 	})
 
 	if err != nil {
@@ -236,6 +240,10 @@ func readData(path string, identifier string) bool {
 
 	scanner.Scan()
 	BasePath = scanner.Text()
+	Domain = extractDomain(BasePath)
+	if strings.HasPrefix(BasePath, "http://") {
+		Domain = "http://" + Domain
+	}
 
 	scanner.Scan()
 	nodeToken := scanner.Text()
@@ -254,4 +262,10 @@ func readData(path string, identifier string) bool {
 	}
 
 	return true
+}
+
+func extractDomain(path string) string {
+	path = strings.ReplaceAll(path, "http://", "")
+	path = strings.ReplaceAll(path, "https://", "")
+	return path
 }

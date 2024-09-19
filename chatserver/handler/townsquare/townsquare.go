@@ -1,12 +1,15 @@
 package townsquare_handlers
 
-import "github.com/Liphium/station/chatserver/caching"
+import (
+	"github.com/Liphium/station/chatserver/caching"
+	"github.com/Liphium/station/pipeshandler"
+)
 
 func SetupActions() {
-	caching.CSInstance.RegisterHandler("townsquare_join", joinTownsquare)
-	caching.CSInstance.RegisterHandler("townsquare_leave", leaveTownsquare)
-	caching.CSInstance.RegisterHandler("townsquare_open", openTownsquare)
-	caching.CSInstance.RegisterHandler("townsquare_close", closeTownsquare)
-	caching.CSInstance.RegisterHandler("townsquare_send", sendMessage)
-	caching.CSInstance.RegisterHandler("townsquare_delete", deleteMessage)
+	pipeshandler.CreateHandlerFor(caching.CSInstance, "townsquare_join", joinTownsquare)
+	pipeshandler.CreateHandlerFor(caching.CSInstance, "townsquare_leave", leaveTownsquare)
+	pipeshandler.CreateHandlerFor(caching.CSInstance, "townsquare_open", openTownsquare)
+	pipeshandler.CreateHandlerFor(caching.CSInstance, "townsquare_close", closeTownsquare)
+	pipeshandler.CreateHandlerFor(caching.CSInstance, "townsquare_send", sendMessage)
+	pipeshandler.CreateHandlerFor(caching.CSInstance, "townsquare_delete", deleteMessage)
 }

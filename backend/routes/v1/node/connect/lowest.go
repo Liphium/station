@@ -5,6 +5,7 @@ import (
 	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
+	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -12,7 +13,6 @@ import (
 type LowestUsageRequest struct {
 	Account string `json:"account"`
 	Session string `json:"session"`
-	Cluster uint   `json:"cluster"`
 	App     uint   `json:"app"`
 	Node    uint   `json:"node"`  // Node ID
 	Token   string `json:"token"` // Node token
@@ -42,13 +42,12 @@ func GetLowest(c *fiber.Ctx) error {
 	// Get lowest load node
 	var lowest node.Node
 	search := node.Node{
-		ClusterID: req.Cluster,
-		AppID:     req.App,
-		Status:    node.StatusStarted,
+		AppID:  req.App,
+		Status: node.StatusStarted,
 	}
 
 	if err := database.DBConn.Model(&node.Node{}).Where(&search).Order("load DESC").Take(&lowest).Error; err != nil {
-		return util.FailedRequest(c, "not.setup", nil)
+		return util.FailedRequest(c, localization.ErrorNotSetup, nil)
 	}
 
 	// Ping node (to see if it's online)
@@ -56,18 +55,18 @@ func GetLowest(c *fiber.Ctx) error {
 
 		// Set the node to error
 		nodes.TurnOff(&lowest, node.StatusError)
-		return util.FailedRequest(c, util.ErrorNode, err)
+		return util.FailedRequest(c, localization.ErrorNode, err)
 	}
 
 	// Generate a jwt token for the node
 	token, err := util.ConnectionToken(id, req.Session, lowest.ID)
 	if err != nil {
-		return util.FailedRequest(c, util.ErrorServer, err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Save node
 	if err := database.DBConn.Save(&lowest).Error; err != nil {
-		return util.FailedRequest(c, "server.error", err)
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	return util.ReturnJSON(c, fiber.Map{
