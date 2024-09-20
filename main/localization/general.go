@@ -34,6 +34,9 @@ var (
 	ErrorInvalidCredentials = Translations{
 		englishUS: "The credentials are invalid. Please try again.",
 	}
+	ErrorJapanese = Translations{
+		englishUS: "こんにちは こんにちは こんにちは こんにちは",
+	}
 
 	DialogTitleError = Translations{
 		englishUS: "Error",
