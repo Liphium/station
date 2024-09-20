@@ -40,7 +40,6 @@ func (i Input) render(locale string) fiber.Map {
 		"type":        "input",
 		"placeholder": localization.TranslateLocale(locale, i.Placeholder),
 		"hidden":      i.Hidden,
-		"utf8":        i.UTF8,
 		"value":       i.Value,
 		"name":        i.Name,
 	}
