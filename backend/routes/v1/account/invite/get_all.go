@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -22,11 +21,11 @@ func getAllInformation(c *fiber.Ctx) error {
 	}
 
 	var invitesGenerated []uuid.UUID
-	if err := database.DBConn.Model(&account.Invite{}).Where("creator = ?", accId).Limit(30).Order("created_at DESC").Select("id").Scan(&invitesGenerated).Error; err != nil {
+	if err := database.DBConn.Model(&database.Invite{}).Where("creator = ?", accId).Limit(30).Order("created_at DESC").Select("id").Scan(&invitesGenerated).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	var inviteCount account.InviteCount
+	var inviteCount database.InviteCount
 	err := database.DBConn.Where("account = ?", accId).Take(&inviteCount).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return util.FailedRequest(c, localization.ErrorServer, err)

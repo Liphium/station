@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -35,7 +34,7 @@ func deleteFile(c *fiber.Ctx) error {
 	}
 
 	// Get file
-	var file account.CloudFile
+	var file database.CloudFile
 	if database.DBConn.Where("account = ? AND id = ?", accId, req.Id).First(&file).Error != nil {
 		return util.FailedRequest(c, localization.ErrorFileNotFound, nil)
 	}

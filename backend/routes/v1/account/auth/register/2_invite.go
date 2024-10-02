@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/backend/util/mail"
@@ -38,7 +37,7 @@ func checkInvite(c *fiber.Ctx) error {
 	if err != nil {
 		return util.FailedRequest(c, localization.ErrorInviteInvalid, nil)
 	}
-	var invite account.Invite
+	var invite database.Invite
 	if err := database.DBConn.Where("id = ?", inviteId).Take(&invite).Error; err != nil {
 
 		// Send an invalid invite error if the record wasn't found

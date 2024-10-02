@@ -1,6 +1,15 @@
-package node
+package database
 
-import "github.com/Liphium/station/backend/util"
+import (
+	"time"
+
+	"github.com/Liphium/station/backend/util"
+)
+
+type NodeCreation struct {
+	Token string    `json:"token" gorm:"primaryKey"`
+	Date  time.Time `json:"date"`
+}
 
 type Node struct {
 	ID uint `json:"id" gorm:"primaryKey"`

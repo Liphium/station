@@ -1,4 +1,4 @@
-package app
+package database
 
 type App struct {
 	ID uint `json:"id" gorm:"primaryKey"`

@@ -4,8 +4,6 @@ import (
 	"errors"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
-	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -22,17 +20,17 @@ func list(c *fiber.Ctx) error {
 	}
 
 	// Get all key requests for account
-	var requests []properties.KeyRequest = []properties.KeyRequest{}
+	var requests []database.KeyRequest = []database.KeyRequest{}
 	if err := database.DBConn.Where("account = ?", accId).Find(&requests).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Check if they are still valid
-	var validRequests = []properties.KeyRequest{}
+	var validRequests = []database.KeyRequest{}
 	for _, request := range requests {
 
 		// Check if the session still exists
-		if err := database.DBConn.Where("account = ? AND id = ?", request.Account, request.Session).Take(&account.Session{}).Error; err != nil {
+		if err := database.DBConn.Where("account = ? AND id = ?", request.Account, request.Session).Take(&database.Session{}).Error; err != nil {
 
 			// Delete the request if the session doesn't exist anymore
 			if errors.Is(err, gorm.ErrRecordNotFound) {

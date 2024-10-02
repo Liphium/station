@@ -2,7 +2,6 @@ package sso_routes
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	login_routes "github.com/Liphium/station/backend/routes/v1/account/auth/login"
 	register_routes "github.com/Liphium/station/backend/routes/v1/account/auth/register"
 	"github.com/Liphium/station/backend/util"
@@ -37,12 +36,12 @@ func checkSSO(c *fiber.Ctx) error {
 	}
 
 	// Check if there is an account with that user id already
-	var auth account.Authentication
-	err := database.DBConn.Where("secret = ? AND type = ?", state.UserID, account.TypeSSO).Take(&auth).Error
+	var auth database.Authentication
+	err := database.DBConn.Where("secret = ? AND type = ?", state.UserID, database.AuthTypeSSO).Take(&auth).Error
 	if err == nil {
 
 		// Get the account from the authentication method if one exists
-		var acc account.Account
+		var acc database.Account
 		if err := database.DBConn.Where("id = ?", auth.Account).Preload("Rank").Take(&acc).Error; err != nil {
 			return util.FailedRequest(c, localization.ErrorServer, err)
 		}

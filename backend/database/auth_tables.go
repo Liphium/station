@@ -1,4 +1,4 @@
-package account
+package database
 
 import (
 	"github.com/Liphium/station/backend/util/auth"
@@ -13,13 +13,13 @@ type Authentication struct {
 	Secret  string    `json:"secret"`
 }
 
-const TypePassword = 0
-const TypeSSO = 1
+const AuthTypePassword = 0
+const AuthTypeSSO = 1
 
 // Order to autenticate (0 = first, 1 = second, etc.)
 var Order = map[uint]uint{
-	TypePassword: 0,
-	TypeSSO:      0,
+	AuthTypePassword: 0,
+	AuthTypeSSO:      0,
 }
 
 // Starting step when authenticating
@@ -42,11 +42,20 @@ func (a *Authentication) Verify(authType uint, secret string, id uuid.UUID) bool
 	}
 
 	switch authType {
-	case TypePassword:
+	case AuthTypePassword:
 		return a.checkPassword(secret, id)
-	case TypeSSO:
+	case AuthTypeSSO:
 		return false // TODO: Implement
 	}
 
 	return false
+}
+
+type KeyRequest struct {
+	Session   uuid.UUID `gorm:"primaryKey" json:"session"`
+	Account   uuid.UUID `gorm:"not null" json:"-"`
+	Key       string    `json:"pub"`       // Public key of the session requesting it
+	Signature string    `json:"signature"` // Signature of the session requesting it
+	Payload   string    `json:"payload"`   // Encrypted payload (from the session sending it)
+	CreatedAt int64     `json:"creation" gorm:"not null,autoCreateTime:milli"`
 }

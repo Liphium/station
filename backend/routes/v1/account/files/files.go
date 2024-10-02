@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -133,7 +132,7 @@ func CountTotalStorage(accId uuid.UUID) (int64, error) {
 
 	// Get total storage (coalesce is important cause otherwise we get null)
 	var totalStorage int64
-	rq := database.DBConn.Model(&account.CloudFile{}).Where("account = ?", accId).Select("coalesce(sum(size), 0)").Scan(&totalStorage)
+	rq := database.DBConn.Model(&database.CloudFile{}).Where("account = ?", accId).Select("coalesce(sum(size), 0)").Scan(&totalStorage)
 	if rq.Error != nil {
 		if rq.RowsAffected > 0 {
 			return 0, nil

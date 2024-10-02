@@ -2,7 +2,6 @@ package vault
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -27,7 +26,7 @@ func listEntries(c *fiber.Ctx) error {
 	if !valid {
 		return util.InvalidRequest(c)
 	}
-	var entries []properties.VaultEntry
+	var entries []database.VaultEntry
 	if err := database.DBConn.Where("account = ? AND tag = ? AND updated_at > ?", accId, req.Tag, req.After).Find(&entries).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}

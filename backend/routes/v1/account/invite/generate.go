@@ -2,7 +2,6 @@ package invite_routes
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -16,27 +15,31 @@ func generateInvite(c *fiber.Ctx) error {
 	if !valid {
 		return util.InvalidRequest(c)
 	}
-	var inviteCount account.InviteCount
-	if err := database.DBConn.Where("account = ?", accId).Take(&inviteCount).Error; err != nil {
-		return util.InvalidRequest(c)
-	}
 
-	// Check if the account can generate invites
-	if inviteCount.Count <= 0 {
-		return util.InvalidRequest(c)
+	// Only check for the invite code if the user isn't an admin
+	if !util.Permission(c, util.PermissionAdmin) {
+		var inviteCount database.InviteCount
+		if err := database.DBConn.Where("account = ?", accId).Take(&inviteCount).Error; err != nil {
+			return util.FailedRequest(c, localization.ErrorInvitesEmpty, err)
+		}
+
+		// Check if the account can generate invites
+		if inviteCount.Count <= 0 {
+			return util.FailedRequest(c, localization.ErrorInvitesEmpty, nil)
+		}
+
+		// Retract one from the invite count of the account
+		inviteCount.Count -= 1
+		if err := database.DBConn.Save(&inviteCount).Error; err != nil {
+			return util.FailedRequest(c, localization.ErrorServer, err)
+		}
 	}
 
 	// Generate new invite
-	invite := account.Invite{
+	invite := database.Invite{
 		Creator: accId,
 	}
 	if err := database.DBConn.Create(&invite).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
-	}
-
-	// Retract one from the invite count of the account
-	inviteCount.Count -= 1
-	if err := database.DBConn.Save(&inviteCount).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 

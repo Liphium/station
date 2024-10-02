@@ -2,7 +2,6 @@ package requests
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 	"github.com/gofiber/fiber/v2"
 )
@@ -29,7 +28,7 @@ type message struct {
 func SendEventToNode(nodeID uint, account string, event Event) error {
 
 	// Get node
-	var receiverNode node.Node
+	var receiverNode database.Node
 	if err := database.DBConn.Where("id = ?", nodeID).Take(&receiverNode).Error; err != nil {
 		return err
 	}

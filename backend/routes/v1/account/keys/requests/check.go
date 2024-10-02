@@ -5,8 +5,6 @@ import (
 	"time"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
-	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -29,13 +27,13 @@ func check(c *fiber.Ctx) error {
 	}
 
 	// Get the session and check the token
-	var session account.Session
+	var session database.Session
 	if err := database.DBConn.Where("token = ?", req.Token).Take(&session).Error; err != nil {
 		return util.InvalidRequest(c)
 	}
 
 	// Check if there is an existing key sync request
-	var keyRequest properties.KeyRequest = properties.KeyRequest{}
+	var keyRequest database.KeyRequest = database.KeyRequest{}
 	err := database.DBConn.Where("session = ?", session.ID).Take(&keyRequest).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return util.FailedRequest(c, localization.ErrorServer, err)
@@ -45,7 +43,7 @@ func check(c *fiber.Ctx) error {
 	if err != nil {
 
 		// Create a new key synchronization request
-		keyRequest := properties.KeyRequest{
+		keyRequest := database.KeyRequest{
 			Session:   session.ID,
 			Account:   session.Account,
 			Key:       req.Key,

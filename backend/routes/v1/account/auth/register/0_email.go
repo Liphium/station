@@ -2,7 +2,6 @@ package register_routes
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
@@ -28,7 +27,7 @@ func checkEmail(c *fiber.Ctx) error {
 	}
 
 	// Make sure there is no other account with this email
-	var acc account.Account
+	var acc database.Account
 	if err := database.DBConn.Where("email = ?", normalizedEmail).Take(&acc).Error; err == nil {
 		return util.FailedRequest(c, localization.ErrorEmailAlreadyInUse, nil)
 	}

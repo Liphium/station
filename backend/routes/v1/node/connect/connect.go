@@ -4,9 +4,6 @@ import (
 	"time"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
-	"github.com/Liphium/station/backend/entities/app"
-	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
 	"github.com/Liphium/station/main/localization"
@@ -42,18 +39,18 @@ func Connect(c *fiber.Ctx) error {
 	}
 	tk := req.Token
 
-	var acc account.Account
+	var acc database.Account
 	if err := database.DBConn.Preload("Sessions").Where("id = ?", accId).Take(&acc).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorAccountNotFound, nil)
 	}
 
 	// Check if account has key set
-	if database.DBConn.Where("id = ?", acc.ID).Find(&account.PublicKey{}).Error != nil {
+	if database.DBConn.Where("id = ?", acc.ID).Find(&database.PublicKey{}).Error != nil {
 		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Get the most recent session
-	var mostRecent account.Session = account.Session{
+	var mostRecent database.Session = database.Session{
 		LastConnection: time.Unix(0, 10),
 	}
 	var sessionIds []string
@@ -65,7 +62,7 @@ func Connect(c *fiber.Ctx) error {
 		}
 	}
 
-	var currentSession account.Session
+	var currentSession database.Session
 	if err := database.DBConn.Where("id = ?", currentSessionId).Take(&currentSession).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorInvalidRequest, err)
 	}
@@ -75,21 +72,21 @@ func Connect(c *fiber.Ctx) error {
 	}
 
 	// Get the app
-	var application app.App
+	var application database.App
 	if err := database.DBConn.Where("tag = ?", req.Tag).Take(&application).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorInvalidRequest, err)
 	}
 
 	// Get lowest load node
-	var lowest node.Node
+	var lowest database.Node
 
 	// Connect to the same node if possible
 	if mostRecent.Node != 0 {
-		if err := database.DBConn.Model(&node.Node{}).Where("app_id = ? AND status = ? AND id = ?", application.ID, node.StatusStarted, mostRecent.Node).Order("load DESC").Take(&lowest).Error; err != nil {
+		if err := database.DBConn.Model(&database.Node{}).Where("app_id = ? AND status = ? AND id = ?", application.ID, database.StatusStarted, mostRecent.Node).Order("load DESC").Take(&lowest).Error; err != nil {
 			return util.FailedRequest(c, localization.ErrorNotSetup, nil)
 		}
 	} else {
-		if err := database.DBConn.Model(&node.Node{}).Where("app_id = ? AND status = ?", application.ID, node.StatusStarted).Order("load DESC").Take(&lowest).Error; err != nil {
+		if err := database.DBConn.Model(&database.Node{}).Where("app_id = ? AND status = ?", application.ID, database.StatusStarted).Order("load DESC").Take(&lowest).Error; err != nil {
 			return util.FailedRequest(c, localization.ErrorNotSetup, nil)
 		}
 	}
@@ -98,7 +95,7 @@ func Connect(c *fiber.Ctx) error {
 	if err := lowest.SendPing(); err != nil {
 
 		// Set the node to error
-		nodes.TurnOff(&lowest, node.StatusError)
+		nodes.TurnOff(&lowest, database.StatusError)
 		return util.FailedRequest(c, localization.ErrorNode, err)
 	}
 

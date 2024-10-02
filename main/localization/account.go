@@ -21,6 +21,9 @@ var (
 	ErrorSessionNotFound = Translations{
 		englishUS: "This session couldn't be found. Maybe you need to login again?",
 	}
+	ErrorInvitesEmpty = Translations{
+		englishUS: "You can't generate any invites right now as you don't have any invites left. You can ask an admin for invites if you want to invite someone.",
+	}
 )
 
 func ErrorFriendLimitReached(limit int) Translations {

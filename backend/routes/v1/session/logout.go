@@ -2,7 +2,6 @@ package session
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/requests"
 	"github.com/Liphium/station/main/localization"
@@ -17,7 +16,7 @@ func logOut(c *fiber.Ctx) error {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	var session account.Session
+	var session database.Session
 	if !requests.GetSession(sessionId, &session) {
 		return util.InvalidRequest(c)
 	}

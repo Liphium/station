@@ -4,8 +4,6 @@ import (
 	"sort"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
-	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/main/localization"
@@ -29,7 +27,7 @@ func listStoredActions(c *fiber.Ctx) error {
 	var returnables = []returnableStoredAction{}
 
 	// Get all normal stored actions and add them as non authenticated ones
-	var storedActions []properties.StoredAction
+	var storedActions []database.StoredAction
 	if database.DBConn.Where("account = ?", accId).Find(&storedActions).Error != nil {
 		return util.FailedRequest(c, localization.ErrorServer, nil)
 	}
@@ -42,7 +40,7 @@ func listStoredActions(c *fiber.Ctx) error {
 	}
 
 	// Get all authenticated stored actions and mark them as such in the returning phase
-	var aStoredActions []properties.AStoredAction
+	var aStoredActions []database.AStoredAction
 	if database.DBConn.Where("account = ?", accId).Find(&aStoredActions).Error != nil {
 		return util.FailedRequest(c, localization.ErrorServer, nil)
 	}
@@ -60,11 +58,11 @@ func listStoredActions(c *fiber.Ctx) error {
 	})
 
 	// Get authenticated stored action key
-	var storedActionKey account.StoredActionKey
-	if database.DBConn.Where(&account.StoredActionKey{ID: accId}).Take(&storedActionKey).Error != nil {
+	var storedActionKey database.StoredActionKey
+	if database.DBConn.Where(&database.StoredActionKey{ID: accId}).Take(&storedActionKey).Error != nil {
 
 		// Generate new stored action key
-		storedActionKey = account.StoredActionKey{
+		storedActionKey = database.StoredActionKey{
 			ID:  accId,
 			Key: auth.GenerateToken(StoredActionTokenLength),
 		}

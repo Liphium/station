@@ -2,7 +2,6 @@ package rank
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
 	"github.com/Liphium/station/main/localization"
@@ -34,7 +33,7 @@ func getRank(c *fiber.Ctx) error {
 	}
 
 	// Get rank
-	var rank account.Rank
+	var rank database.Rank
 	if database.DBConn.Where("id = ?", req.ID).Find(&rank).Error != nil {
 		return util.FailedRequest(c, localization.ErrorServer, nil)
 	}

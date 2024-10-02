@@ -10,10 +10,6 @@ import (
 	"time"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
-	"github.com/Liphium/station/backend/entities/account/properties"
-	"github.com/Liphium/station/backend/entities/app"
-	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"gorm.io/gorm"
@@ -53,7 +49,7 @@ func listenForCommands() {
 				continue
 			}
 
-			app := &app.App{
+			app := &database.App{
 				Name:        appName,
 				Description: appDescription,
 				Version:     0,
@@ -74,14 +70,14 @@ func listenForCommands() {
 				continue
 			}
 
-			var application app.App
+			var application database.App
 			if database.DBConn.Where("id = ?", appId).Take(&application).Error != nil {
 				fmt.Println("Couldn't get the app from the database")
 				continue
 			}
 
 			// Increment version
-			if database.DBConn.Model(&app.App{}).Where("id = ?", application.ID).Update("version", application.Version+1).Error != nil {
+			if database.DBConn.Model(&database.App{}).Where("id = ?", application.ID).Update("version", application.Version+1).Error != nil {
 				fmt.Println("Couldn't increment version of the app in the database")
 				continue
 			}
@@ -94,7 +90,7 @@ func listenForCommands() {
 			tk := auth.GenerateToken(100)
 
 			// Save
-			if err := database.DBConn.Create(&node.NodeCreation{
+			if err := database.DBConn.Create(&database.NodeCreation{
 				Token: tk,
 				Date:  time.Now(),
 			}).Error; err != nil {
@@ -111,22 +107,22 @@ func listenForCommands() {
 			email = strings.TrimSpace(email)
 
 			// Delete all data
-			var acc account.Account
+			var acc database.Account
 			if err := database.DBConn.Where("email = ?", email).Take(&acc).Error; err != nil {
 				fmt.Println("Failed to find account")
 				continue
 			}
 
-			database.DBConn.Where("account = ?", acc.ID).Delete(&account.Session{})
-			database.DBConn.Where("id = ?", acc.ID).Delete(&account.ProfileKey{})
-			database.DBConn.Where("id = ?", acc.ID).Delete(&account.StoredActionKey{})
-			database.DBConn.Where("id = ?", acc.ID).Delete(&account.PublicKey{})
-			database.DBConn.Where("id = ?", acc.ID).Delete(&account.SignatureKey{})
-			database.DBConn.Where("account = ?", acc.ID).Delete(&properties.AStoredAction{})
-			database.DBConn.Where("account = ?", acc.ID).Delete(&properties.StoredAction{})
-			database.DBConn.Where("account = ?", acc.ID).Delete(&properties.Friendship{})
-			database.DBConn.Where("account = ?", acc.ID).Delete(&properties.VaultEntry{})
-			database.DBConn.Where("id = ?", acc.ID).Delete(&properties.Profile{})
+			database.DBConn.Where("account = ?", acc.ID).Delete(&database.Session{})
+			database.DBConn.Where("id = ?", acc.ID).Delete(&database.ProfileKey{})
+			database.DBConn.Where("id = ?", acc.ID).Delete(&database.StoredActionKey{})
+			database.DBConn.Where("id = ?", acc.ID).Delete(&database.PublicKey{})
+			database.DBConn.Where("id = ?", acc.ID).Delete(&database.SignatureKey{})
+			database.DBConn.Where("account = ?", acc.ID).Delete(&database.AStoredAction{})
+			database.DBConn.Where("account = ?", acc.ID).Delete(&database.StoredAction{})
+			database.DBConn.Where("account = ?", acc.ID).Delete(&database.Friendship{})
+			database.DBConn.Where("account = ?", acc.ID).Delete(&database.VaultEntry{})
+			database.DBConn.Where("id = ?", acc.ID).Delete(&database.Profile{})
 
 		case "keypair":
 
@@ -184,14 +180,14 @@ func listenForCommands() {
 			for invites > 0 {
 
 				// Get a random account
-				var acc account.Account
+				var acc database.Account
 				if err := database.DBConn.Order("random()").Take(&acc).Error; err != nil {
 					fmt.Println("Couldn't get a random account:", err.Error())
 					break
 				}
 
 				// Get the current invite count
-				var inviteCount account.InviteCount
+				var inviteCount database.InviteCount
 				err := database.DBConn.Where("account = ?", acc.ID).Take(&inviteCount).Error
 				if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 					fmt.Println("Couldn't get invite count:", err.Error())
@@ -223,7 +219,7 @@ func listenForCommands() {
 			name, _ := reader.ReadString('\n')
 			name = strings.TrimSpace(name)
 
-			acc := &account.Account{
+			acc := &database.Account{
 				Email:       name + "@liphium.app",
 				DisplayName: "",
 				Username:    name,
@@ -239,9 +235,9 @@ func listenForCommands() {
 				return
 			}
 
-			if err := database.DBConn.Create(&account.Authentication{
+			if err := database.DBConn.Create(&database.Authentication{
 				Account: acc.ID,
-				Type:    account.TypePassword,
+				Type:    database.AuthTypePassword,
 				Secret:  hash,
 			}).Error; err != nil {
 				fmt.Println("error:", err.Error())
@@ -254,7 +250,7 @@ func listenForCommands() {
 
 		case "generate-invite":
 
-			invite := account.Invite{
+			invite := database.Invite{
 				Creator: util.GetSystemUUID(),
 			}
 			if err := database.DBConn.Create(&invite).Error; err != nil {
@@ -293,17 +289,17 @@ func GenerateKeyPair() (publicKey string, privateKey string, theError error) {
 }
 
 func CreateDefaultObjects() {
-	if database.DBConn.Where("name = ?", "Default").Take(&account.Rank{}).RowsAffected > 0 {
+	if database.DBConn.Where("name = ?", "Default").Take(&database.Rank{}).RowsAffected > 0 {
 		fmt.Println("Default stuff already exists")
 		return
 	}
 
 	// Create default ranks
-	database.DBConn.Create(&account.Rank{
+	database.DBConn.Create(&database.Rank{
 		Name:  "Default",
 		Level: 20,
 	})
-	database.DBConn.Create(&account.Rank{
+	database.DBConn.Create(&database.Rank{
 		Name:  "Admin",
 		Level: 100,
 	})

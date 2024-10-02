@@ -2,7 +2,6 @@ package login_routes
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/kv"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
@@ -40,8 +39,8 @@ func checkPassword(c *fiber.Ctx) error {
 	}
 
 	// Get the password stored in the database
-	var credential account.Authentication
-	if err := database.DBConn.Where("account = ? AND type = ?", state.Account, account.TypePassword).Take(&credential).Error; err != nil {
+	var credential database.Authentication
+	if err := database.DBConn.Where("account = ? AND type = ?", state.Account, database.AuthTypePassword).Take(&credential).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 

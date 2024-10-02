@@ -2,7 +2,6 @@ package connect
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
 	"github.com/Liphium/station/main/localization"
@@ -40,13 +39,13 @@ func GetLowest(c *fiber.Ctx) error {
 	}
 
 	// Get lowest load node
-	var lowest node.Node
-	search := node.Node{
+	var lowest database.Node
+	search := database.Node{
 		AppID:  req.App,
-		Status: node.StatusStarted,
+		Status: database.StatusStarted,
 	}
 
-	if err := database.DBConn.Model(&node.Node{}).Where(&search).Order("load DESC").Take(&lowest).Error; err != nil {
+	if err := database.DBConn.Model(&database.Node{}).Where(&search).Order("load DESC").Take(&lowest).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorNotSetup, nil)
 	}
 
@@ -54,7 +53,7 @@ func GetLowest(c *fiber.Ctx) error {
 	if err := lowest.SendPing(); err != nil {
 
 		// Set the node to error
-		nodes.TurnOff(&lowest, node.StatusError)
+		nodes.TurnOff(&lowest, database.StatusError)
 		return util.FailedRequest(c, localization.ErrorNode, err)
 	}
 

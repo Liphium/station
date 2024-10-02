@@ -2,12 +2,10 @@ package nodes
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
-	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 )
 
-func TurnOff(node *node.Node, status uint) {
+func TurnOff(node *database.Node, status uint) {
 
 	node.Status = status
 	node.Load = 0
@@ -17,10 +15,10 @@ func TurnOff(node *node.Node, status uint) {
 	go DisconnectAll(node)
 }
 
-func DisconnectAll(node *node.Node) {
+func DisconnectAll(node *database.Node) {
 
 	// Disconnect all sessions
-	database.DBConn.Model(&account.Session{}).Where("node = ?", node.ID).Updates(map[string]interface{}{
+	database.DBConn.Model(&database.Session{}).Where("node = ?", node.ID).Updates(map[string]interface{}{
 		"node": 0,
 		"app":  0,
 	})

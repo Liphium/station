@@ -2,7 +2,6 @@ package keys
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -18,7 +17,7 @@ func getVaultKey(c *fiber.Ctx) error {
 	}
 
 	// Get public key
-	var key account.VaultKey
+	var key database.VaultKey
 	if database.DBConn.Where("id = ?", accId).Take(&key).Error != nil {
 		return util.FailedRequest(c, localization.ErrorKeyNotFound, nil)
 	}
@@ -47,17 +46,17 @@ func setVaultKey(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
-	var acc account.Account
+	var acc database.Account
 	if database.DBConn.Where("id = ?", accId).Take(&acc).Error != nil {
 		return util.InvalidRequest(c)
 	}
 
-	if database.DBConn.Where("id = ?", accId).Take(&account.VaultKey{}).Error == nil {
+	if database.DBConn.Where("id = ?", accId).Take(&database.VaultKey{}).Error == nil {
 		return util.FailedRequest(c, localization.ErrorKeyAlreadySet, nil)
 	}
 
 	// Set vault key
-	if database.DBConn.Create(&account.VaultKey{
+	if database.DBConn.Create(&database.VaultKey{
 		ID:  accId,
 		Key: req.Key,
 	}).Error != nil {

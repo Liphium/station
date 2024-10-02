@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/app"
-	"github.com/Liphium/station/backend/entities/node"
 	backend_starter "github.com/Liphium/station/backend/starter"
 	"github.com/Liphium/station/backend/util/auth"
 	chatserver_starter "github.com/Liphium/station/chatserver/starter"
@@ -63,8 +61,8 @@ func main() {
 
 	// Create default database stuff
 	backend_starter.CreateDefaultObjects()
-	if err := database.DBConn.Where("id = ?", 1).First(&app.App{}).Error; err != nil {
-		if err := database.DBConn.Create(&app.App{
+	if err := database.DBConn.Where("id = ?", 1).First(&database.App{}).Error; err != nil {
+		if err := database.DBConn.Create(&database.App{
 			ID:          1,
 			Name:        "Chat",
 			Description: "Chat application",
@@ -77,8 +75,8 @@ func main() {
 		printWithPrefix("Created default chat app")
 	}
 
-	if err := database.DBConn.Where("id = ?", 2).First(&app.App{}).Error; err != nil {
-		if err := database.DBConn.Create(&app.App{
+	if err := database.DBConn.Where("id = ?", 2).First(&database.App{}).Error; err != nil {
+		if err := database.DBConn.Create(&database.App{
 			ID:          2,
 			Name:        "Spaces",
 			Description: "Spaces application",
@@ -99,16 +97,16 @@ func main() {
 	os.Setenv("SPACES_APP", "2")
 
 	// Create default nodes
-	var defaultChatNode node.Node
+	var defaultChatNode database.Node
 	if err := database.DBConn.Where("id = ? AND app_id = ?", 1, 1).First(&defaultChatNode).Error; err != nil {
-		defaultChatNode = node.Node{
+		defaultChatNode = database.Node{
 			ID:              1,
 			AppID:           1,
 			Load:            0,
 			PeformanceLevel: 1,
 			Token:           auth.GenerateToken(300),
 			Domain:          os.Getenv("CHAT_NODE"),
-			Status:          node.StatusStopped,
+			Status:          database.StatusStopped,
 		}
 		if err := database.DBConn.Create(&defaultChatNode).Error; err != nil {
 			panic(err)
@@ -121,16 +119,16 @@ func main() {
 		AppId:     defaultChatNode.AppID,
 	}
 
-	var defaultSpaceNode node.Node
+	var defaultSpaceNode database.Node
 	if err := database.DBConn.Where("id = ? AND app_id = ?", 2, 2).First(&defaultSpaceNode).Error; err != nil {
-		defaultSpaceNode = node.Node{
+		defaultSpaceNode = database.Node{
 			ID:              2,
 			AppID:           2,
 			Load:            0,
 			PeformanceLevel: 1,
 			Token:           auth.GenerateToken(300),
 			Domain:          os.Getenv("SPACE_NODE"),
-			Status:          node.StatusStopped,
+			Status:          database.StatusStopped,
 		}
 		if err := database.DBConn.Create(&defaultSpaceNode).Error; err != nil {
 			panic(err)

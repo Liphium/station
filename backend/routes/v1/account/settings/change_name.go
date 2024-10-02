@@ -2,7 +2,6 @@ package settings_routes
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
@@ -31,7 +30,7 @@ func changeName(c *fiber.Ctx) error {
 	}
 
 	// Change username
-	err := database.DBConn.Model(&account.Account{}).Where("id = ?", accId).Update("username", req.Username).Error
+	err := database.DBConn.Model(&database.Account{}).Where("id = ?", accId).Update("username", req.Username).Error
 	if err != nil {
 		return util.FailedRequest(c, localization.ErrorUsernameTaken, err)
 	}

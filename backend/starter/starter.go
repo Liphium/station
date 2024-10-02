@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	routes_v1 "github.com/Liphium/station/backend/routes/v1"
 	"github.com/Liphium/station/backend/util"
 	"github.com/bytedance/sonic"
@@ -58,12 +57,12 @@ func Startup(routine bool) {
 
 	// Create an admin invite in the case of no account existing
 	var count int64
-	if err := database.DBConn.Model(&account.Account{}).Count(&count).Error; err != nil {
+	if err := database.DBConn.Model(&database.Account{}).Count(&count).Error; err != nil {
 		panic(err)
 	}
 	if count == 0 {
 		uuid := util.GetSystemUUID()
-		if err := database.DBConn.FirstOrCreate(&account.Invite{
+		if err := database.DBConn.FirstOrCreate(&database.Invite{
 			ID:      uuid,
 			Creator: uuid,
 		}).Error; err != nil {
@@ -128,7 +127,7 @@ func testMode() {
 	util.Log.Println("Test mode enabled.")
 
 	/* not need for now
-	var foundNodes []node.Node
+	var foundNodes []database.Node
 	database.DBConn.Find(&foundNodes)
 
 	for _, n := range foundNodes {

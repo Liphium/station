@@ -2,7 +2,6 @@ package key_request_routes
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -37,7 +36,7 @@ func respond(c *fiber.Ctx) error {
 	}
 
 	// Get the key synchronization request
-	var request properties.KeyRequest
+	var request database.KeyRequest
 	if err := database.DBConn.Where("session = ? AND account = ?", sessionId, accId).Take(&request).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}

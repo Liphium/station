@@ -2,8 +2,6 @@ package profile
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
-	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -19,7 +17,7 @@ func removeProfilePicture(c *fiber.Ctx) error {
 	}
 
 	// Get the current profile
-	var profile properties.Profile = properties.Profile{}
+	var profile database.Profile = database.Profile{}
 	err := database.DBConn.Where("id = ?", accId).Take(&profile).Error
 
 	// Check if the profile was found (error has to be gorm.ErrRecordNotFound here cause excluded before)
@@ -27,7 +25,7 @@ func removeProfilePicture(c *fiber.Ctx) error {
 
 		// TODO: Delete the file in the future
 		// Make previous profile picture no longer saved when it wasn't found
-		if err := database.DBConn.Model(&account.CloudFile{}).Where("id = ?", profile.Picture).Update("system", false).Error; err != nil {
+		if err := database.DBConn.Model(&database.CloudFile{}).Where("id = ?", profile.Picture).Update("system", false).Error; err != nil {
 			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 

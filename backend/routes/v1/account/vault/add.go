@@ -2,7 +2,6 @@ package vault
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/main/localization"
@@ -29,7 +28,7 @@ func addEntry(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 	var entryCount int64
-	if err := database.DBConn.Model(&properties.VaultEntry{}).Where("account = ?", accId).Count(&entryCount).Error; err != nil {
+	if err := database.DBConn.Model(&database.VaultEntry{}).Where("account = ?", accId).Count(&entryCount).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
@@ -38,7 +37,7 @@ func addEntry(c *fiber.Ctx) error {
 	}
 
 	// Create vault entry
-	vaultEntry := properties.VaultEntry{
+	vaultEntry := database.VaultEntry{
 		ID:      auth.GenerateToken(12),
 		Account: accId,
 		Tag:     req.Tag,

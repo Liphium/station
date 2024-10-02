@@ -5,10 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/Liphium/station/backend/entities/account"
-	"github.com/Liphium/station/backend/entities/account/properties"
-	"github.com/Liphium/station/backend/entities/app"
-	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -46,34 +42,33 @@ func Connect() {
 	// Migrate the schema
 
 	// Migrate account related tables
-	db.AutoMigrate(&account.Account{})
-	db.AutoMigrate(&account.Authentication{})
-	db.AutoMigrate(&account.Session{})
-	db.AutoMigrate(&account.Rank{})
-	db.AutoMigrate(&account.PublicKey{})
-	db.AutoMigrate(&account.ProfileKey{})
-	db.AutoMigrate(&account.VaultKey{})
-	db.AutoMigrate(&account.SignatureKey{})
-	db.AutoMigrate(&account.StoredActionKey{})
-	db.AutoMigrate(&account.CloudFile{})
-	db.AutoMigrate(&account.Invite{})
-	db.AutoMigrate(&account.InviteCount{})
+	db.AutoMigrate(&Account{})
+	db.AutoMigrate(&Authentication{})
+	db.AutoMigrate(&Session{})
+	db.AutoMigrate(&Rank{})
+	db.AutoMigrate(&PublicKey{})
+	db.AutoMigrate(&ProfileKey{})
+	db.AutoMigrate(&VaultKey{})
+	db.AutoMigrate(&SignatureKey{})
+	db.AutoMigrate(&StoredActionKey{})
+	db.AutoMigrate(&CloudFile{})
+	db.AutoMigrate(&Invite{})
+	db.AutoMigrate(&InviteCount{})
 
 	// Migrate account properties related tables
-	db.AutoMigrate(&properties.Friendship{})
-	db.AutoMigrate(&properties.Profile{})
-	db.AutoMigrate(&properties.StoredAction{})
-	db.AutoMigrate(&properties.AStoredAction{})
-	db.AutoMigrate(&properties.VaultEntry{})
-	db.AutoMigrate(&properties.KeyRequest{})
+	db.AutoMigrate(&Friendship{})
+	db.AutoMigrate(&Profile{})
+	db.AutoMigrate(&StoredAction{})
+	db.AutoMigrate(&AStoredAction{})
+	db.AutoMigrate(&VaultEntry{})
+	db.AutoMigrate(&KeyRequest{})
 
 	// Migrate node related tables
-	db.AutoMigrate(&node.Node{})
-	db.AutoMigrate(&node.NodeCreation{})
+	db.AutoMigrate(&Node{})
+	db.AutoMigrate(&NodeCreation{})
 
 	// Migrate app related tables
-	db.AutoMigrate(&app.App{})
-	db.AutoMigrate(&app.AppSetting{})
+	db.AutoMigrate(&App{})
 
 	// Assign the database to the global variable
 	DBConn = db

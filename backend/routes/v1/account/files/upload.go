@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/main/localization"
@@ -74,7 +73,7 @@ func uploadFile(c *fiber.Ctx) error {
 
 	// Generate file name Format: a-[timestamp]-[objectIdentifier].[extension]
 	fileId := "a-" + fmt.Sprintf("%d", time.Now().UnixMilli()) + "-" + auth.GenerateToken(16) + "." + extension
-	if err := database.DBConn.Create(&account.CloudFile{
+	if err := database.DBConn.Create(&database.CloudFile{
 		Id:      fileId,
 		Name:    name,
 		Type:    file.Header.Get("Content-Type"),

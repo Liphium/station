@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/app"
-	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -28,14 +26,14 @@ func sendNodeAction(c *fiber.Ctx) error {
 	}
 
 	// Get the app by app tag
-	var application app.App
+	var application database.App
 	if err := database.DBConn.Where("tag = ?", req.AppTag).Take(&application).Error; err != nil {
 		return util.InvalidRequest(c)
 	}
 
 	// Get the node with the lowest load to handle the request on
-	var lowest node.Node
-	if err := database.DBConn.Model(&node.Node{}).Where("app_id = ? AND status = ?", application.ID, node.StatusStarted).Order("load DESC").Take(&lowest).Error; err != nil {
+	var lowest database.Node
+	if err := database.DBConn.Model(&database.Node{}).Where("app_id = ? AND status = ?", application.ID, database.StatusStarted).Order("load DESC").Take(&lowest).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorNotSetup, nil)
 	}
 

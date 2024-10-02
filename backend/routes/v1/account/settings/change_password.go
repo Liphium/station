@@ -2,7 +2,6 @@ package settings_routes
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/main/localization"
@@ -27,8 +26,8 @@ func changePassword(c *fiber.Ctx) error {
 	if !valid {
 		return util.InvalidRequest(c)
 	}
-	var authentication account.Authentication
-	if err := database.DBConn.Where("account = ? AND type = ?", accId, account.TypePassword).Take(&authentication).Error; err != nil {
+	var authentication database.Authentication
+	if err := database.DBConn.Where("account = ? AND type = ?", accId, database.AuthTypePassword).Take(&authentication).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
@@ -39,7 +38,7 @@ func changePassword(c *fiber.Ctx) error {
 
 	// Log out all devices
 	// TODO: Disconnect all sessions
-	if err := database.DBConn.Where("account = ?", accId).Delete(&account.Session{}).Error; err != nil {
+	if err := database.DBConn.Where("account = ?", accId).Delete(&database.Session{}).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
@@ -49,7 +48,7 @@ func changePassword(c *fiber.Ctx) error {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	err = database.DBConn.Model(&account.Authentication{}).Where("account = ? AND type = ?", accId, account.TypePassword).
+	err = database.DBConn.Model(&database.Authentication{}).Where("account = ? AND type = ?", accId, database.AuthTypePassword).
 		Update("secret", hash).Error
 	if err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
