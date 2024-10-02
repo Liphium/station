@@ -50,6 +50,9 @@ func Start(loadEnv bool) bool {
 
 	// Setup routes (called here because of the jwt secret)
 	app.Route("/", routes.SetupRoutes)
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Hello from space station! This is the service that handles all the calling stuff (also tabletop). Since you're here you're probably trying some things! If you are, thank you, and please report security issues to Liphium if you find any. You can find us at https://liphium.com.")
+	})
 
 	util.Log.Printf("Node %s on app %d\n", caching.SSNode.ID, currentApp)
 

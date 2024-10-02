@@ -72,6 +72,9 @@ func Start(routine bool) {
 		Format: "chat | " + logger.ConfigDefault.Format,
 	}))
 	app.Route("/", routes.Setup)
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Hello from the chat server, this is handling all your messages. Since you're here you're probably trying some things! If you are, thank you, and please report security issues to Liphium if you find any. You can find us at https://liphium.com.")
+	})
 
 	// Create handlers
 	handler.Create()
