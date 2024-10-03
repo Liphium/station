@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Liphium/station/backend/database"
+	"github.com/Liphium/station/backend/settings"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/main/localization"
@@ -56,6 +57,16 @@ func uploadFile(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
+	// Get max upload size and max total storage
+	storageLimit, err := settings.FilesMaxTotalStorage.GetValue()
+	if err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
+	}
+	maxUploadSize, err := settings.FilesMaxUploadSize.GetValue()
+	if err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
+	}
+
 	// Check file size
 	if file.Size > maxUploadSize {
 		return util.FailedRequest(c, localization.ErrorFileTooLarge(maxUploadSize), nil)
@@ -67,8 +78,8 @@ func uploadFile(c *fiber.Ctx) error {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	if totalStorage+file.Size > maxTotalStorage {
-		return util.FailedRequest(c, localization.ErrorFileStorageLimit(maxUploadSize), nil)
+	if totalStorage+file.Size > storageLimit {
+		return util.FailedRequest(c, localization.ErrorFileStorageLimit(storageLimit), nil)
 	}
 
 	// Generate file name Format: a-[timestamp]-[objectIdentifier].[extension]

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -30,8 +32,6 @@ const repoTypeR2 = "r2"
 const repoTypeLocal = "local"
 
 // Configuration
-var maxUploadSize int64 = 10      // 10 MB
-var maxTotalStorage int64 = 1_000 // 1 GB
 var saveLocation = ""
 var urlPath = ""
 
@@ -53,11 +53,6 @@ func Unencrypted(router fiber.Router) {
 		disabled = true
 	} else {
 		urlPath = os.Getenv("PROTOCOL") + os.Getenv("BASE_PATH")
-	}
-
-	if !disabled {
-		maxUploadSize = GetIntEnv("MAX_UPLOAD_SIZE", maxUploadSize) * 1_000_000
-		maxTotalStorage = GetIntEnv("MAX_TOTAL_STORAGE", maxTotalStorage) * 1_000_000
 	}
 
 	// Autorized by using a normal JWT token
@@ -173,4 +168,50 @@ func connectToR2() {
 	}
 
 	util.Log.Println("Successfully connected to Cloudflare R2.")
+}
+
+func Delete(ids []string) error {
+
+	// Check where the file should be deleted
+	if fileRepoType == repoTypeR2 {
+
+		// Chunk the file ids so they don't hit the limit of 1000 objects (max delete amount)
+		for fileIds := range slices.Chunk(ids, 800) {
+
+			// Make a list of the identifiers
+			objects := make([]types.ObjectIdentifier, len(fileIds))
+			for i, id := range fileIds {
+				objects[i] = types.ObjectIdentifier{Key: aws.String(id)}
+			}
+
+			// Delete the object from R2
+			_, err := s3Client.DeleteObjects(context.TODO(), &s3.DeleteObjectsInput{
+				Bucket: aws.String(bucketName),
+				Delete: &types.Delete{
+					Objects: objects,
+					Quiet:   aws.Bool(false),
+				},
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+	} else if fileRepoType == repoTypeLocal {
+
+		// Delete all the files from the local file system
+		for _, id := range ids {
+			err := os.Remove(saveLocation + id)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Delete all the files from the DB (this may need chunking too, but idk, for now it'll hopefully be fine?)
+	if err := database.DBConn.Where("id IN ?", ids).Delete(&database.CloudFile{}).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -67,8 +67,9 @@ func Connect() {
 	db.AutoMigrate(&Node{})
 	db.AutoMigrate(&NodeCreation{})
 
-	// Migrate app related tables
+	// Migrate server related tables
 	db.AutoMigrate(&App{})
+	db.AutoMigrate(&Setting{})
 
 	// Assign the database to the global variable
 	DBConn = db

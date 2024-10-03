@@ -1,6 +1,7 @@
 package files
 
 import (
+	"github.com/Liphium/station/backend/settings"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -21,10 +22,16 @@ func getStorageUsage(c *fiber.Ctx) error {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
+	// Get the max storage size
+	storageLimit, err := settings.FilesMaxTotalStorage.GetValue()
+	if err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
+	}
+
 	// Return all the data
 	return util.ReturnJSON(c, fiber.Map{
 		"success": true,
 		"amount":  storage,
-		"max":     maxTotalStorage,
+		"max":     storageLimit,
 	})
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/Liphium/station/backend/routes/v1/account"
 	"github.com/Liphium/station/backend/routes/v1/node"
+	townhall_routes "github.com/Liphium/station/backend/routes/v1/townhall"
 	"github.com/Liphium/station/backend/util"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
@@ -131,4 +132,5 @@ func authorizedRoutes(router fiber.Router) {
 	// Authorized routes
 	router.Route("/account", account.Authorized)
 	router.Route("/node", node.Authorized)
+	router.Route("/townhall", townhall_routes.Authorized)
 }
