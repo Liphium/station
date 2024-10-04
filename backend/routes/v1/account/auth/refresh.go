@@ -76,7 +76,7 @@ func refreshSession(c *fiber.Ctx) error {
 	}
 
 	// Refresh session
-	session.LastUsage = time.Now().Add(time.Hour * 24 * 7)
+	session.LastUsage = time.Now()
 	if err := database.DBConn.Save(&session).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}

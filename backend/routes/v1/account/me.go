@@ -35,10 +35,17 @@ func me(c *fiber.Ctx) error {
 		}
 	}
 
+	// Get all the ranks
+	var ranks []database.Rank
+	if err := database.DBConn.Find(&ranks).Error; err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
+	}
+
 	// Retrun details
 	return util.ReturnJSON(c, fiber.Map{
 		"success":     true,
 		"account":     acc,
 		"permissions": perms,
+		"ranks":       ranks,
 	})
 }

@@ -125,6 +125,20 @@ func Permission(c *fiber.Ctx, perm string) bool {
 	return lvl >= permission
 }
 
+func GetPermissionLevel(c *fiber.Ctx) (int16, bool) {
+
+	// Check if there is a JWT token
+	if c.Locals("user") == nil || reflect.TypeOf(c.Locals("user")).String() != "*jwt.Token" {
+		return 0, false
+	}
+
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	lvl := int16(claims["lvl"].(float64))
+
+	return lvl, true
+}
+
 // Get session from JWT token (only use on authorized routes)
 func GetSession(c *fiber.Ctx) (uuid.UUID, error) {
 	if c.Locals("user") == nil || reflect.TypeOf(c.Locals("user")).String() != "*jwt.Token" {

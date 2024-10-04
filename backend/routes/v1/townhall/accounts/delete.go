@@ -35,6 +35,7 @@ func deleteAccount(c *fiber.Ctx) error {
 	database.DBConn.Where("id = ?", req.Account).Delete(&database.Profile{})
 	database.DBConn.Where("account = ?", req.Account).Delete(&database.Authentication{})
 	database.DBConn.Where("account = ?", req.Account).Delete(&database.KeyRequest{})
+	database.DBConn.Where("id = ?", req.Account).Delete(&database.Account{})
 
 	// Get all the files and delete all of them
 	var ids []string
