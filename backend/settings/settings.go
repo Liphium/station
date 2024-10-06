@@ -4,13 +4,16 @@ import (
 	"errors"
 
 	"github.com/Liphium/station/backend/database"
+	"github.com/Liphium/station/main/localization"
 	"github.com/bytedance/sonic"
+	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
 type setting[T any] struct {
-	Name         string // Id of the setting in the database
-	DefaultValue T      // The default value
+	Label        localization.Translations // The label for the UI
+	Name         string                    // Id of the setting in the database
+	DefaultValue T                         // The default value
 
 	// Cached current value (for quicker access)
 	currentValueSet bool
@@ -86,4 +89,24 @@ func (s setting[T]) Decode(value string) (T, error) {
 	var result T
 	err := sonic.UnmarshalString(value, &result)
 	return result, err
+}
+
+func (s setting[T]) ToMap(locale string) fiber.Map {
+	return fiber.Map{
+		"name":  s.Name,
+		"label": localization.TranslateLocale(locale, s.Label),
+		"value": s.currentValue,
+	}
+}
+
+// Settings registry for integers (int64)
+var SettingRegistryInteger = map[string]*setting[int64]{
+	FilesMaxUploadSize.Name:   FilesMaxUploadSize,
+	FilesMaxTotalStorage.Name: FilesMaxTotalStorage,
+}
+
+// Settings registry for booleans
+var SettingRegistryBoolean = map[string]*setting[bool]{
+	DecentralizationEnabled.Name:     DecentralizationEnabled,
+	DecentralizationAllowUnsafe.Name: DecentralizationAllowUnsafe,
 }

@@ -2,6 +2,7 @@ package townhall_routes
 
 import (
 	townhall_accounts "github.com/Liphium/station/backend/routes/v1/townhall/accounts"
+	townhall_settings "github.com/Liphium/station/backend/routes/v1/townhall/settings"
 	"github.com/Liphium/station/backend/util"
 	"github.com/gofiber/fiber/v2"
 )
@@ -20,4 +21,5 @@ func Authorized(router fiber.Router) {
 	})
 
 	router.Route("/accounts", townhall_accounts.Authorized)
+	router.Route("/settings", townhall_settings.Authorized)
 }
