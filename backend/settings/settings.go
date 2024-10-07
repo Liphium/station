@@ -20,6 +20,32 @@ type setting[T any] struct {
 	currentValue    T
 }
 
+type intSetting struct {
+	setting[int64]
+	Min     int64
+	Max     int64
+	Devider int64
+}
+
+// ToMap overwrite for integer settings
+func (s *intSetting) ToMap(locale string) fiber.Map {
+	val, err := s.GetValue()
+	if err != nil {
+		return fiber.Map{
+			"visible": false,
+		}
+	}
+
+	return fiber.Map{
+		"name":  s.Name,
+		"label": localization.TranslateLocale(locale, s.Label),
+		"value": val,
+		"min":   s.Min,
+		"max":   s.Max,
+		"dev":   s.Devider,
+	}
+}
+
 // Set the value of the setting in the database (and in the cache)
 func (s *setting[T]) SetValue(value T) error {
 
@@ -91,16 +117,25 @@ func (s setting[T]) Decode(value string) (T, error) {
 	return result, err
 }
 
+// Convert the current setting to a map (may do a database request)
 func (s setting[T]) ToMap(locale string) fiber.Map {
+
+	val, err := s.GetValue()
+	if err != nil {
+		return fiber.Map{
+			"visible": false,
+		}
+	}
+
 	return fiber.Map{
 		"name":  s.Name,
 		"label": localization.TranslateLocale(locale, s.Label),
-		"value": s.currentValue,
+		"value": val,
 	}
 }
 
 // Settings registry for integers (int64)
-var SettingRegistryInteger = map[string]*setting[int64]{
+var SettingRegistryInteger = map[string]*intSetting{
 	FilesMaxUploadSize.Name:   FilesMaxUploadSize,
 	FilesMaxTotalStorage.Name: FilesMaxTotalStorage,
 }
