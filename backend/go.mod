@@ -14,6 +14,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.11
+	github.com/markbates/goth v1.80.0
 )
 
 require (
@@ -36,7 +37,6 @@ require (
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
-	github.com/markbates/goth v1.80.0 // indirect
 	golang.org/x/oauth2 v0.17.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect

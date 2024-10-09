@@ -8,6 +8,7 @@ import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/handler/account"
+	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
@@ -24,6 +25,11 @@ type RemoteSubscribeAction struct {
 
 // Action: conv_sub
 func HandleRemoteSubscription(c *fiber.Ctx, action RemoteSubscribeAction) error {
+
+	// Make sure decentralization is enabled
+	if !action_helpers.IsDecentralizationEnabled() {
+		return integration.FailedRequest(c, localization.ErrorDecentralizationDisabled, nil)
+	}
 
 	// Check if there are too many tokens
 	if len(action.Tokens) > 500 {

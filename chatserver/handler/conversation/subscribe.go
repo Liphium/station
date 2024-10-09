@@ -91,41 +91,50 @@ func subscribe(c *pipeshandler.Context, action struct {
 
 	// Subscribe to all remote tokens
 	var serversWithError []string = []string{}
-	for server, tokens := range remoteTokens {
-		res, err := action_helpers.SendRemoteActionGeneric[conversationSubscribeResponse](server, "conv_subscribe", fiber.Map{
-			"tokens": tokens,
-			"status": action.Status,
-			"data":   action.Data,
-			"node":   util.OwnPath,
-		})
-
-		// Check if there was an error, if so, tell the client
-		if err != nil || !res.Success {
+	enabled, err := integration.GetBoolSetting(caching.CSNode, integration.SettingDecentralizationEnabled)
+	if err != nil || !enabled {
+		for server := range remoteTokens {
 			serversWithError = append(serversWithError, server)
-			continue
 		}
+	}
 
-		// Add the conversation info from the remote server
-		// This could technically be vulnerable to an attack where a remote node could
-		// artificially increment the notification count, mess with the read dates or
-		// make the client re-fetch the conversation version (just why?). To me, this isn't
-		// of importance and because this would need a lot of code changes to fix, I'll
-		// just leave this reminder here. If anyone finds this in the future, have
-		// fun exploiting this! :D
-		for conv, info := range res.Answer.Info {
-			convInfo[conv] = info
-		}
-
-		// Add the missing tokens
-		// Make sure remote nodes can't delete tokens they don't have access to (important security fix)
-		log.Println("remote tokens missing: ", res.Answer.Missing)
-		res.Answer.Missing = slices.DeleteFunc(res.Answer.Missing, func(element string) bool {
-			return !slices.ContainsFunc(tokens, func(token conversations.SentConversationToken) bool {
-				return token.ID == element
+	if enabled {
+		for server, tokens := range remoteTokens {
+			res, err := action_helpers.SendRemoteActionGeneric[conversationSubscribeResponse](server, "conv_subscribe", fiber.Map{
+				"tokens": tokens,
+				"status": action.Status,
+				"data":   action.Data,
+				"node":   util.OwnPath,
 			})
-		})
-		log.Println("after processing: ", res.Answer.Missing)
-		missingTokens = append(missingTokens, res.Answer.Missing...)
+
+			// Check if there was an error, if so, tell the client
+			if err != nil || !res.Success {
+				serversWithError = append(serversWithError, server)
+				continue
+			}
+
+			// Add the conversation info from the remote server
+			// This could technically be vulnerable to an attack where a remote node could
+			// artificially increment the notification count, mess with the read dates or
+			// make the client re-fetch the conversation version (just why?). To me, this isn't
+			// of importance and because this would need a lot of code changes to fix, I'll
+			// just leave this reminder here. If anyone finds this in the future, have
+			// fun exploiting this! :D
+			for conv, info := range res.Answer.Info {
+				convInfo[conv] = info
+			}
+
+			// Add the missing tokens
+			// Make sure remote nodes can't delete tokens they don't have access to (important security fix)
+			log.Println("remote tokens missing: ", res.Answer.Missing)
+			res.Answer.Missing = slices.DeleteFunc(res.Answer.Missing, func(element string) bool {
+				return !slices.ContainsFunc(tokens, func(token conversations.SentConversationToken) bool {
+					return token.ID == element
+				})
+			})
+			log.Println("after processing: ", res.Answer.Missing)
+			missingTokens = append(missingTokens, res.Answer.Missing...)
+		}
 	}
 
 	// Send the status to everyone in a goroutine

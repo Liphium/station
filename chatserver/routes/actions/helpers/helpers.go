@@ -94,12 +94,17 @@ func CreateConversationEndpoint[T any](handler ConversationActionHandlerFunc[T],
 		}
 
 		// Check if the connection is safe (or if unsafe is allowed)
-		if strings.HasPrefix(strings.TrimSpace(args[1]), "http://") && !util.AllowUnsafe {
+		if strings.HasPrefix(strings.TrimSpace(args[1]), "http://") && !IsUnsafeAllowed() {
 			return integration.FailedRequest(c, localization.ErrorNoUnsafeConnections, errors.New("unsafe requests aren't allowed"))
 		}
 
 		// If the address isn't the current instance, send a remote action
 		if args[1] != integration.Domain {
+
+			// Make sure decentralization is enabled
+			if !IsDecentralizationEnabled() {
+				return integration.FailedRequest(c, localization.ErrorDecentralizationDisabled, nil)
+			}
 
 			// Send a conversation aciton to the other instance
 			res, err := SendConversationAction(action, req.Token, req.Data)
@@ -243,4 +248,20 @@ func SendRemoteActionGeneric[T any](server string, action string, data interface
 		"action":  action,
 		"data":    data,
 	})
+}
+
+func IsDecentralizationEnabled() bool {
+	enabled, err := integration.GetBoolSetting(caching.CSNode, integration.SettingDecentralizationEnabled)
+	if err != nil {
+		return false
+	}
+	return enabled
+}
+
+func IsUnsafeAllowed() bool {
+	allowed, err := integration.GetBoolSetting(caching.CSNode, integration.SettingDecentralizationUnsafeAllowed)
+	if err != nil {
+		return false
+	}
+	return allowed
 }
