@@ -93,13 +93,13 @@ func CreateConversationEndpoint[T any](handler ConversationActionHandlerFunc[T],
 			return integration.InvalidRequest(c, "conversation id is invalid")
 		}
 
-		// Check if the connection is safe (or if unsafe is allowed)
-		if strings.HasPrefix(strings.TrimSpace(args[1]), "http://") && !IsUnsafeAllowed() {
-			return integration.FailedRequest(c, localization.ErrorNoUnsafeConnections, errors.New("unsafe requests aren't allowed"))
-		}
-
 		// If the address isn't the current instance, send a remote action
 		if args[1] != integration.Domain {
+
+			// Check if the connection is safe (or if unsafe is allowed)
+			if strings.HasPrefix(strings.TrimSpace(args[1]), "http://") && !IsUnsafeAllowed() {
+				return integration.FailedRequest(c, localization.ErrorNoUnsafeConnections, errors.New("unsafe requests aren't allowed"))
+			}
 
 			// Make sure decentralization is enabled
 			if !IsDecentralizationEnabled() {
@@ -138,7 +138,15 @@ func SendConversationAction(action string, token conversations.SentConversationT
 
 	// Get the address of the chat node
 	obj, valid := TokenMap.Load(token.ID)
-	if !valid {
+	negotiationRequired := !valid
+
+	// Make sure to re-negotiate when the token changes (for example when the conversation is activated)
+	if valid {
+		node := obj.(*TokenData)
+		negotiationRequired = node.Token != token.Token
+	}
+
+	if negotiationRequired {
 
 		// Extract the address of the main backend from the conversation token
 		args := strings.Split(token.ID, "@")

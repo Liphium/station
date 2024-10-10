@@ -94,6 +94,11 @@ func Unencrypted(router fiber.Router) {
 	router.Post("/upload", uploadFile)
 }
 
+func Unauthorized(router fiber.Router) {
+	// Due to decentralization being a thing, this is now public
+	router.Post("/info", fileInfo)
+}
+
 func UnencryptedUnauthorized(router fiber.Router) {
 	router.Post("/download/:id", downloadFile)
 }
@@ -118,8 +123,8 @@ func Authorized(router fiber.Router) {
 	// Setup file routes
 	router.Post("/delete", deleteFile)
 	router.Post("/list", listFiles)
+	router.Post("/info", fileInfo) // This is just for back-compatability
 	router.Post("/change_tag", changeFileTag)
-	router.Post("/info", fileInfo)
 	router.Post("/storage", getStorageUsage)
 }
 

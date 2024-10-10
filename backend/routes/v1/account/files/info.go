@@ -10,7 +10,7 @@ type infoRequest struct {
 	Id string `json:"id"`
 }
 
-// Route: /account/files/info
+// Route: /account/files_unauth/info
 func fileInfo(c *fiber.Ctx) error {
 
 	var req infoRequest

@@ -23,6 +23,7 @@ func Unencrypted(router fiber.Router) {
 func Unauthorized(router fiber.Router) {
 	router.Route("/auth", auth_routes.Unauthorized)
 	router.Route("/keys", keys.Unauthorized)
+	router.Route("/file_info", files.Unauthorized) // This is this way because of routing issues with fiber (can't blame them though, this is way too complex)
 	router.Route("/rank", rank.Unauthorized)
 	router.Route("/stored_actions", stored_actions.Unauthorized)
 

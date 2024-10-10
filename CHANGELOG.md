@@ -14,3 +14,4 @@ There is a new admin panel in the client app now. Some settings that you could s
 - Moved file max size and total storage settings to the admin panel
 - New settings for decentralization in the admin panel
 - Settings bridge using node tokens as authorization between the nodes and the backend
+- Fixed a bug where decentralization wouldn't work because of token synchronization issues
