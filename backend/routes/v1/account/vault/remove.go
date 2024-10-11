@@ -2,7 +2,6 @@ package vault
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -27,7 +26,7 @@ func removeEntry(c *fiber.Ctx) error {
 	if !valid {
 		return util.InvalidRequest(c)
 	}
-	var entry properties.VaultEntry
+	var entry database.VaultEntry
 	if err := database.DBConn.Where("id = ? AND account = ?", req.ID, accId).Take(&entry).Error; err != nil {
 
 		if err == gorm.ErrRecordNotFound {

@@ -4,17 +4,18 @@ import (
 	"context"
 	"log"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -31,8 +32,6 @@ const repoTypeR2 = "r2"
 const repoTypeLocal = "local"
 
 // Configuration
-var maxUploadSize int64 = 10      // 10 MB
-var maxTotalStorage int64 = 1_000 // 1 GB
 var saveLocation = ""
 var urlPath = ""
 
@@ -54,11 +53,6 @@ func Unencrypted(router fiber.Router) {
 		disabled = true
 	} else {
 		urlPath = os.Getenv("PROTOCOL") + os.Getenv("BASE_PATH")
-	}
-
-	if !disabled {
-		maxUploadSize = GetIntEnv("MAX_UPLOAD_SIZE", maxUploadSize) * 1_000_000
-		maxTotalStorage = GetIntEnv("MAX_TOTAL_STORAGE", maxTotalStorage) * 1_000_000
 	}
 
 	// Autorized by using a normal JWT token
@@ -100,6 +94,11 @@ func Unencrypted(router fiber.Router) {
 	router.Post("/upload", uploadFile)
 }
 
+func Unauthorized(router fiber.Router) {
+	// Due to decentralization being a thing, this is now public
+	router.Post("/info", fileInfo)
+}
+
 func UnencryptedUnauthorized(router fiber.Router) {
 	router.Post("/download/:id", downloadFile)
 }
@@ -124,8 +123,8 @@ func Authorized(router fiber.Router) {
 	// Setup file routes
 	router.Post("/delete", deleteFile)
 	router.Post("/list", listFiles)
+	router.Post("/info", fileInfo) // This is just for back-compatability
 	router.Post("/change_tag", changeFileTag)
-	router.Post("/info", fileInfo)
 	router.Post("/storage", getStorageUsage)
 }
 
@@ -133,7 +132,7 @@ func CountTotalStorage(accId uuid.UUID) (int64, error) {
 
 	// Get total storage (coalesce is important cause otherwise we get null)
 	var totalStorage int64
-	rq := database.DBConn.Model(&account.CloudFile{}).Where("account = ?", accId).Select("coalesce(sum(size), 0)").Scan(&totalStorage)
+	rq := database.DBConn.Model(&database.CloudFile{}).Where("account = ?", accId).Select("coalesce(sum(size), 0)").Scan(&totalStorage)
 	if rq.Error != nil {
 		if rq.RowsAffected > 0 {
 			return 0, nil
@@ -174,4 +173,50 @@ func connectToR2() {
 	}
 
 	util.Log.Println("Successfully connected to Cloudflare R2.")
+}
+
+func Delete(ids []string) error {
+
+	// Check where the file should be deleted
+	if fileRepoType == repoTypeR2 {
+
+		// Chunk the file ids so they don't hit the limit of 1000 objects (max delete amount)
+		for fileIds := range slices.Chunk(ids, 800) {
+
+			// Make a list of the identifiers
+			objects := make([]types.ObjectIdentifier, len(fileIds))
+			for i, id := range fileIds {
+				objects[i] = types.ObjectIdentifier{Key: aws.String(id)}
+			}
+
+			// Delete the object from R2
+			_, err := s3Client.DeleteObjects(context.TODO(), &s3.DeleteObjectsInput{
+				Bucket: aws.String(bucketName),
+				Delete: &types.Delete{
+					Objects: objects,
+					Quiet:   aws.Bool(false),
+				},
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+	} else if fileRepoType == repoTypeLocal {
+
+		// Delete all the files from the local file system
+		for _, id := range ids {
+			err := os.Remove(saveLocation + id)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Delete all the files from the DB (this may need chunking too, but idk, for now it'll hopefully be fine?)
+	if err := database.DBConn.Where("id IN ?", ids).Delete(&database.CloudFile{}).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

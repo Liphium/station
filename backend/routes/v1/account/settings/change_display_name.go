@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
@@ -33,7 +32,7 @@ func changeDisplayName(c *fiber.Ctx) error {
 	}
 
 	// Get account from database
-	var acc account.Account
+	var acc database.Account
 	if err := database.DBConn.Where("id = ?", accId).Take(&acc).Error; err != nil {
 		log.Println("account no found")
 		return util.InvalidRequest(c)

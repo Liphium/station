@@ -2,8 +2,6 @@ package manage
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/app"
-	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/main/localization"
@@ -26,7 +24,7 @@ func newNode(c *fiber.Ctx) error {
 	}
 
 	// Check if token is valid
-	var ct node.NodeCreation
+	var ct database.NodeCreation
 	if err := database.DBConn.Where("token = ?", req.Token).Take(&ct).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
@@ -39,13 +37,13 @@ func newNode(c *fiber.Ctx) error {
 		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
-	var app app.App
+	var app database.App
 	if err := database.DBConn.Take(&app, req.App).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Create node
-	var created node.Node = node.Node{
+	var created database.Node = database.Node{
 		AppID:           req.App,
 		Token:           auth.GenerateToken(300),
 		Domain:          req.Domain,

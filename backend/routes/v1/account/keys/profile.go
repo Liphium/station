@@ -2,7 +2,6 @@ package keys
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -18,7 +17,7 @@ func getProfileKey(c *fiber.Ctx) error {
 	}
 
 	// Get public key
-	var key account.ProfileKey
+	var key database.ProfileKey
 	if database.DBConn.Where("id = ?", accId).Take(&key).Error != nil {
 		return util.FailedRequest(c, localization.ErrorKeyNotFound, nil)
 	}
@@ -47,17 +46,17 @@ func setProfileKey(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
-	var acc account.Account
+	var acc database.Account
 	if database.DBConn.Where("id = ?", accId).Take(&acc).Error != nil {
 		return util.InvalidRequest(c)
 	}
 
-	if database.DBConn.Where("id = ?", accId).Take(&account.ProfileKey{}).Error == nil {
+	if database.DBConn.Where("id = ?", accId).Take(&database.ProfileKey{}).Error == nil {
 		return util.FailedRequest(c, localization.ErrorKeyAlreadySet, nil)
 	}
 
 	// Set public key
-	if database.DBConn.Create(&account.ProfileKey{
+	if database.DBConn.Create(&database.ProfileKey{
 		ID:  accId,
 		Key: req.Key,
 	}).Error != nil {

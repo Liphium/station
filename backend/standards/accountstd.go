@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/main/localization"
 )
 
@@ -71,7 +70,7 @@ func CheckUsername(username string) localization.Translations {
 	}
 
 	// Check if username is available
-	if database.DBConn.Where("username = ?", username).Take(&account.Account{}).RowsAffected > 0 {
+	if database.DBConn.Where("username = ?", username).Take(&database.Account{}).RowsAffected > 0 {
 		return localization.ErrorUsernameTaken
 	}
 

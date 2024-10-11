@@ -4,7 +4,6 @@ import (
 	"errors"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	login_routes "github.com/Liphium/station/backend/routes/v1/account/auth/login"
 	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util"
@@ -32,7 +31,7 @@ func startAuth(c *fiber.Ctx) error {
 	}
 
 	// Check if there is an account with this email
-	var acc account.Account
+	var acc database.Account
 	if err := database.DBConn.Where("email = ?", normalizedEmail).Preload("Rank").Take(&acc).Error; err != nil {
 
 		// If the account wasn't found, redirect to register

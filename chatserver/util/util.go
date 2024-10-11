@@ -11,9 +11,6 @@ import (
 	"strconv"
 )
 
-// Whether the chat node is allowed to connect to unsafe instances
-var AllowUnsafe = false
-
 // The domain of the chat server
 var OwnPath = ""
 

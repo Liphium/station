@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/main/localization"
@@ -20,7 +19,7 @@ func generateToken(c *fiber.Ctx) error {
 	tk := auth.GenerateToken(200)
 
 	// Save
-	if err := database.DBConn.Create(&node.NodeCreation{
+	if err := database.DBConn.Create(&database.NodeCreation{
 		Token: tk,
 		Date:  time.Now(),
 	}).Error; err != nil {

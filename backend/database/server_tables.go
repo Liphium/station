@@ -1,5 +1,6 @@
-package app
+package database
 
+// Apps created on the server
 type App struct {
 	ID uint `json:"id" gorm:"primaryKey"`
 
@@ -8,4 +9,10 @@ type App struct {
 	Description string `json:"description"`
 	Version     uint   `json:"version"`
 	AccessLevel uint   `json:"access_level"`
+}
+
+// Settings in the admin panel
+type Setting struct {
+	Name  string `gorm:"primaryKey"`
+	Value string
 }

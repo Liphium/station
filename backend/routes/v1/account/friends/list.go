@@ -2,7 +2,6 @@ package friends
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -25,8 +24,8 @@ func listFriends(c *fiber.Ctx) error {
 	if !valid {
 		return util.InvalidRequest(c)
 	}
-	var friends []properties.Friendship
-	if err := database.DBConn.Model(&properties.Friendship{}).Where("account = ? AND updated_at > ?", accId, req.After).Find(&friends).Error; err != nil {
+	var friends []database.Friendship
+	if err := database.DBConn.Model(&database.Friendship{}).Where("account = ? AND updated_at > ?", accId, req.After).Find(&friends).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 

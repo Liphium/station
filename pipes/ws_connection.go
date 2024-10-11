@@ -16,7 +16,7 @@ type AdoptionRequest struct {
 }
 
 func (local *LocalNode) setupWSStore() {
-	local.nodeWSConnections = sync.Map{}
+	local.nodeWSConnections = &sync.Map{}
 }
 
 func (local *LocalNode) ConnectToNodeWS(node Node) error {

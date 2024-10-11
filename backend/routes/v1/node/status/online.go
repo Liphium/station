@@ -2,7 +2,6 @@ package status
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
 	"github.com/Liphium/station/main/localization"
@@ -29,14 +28,14 @@ func online(c *fiber.Ctx) error {
 	}
 
 	// Update status
-	nodes.TurnOff(&requested, node.StatusStarted)
+	nodes.TurnOff(&requested, database.StatusStarted)
 
 	// Send adoption
-	var foundNodes []node.Node
-	var startedNodes []node.NodeEntity
-	if err := database.DBConn.Where(&node.Node{
+	var foundNodes []database.Node
+	var startedNodes []database.NodeEntity
+	if err := database.DBConn.Where(&database.Node{
 		AppID:  requested.AppID,
-		Status: node.StatusStarted,
+		Status: database.StatusStarted,
 	}).Find(&foundNodes).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
@@ -47,7 +46,7 @@ func online(c *fiber.Ctx) error {
 
 				util.Log.Println("Found offline node: " + n.Domain + "! Shutting down..")
 
-				nodes.TurnOff(&n, node.StatusStopped)
+				nodes.TurnOff(&n, database.StatusStopped)
 			} else {
 				startedNodes = append(startedNodes, n.ToEntity())
 			}

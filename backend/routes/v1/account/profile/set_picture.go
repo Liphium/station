@@ -4,8 +4,6 @@ import (
 	"strings"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
-	"github.com/Liphium/station/backend/entities/account/properties"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -44,7 +42,7 @@ func setProfilePicture(c *fiber.Ctx) error {
 	}
 
 	// Get the profile picture file
-	var file account.CloudFile
+	var file database.CloudFile
 	if err := database.DBConn.Where("id = ?", req.File).Take(&file).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
@@ -65,7 +63,7 @@ func setProfilePicture(c *fiber.Ctx) error {
 	}
 
 	// Get the current profile
-	var profile properties.Profile = properties.Profile{}
+	var profile database.Profile = database.Profile{}
 	err := database.DBConn.Where("id = ?", accId).Take(&profile).Error
 
 	// Only return if there was an error with the database (exclude not found)
@@ -77,7 +75,7 @@ func setProfilePicture(c *fiber.Ctx) error {
 	if err == nil {
 
 		// Make previous profile picture no longer saved when it wasn't found
-		if err := database.DBConn.Model(&account.CloudFile{}).Where("id = ?", profile.Picture).Update("system", false).Error; err != nil {
+		if err := database.DBConn.Model(&database.CloudFile{}).Where("id = ?", profile.Picture).Update("system", false).Error; err != nil {
 			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 	}
@@ -94,7 +92,7 @@ func setProfilePicture(c *fiber.Ctx) error {
 	}
 
 	// Mark new profile picture as system file
-	if err := database.DBConn.Model(&account.CloudFile{}).Where("id = ?", req.File).Update("system", true).Error; err != nil {
+	if err := database.DBConn.Model(&database.CloudFile{}).Where("id = ?", req.File).Update("system", true).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 

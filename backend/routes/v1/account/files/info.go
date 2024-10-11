@@ -2,7 +2,6 @@ package files
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/gofiber/fiber/v2"
 )
@@ -11,7 +10,7 @@ type infoRequest struct {
 	Id string `json:"id"`
 }
 
-// Route: /account/files/info
+// Route: /account/files_unauth/info
 func fileInfo(c *fiber.Ctx) error {
 
 	var req infoRequest
@@ -20,7 +19,7 @@ func fileInfo(c *fiber.Ctx) error {
 	}
 
 	// Get file info
-	var cloudFile account.CloudFile
+	var cloudFile database.CloudFile
 	if err := database.DBConn.Select("id,name,size,account").Where("id = ?", req.Id).Take(&cloudFile).Error; err != nil {
 		return util.InvalidRequest(c)
 	}

@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -31,7 +30,7 @@ func downloadFile(c *fiber.Ctx) error {
 	}
 
 	// Get the file from the database
-	var file account.CloudFile
+	var file database.CloudFile
 	if err := database.DBConn.Where("id = ?", id).Take(&file).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorFileNotFound, err)
 	}

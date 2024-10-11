@@ -2,7 +2,6 @@ package account
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -23,17 +22,17 @@ func getAccount(c *fiber.Ctx) error {
 	}
 
 	// Get account
-	var acc account.Account
+	var acc database.Account
 	if err := database.DBConn.Select("username", "display_name").Where("id = ?", req.ID).Take(&acc).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	var pub account.PublicKey
+	var pub database.PublicKey
 	if err := database.DBConn.Select("key").Where("id = ?", req.ID).Take(&pub).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	var signaturePub account.SignatureKey
+	var signaturePub database.SignatureKey
 	if err := database.DBConn.Select("key").Where("id = ?", req.ID).Take(&signaturePub).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}

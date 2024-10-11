@@ -2,7 +2,6 @@ package keys
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -18,13 +17,13 @@ func getAllEncryptedKeys(c *fiber.Ctx) error {
 	}
 
 	// Get vault key
-	var vaultKey account.VaultKey
+	var vaultKey database.VaultKey
 	if database.DBConn.Where("id = ?", accId).Take(&vaultKey).Error != nil {
 		return util.FailedRequest(c, localization.ErrorKeyNotFound, nil)
 	}
 
 	// Get profile key
-	var profileKey account.ProfileKey
+	var profileKey database.ProfileKey
 	if database.DBConn.Where("id = ?", accId).Take(&profileKey).Error != nil {
 		return util.FailedRequest(c, localization.ErrorKeyNotFound, nil)
 	}

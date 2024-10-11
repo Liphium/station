@@ -29,8 +29,8 @@ type LocalNode struct {
 
 	// Adapters
 	websocketCache    *ristretto.Cache                        `json:"-"`
-	nodeWSConnections sync.Map                                `json:"-"`
-	nodes             sync.Map                                `json:"-"`
+	nodeWSConnections *sync.Map                               `json:"-"`
+	nodes             *sync.Map                               `json:"-"`
 	Processors        map[string]func(*Message, string) Event `json:"-"`
 
 	// Encryption
@@ -62,10 +62,10 @@ func SetupCurrent(id string, token string) *LocalNode {
 		WS:     "",
 		SL:     "",
 		Cipher: cipher,
+		nodes:  &sync.Map{},
 	}
 	node.setupCaching()
 	node.setupWSStore()
-	node.nodes = sync.Map{}
 	node.Processors = make(map[string]func(*Message, string) Event)
 
 	return node

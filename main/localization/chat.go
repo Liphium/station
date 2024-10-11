@@ -21,6 +21,9 @@ var (
 	ErrorMessageDeleteNoPermission = Translations{
 		englishUS: "You don't have permission to delete this message.",
 	}
+	ErrorDecentralizationDisabled = Translations{
+		englishUS: "Decentralization is currently disabled. Please contact the admin of your town if this bothers you.",
+	}
 )
 
 func ErrorGroupMemberLimit(limit int) Translations {

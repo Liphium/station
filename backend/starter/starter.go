@@ -52,8 +52,24 @@ func Startup(routine bool) {
 	// Handle routing
 	app.Route("/", routes_v1.Router)
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello from the backend, you probably shouldn't be here though.. Anyway, enjoy your time!")
+		return c.SendString("Hello from the backend, this is handling all account related data as well as general data management. Since you're here you're probably trying some things! If you are, thank you, and please report security issues to Liphium if you find any. You can find us at https://liphium.com.")
 	})
+
+	// Create an admin invite in the case of no account existing
+	var count int64
+	if err := database.DBConn.Model(&database.Account{}).Count(&count).Error; err != nil {
+		panic(err)
+	}
+	if count == 0 {
+		uuid := util.GetSystemUUID()
+		if err := database.DBConn.FirstOrCreate(&database.Invite{
+			ID:      uuid,
+			Creator: uuid,
+		}).Error; err != nil {
+			panic(err)
+		}
+		util.Log.Println("An invite for the first account has been created. It is equal to the value of the SYSTEM_UUID environment variable. Please use it to create your admin account.")
+	}
 
 	// Ask user for test mode
 	testMode()
@@ -111,7 +127,7 @@ func testMode() {
 	util.Log.Println("Test mode enabled.")
 
 	/* not need for now
-	var foundNodes []node.Node
+	var foundNodes []database.Node
 	database.DBConn.Find(&foundNodes)
 
 	for _, n := range foundNodes {

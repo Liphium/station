@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/account"
 	"github.com/Liphium/station/backend/kv"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
@@ -34,7 +33,7 @@ type LoginState struct {
 const loginTokenPrefix = "login_"
 
 // Generate the token required for logging in with SSR
-func GenerateLoginToken(acc account.Account) string {
+func GenerateLoginToken(acc database.Account) string {
 
 	// Generate a unique token
 	token := auth.GenerateToken(50)
@@ -107,13 +106,13 @@ func CreateSession(accId uuid.UUID, permissionLevel uint) (string, string, error
 
 	// Count the amount of sessions
 	var sessionCount int64 = 0
-	if err := database.DBConn.Model(&account.Session{}).Where("account = ?", accId).Count(&sessionCount).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := database.DBConn.Model(&database.Session{}).Where("account = ?", accId).Count(&sessionCount).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return "", "", err
 	}
 
 	// Create session
 	tk := auth.GenerateToken(100)
-	var createdSession account.Session = account.Session{
+	var createdSession database.Session = database.Session{
 		Token:           tk,
 		Verified:        sessionCount == 0,
 		Account:         accId,

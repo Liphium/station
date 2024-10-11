@@ -2,7 +2,6 @@ package status
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/entities/node"
 	"github.com/Liphium/station/backend/util"
 	"github.com/gofiber/fiber/v2"
 )
@@ -21,7 +20,7 @@ func update(c *fiber.Ctx) error {
 	}
 
 	// Get node
-	var requested node.Node
+	var requested database.Node
 	database.DBConn.Where("token = ?", req.Token).Take(&requested)
 
 	if requested.ID == 0 {
