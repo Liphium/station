@@ -1,8 +1,6 @@
 package util
 
 import (
-	"crypto/rsa"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"reflect"
@@ -125,6 +123,7 @@ func Permission(c *fiber.Ctx, perm string) bool {
 	return lvl >= permission
 }
 
+// Get the permission level from the jwt token (this may do a database query)
 func GetPermissionLevel(c *fiber.Ctx) (int16, bool) {
 
 	// Check if there is a JWT token
@@ -172,6 +171,15 @@ func GetAcc(c *fiber.Ctx) (uuid.UUID, bool) {
 	return id, true
 }
 
+/*
+This is staying here for now (even if not used) because we may need it
+again in the future and because I might not want to recode this at that
+time, this can slumber here until it is needed again (maybe).
+
+If this isn't needed for another year, I think it can be removed. Currently
+is the 14th of October in 2024. In case this project is still around in a few
+years from now, let's celebrate by removing this piece of code!!! yay
+
 // Generate a JWT value that the client can't read (can't be really long because of RSA encryption)
 func MakeHiddenJWTValue(c *fiber.Ctx, value []byte) (string, error) {
 	pub := c.Locals(LocalsServerPub).(*rsa.PublicKey)
@@ -204,3 +212,4 @@ func ReadHiddenJWTValue(c *fiber.Ctx, encoded string) ([]byte, error) {
 	}
 	return decrypted, nil
 }
+*/
