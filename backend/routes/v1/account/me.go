@@ -3,6 +3,7 @@ package account
 import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -11,7 +12,7 @@ import (
 func me(c *fiber.Ctx) error {
 
 	// Get session
-	sessionId, err := util.GetSession(c)
+	sessionId, err := verify.InfoLocals(c).GetSessionUUID()
 	if err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
@@ -29,8 +30,9 @@ func me(c *fiber.Ctx) error {
 
 	// Get all valid permissions the account has
 	perms := []string{}
-	for name := range util.Permissions {
-		if util.Permission(c, name) {
+	info := verify.InfoLocals(c)
+	for name := range verify.Permissions {
+		if info.HasPermission(name) {
 			perms = append(perms, name)
 		}
 	}

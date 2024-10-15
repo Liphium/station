@@ -6,6 +6,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -24,16 +25,16 @@ func Connect(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
-	if !util.Permission(c, util.PermissionUseServices) {
+	if !verify.InfoLocals(c).HasPermission(verify.PermissionUseServices) {
 		return util.FailedRequest(c, localization.ErrorNoPermission, nil)
 	}
 
 	// Get account
-	accId, valid := util.GetAcc(c)
-	if !valid {
+	accId, err := verify.InfoLocals(c).GetAccountUUID()
+	if err != nil {
 		return util.InvalidRequest(c)
 	}
-	currentSessionId, err := util.GetSession(c)
+	currentSessionId, err := verify.InfoLocals(c).GetSessionUUID()
 	if err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}

@@ -5,6 +5,7 @@ import (
 
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -31,8 +32,8 @@ func setProfilePicture(c *fiber.Ctx) error {
 	if err := util.BodyParser(c, &req); err != nil {
 		return util.InvalidRequest(c)
 	}
-	accId, valid := util.GetAcc(c)
-	if !valid {
+	accId, err := verify.InfoLocals(c).GetAccountUUID()
+	if err != nil {
 		return util.InvalidRequest(c)
 	}
 
@@ -64,7 +65,7 @@ func setProfilePicture(c *fiber.Ctx) error {
 
 	// Get the current profile
 	var profile database.Profile = database.Profile{}
-	err := database.DBConn.Where("id = ?", accId).Take(&profile).Error
+	err = database.DBConn.Where("id = ?", accId).Take(&profile).Error
 
 	// Only return if there was an error with the database (exclude not found)
 	if err != nil && err != gorm.ErrRecordNotFound {

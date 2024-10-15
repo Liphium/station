@@ -3,6 +3,7 @@ package profile
 import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -11,14 +12,14 @@ import (
 func removeProfilePicture(c *fiber.Ctx) error {
 
 	// Get the account id
-	accId, valid := util.GetAcc(c)
-	if !valid {
+	accId, err := verify.InfoLocals(c).GetAccountUUID()
+	if err != nil {
 		return util.InvalidRequest(c)
 	}
 
 	// Get the current profile
 	var profile database.Profile = database.Profile{}
-	err := database.DBConn.Where("id = ?", accId).Take(&profile).Error
+	err = database.DBConn.Where("id = ?", accId).Take(&profile).Error
 
 	// Check if the profile was found (error has to be gorm.ErrRecordNotFound here cause excluded before)
 	if err == nil {

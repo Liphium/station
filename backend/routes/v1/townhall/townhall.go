@@ -4,6 +4,7 @@ import (
 	townhall_accounts "github.com/Liphium/station/backend/routes/v1/townhall/accounts"
 	townhall_settings "github.com/Liphium/station/backend/routes/v1/townhall/settings"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -13,7 +14,7 @@ func Authorized(router fiber.Router) {
 	router.Use(func(c *fiber.Ctx) error {
 
 		// Deny access if the user doesn't have admin permissions
-		if !util.Permission(c, util.PermissionAdmin) {
+		if !verify.InfoLocals(c).HasPermission(verify.PermissionAdmin) {
 			return util.InvalidRequest(c)
 		}
 

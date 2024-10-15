@@ -1,9 +1,7 @@
 package util
 
 import (
-	"errors"
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -71,8 +69,6 @@ func Token(session uuid.UUID, account uuid.UUID, lvl uint, exp time.Time) (strin
 	tk := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 		"ses": session.String(),
 		"e_u": exp.Unix(), // Expiration unix
-		"acc": account.String(),
-		"lvl": lvl,
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
@@ -100,75 +96,6 @@ func IsExpired(c *fiber.Ctx) bool {
 	}
 
 	return time.Now().Unix() > exp
-}
-
-// Permission checks if the user has the required permission level
-func Permission(c *fiber.Ctx, perm string) bool {
-
-	// Check if there is a JWT token
-	if c.Locals("user") == nil || reflect.TypeOf(c.Locals("user")).String() != "*jwt.Token" {
-		return false
-	}
-
-	// Get the permission from the map
-	permission, valid := Permissions[perm]
-	if !valid {
-		return false
-	}
-
-	user := c.Locals("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-	lvl := int16(claims["lvl"].(float64))
-
-	return lvl >= permission
-}
-
-// Get the permission level from the jwt token (this may do a database query)
-func GetPermissionLevel(c *fiber.Ctx) (int16, bool) {
-
-	// Check if there is a JWT token
-	if c.Locals("user") == nil || reflect.TypeOf(c.Locals("user")).String() != "*jwt.Token" {
-		return 0, false
-	}
-
-	user := c.Locals("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-	lvl := int16(claims["lvl"].(float64))
-
-	return lvl, true
-}
-
-// Get session from JWT token (only use on authorized routes)
-func GetSession(c *fiber.Ctx) (uuid.UUID, error) {
-	if c.Locals("user") == nil || reflect.TypeOf(c.Locals("user")).String() != "*jwt.Token" {
-		return uuid.UUID{}, errors.New("token wasn't found")
-	}
-	user := c.Locals("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-
-	// Parse the uuid
-	id, err := uuid.Parse(claims["ses"].(string))
-	if err != nil {
-		return uuid.UUID{}, err
-	}
-
-	return id, nil
-}
-
-// Get account from JWT token (only use on authorized routes)
-func GetAcc(c *fiber.Ctx) (uuid.UUID, bool) {
-	if c.Locals("user") == nil || reflect.TypeOf(c.Locals("user")).String() != "*jwt.Token" {
-		return uuid.UUID{}, false
-	}
-	user := c.Locals("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-
-	id, err := uuid.Parse(claims["acc"].(string))
-	if err != nil {
-		return uuid.UUID{}, false
-	}
-
-	return id, true
 }
 
 /*

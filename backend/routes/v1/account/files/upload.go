@@ -10,6 +10,7 @@ import (
 	"github.com/Liphium/station/backend/settings"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -37,8 +38,8 @@ func uploadFile(c *fiber.Ctx) error {
 		util.Log.Println("no file")
 		return util.InvalidRequest(c)
 	}
-	accId, valid := util.GetAcc(c)
-	if !valid {
+	accId, err := verify.InfoLocals(c).GetAccountUUID()
+	if err != nil {
 		return util.InvalidRequest(c)
 	}
 	fileType := file.Header.Get("Content-Type")

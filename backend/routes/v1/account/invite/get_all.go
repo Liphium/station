@@ -5,6 +5,7 @@ import (
 
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -15,8 +16,8 @@ import (
 func getAllInformation(c *fiber.Ctx) error {
 
 	// Retrieve all the information
-	accId, valid := util.GetAcc(c)
-	if !valid {
+	accId, err := verify.InfoLocals(c).GetAccountUUID()
+	if err != nil {
 		return util.InvalidRequest(c)
 	}
 
@@ -26,7 +27,7 @@ func getAllInformation(c *fiber.Ctx) error {
 	}
 
 	var inviteCount database.InviteCount
-	err := database.DBConn.Where("account = ?", accId).Take(&inviteCount).Error
+	err = database.DBConn.Where("account = ?", accId).Take(&inviteCount).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}

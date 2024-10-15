@@ -3,6 +3,7 @@ package files
 import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -24,10 +25,7 @@ func listFiles(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
-	accId, valid := util.GetAcc(c)
-	if !valid {
-		return util.InvalidRequest(c)
-	}
+	accId := verify.InfoLocals(c).GetAccount()
 
 	// Get files
 	var files []database.CloudFile

@@ -3,6 +3,7 @@ package stored_actions
 import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -21,8 +22,8 @@ func deleteStoredAction(c *fiber.Ctx) error {
 	}
 
 	// Delete stored action
-	accId, valid := util.GetAcc(c)
-	if !valid {
+	accId, err := verify.InfoLocals(c).GetAccountUUID()
+	if err != nil {
 		return util.InvalidRequest(c)
 	}
 	if err := database.DBConn.Where("account = ? AND id = ?", accId, req.ID).Delete(&database.StoredAction{}).Error; err != nil {

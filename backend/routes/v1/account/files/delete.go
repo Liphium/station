@@ -5,6 +5,7 @@ import (
 
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -24,10 +25,7 @@ func deleteFile(c *fiber.Ctx) error {
 	if err := util.BodyParser(c, &req); err != nil {
 		return util.InvalidRequest(c)
 	}
-	accId, valid := util.GetAcc(c)
-	if !valid {
-		return util.InvalidRequest(c)
-	}
+	accId := verify.InfoLocals(c).GetAccount()
 
 	// Get file
 	var file database.CloudFile

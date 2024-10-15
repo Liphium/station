@@ -3,6 +3,7 @@ package townhall_accounts
 import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -32,29 +33,23 @@ func changeRank(c *fiber.Ctx) error {
 	}
 
 	// Check if the current user has permission to set that rank
-	currentLevel, valid := util.GetPermissionLevel(c)
-	if !valid {
-		return util.InvalidRequest(c)
-	}
+	currentLevel := verify.InfoLocals(c).GetPermissionLevel()
 	if currentLevel < int16(account.Rank.Level) {
 		return util.FailedRequest(c, localization.ErrorNoPermission, nil)
 	}
 
 	// Check if the user is trying to upgrade their own rank to a higher one
-	acc, valid := util.GetAcc(c)
-	if !valid {
-		return util.InvalidRequest(c)
-	}
-	if acc.String() == req.Account && currentLevel < int16(rank.Level) {
+	acc := verify.InfoLocals(c).GetAccount()
+	if acc == req.Account && currentLevel < int16(rank.Level) {
 		return util.FailedRequest(c, localization.ErrorNoPermission, nil)
 	}
 
 	// Check if the user is trying to demote the only admin left
-	if account.Rank.Level >= uint(util.Permissions[util.PermissionAdmin]) && rank.Level < uint(util.Permissions[util.PermissionAdmin]) {
+	if account.Rank.Level >= uint(verify.Permissions[verify.PermissionAdmin]) && rank.Level < uint(verify.Permissions[verify.PermissionAdmin]) {
 
 		// Get all the accounts with admin permissions
 		var ranksWithAdminPerms []uint
-		if err := database.DBConn.Model(&database.Rank{}).Select("id").Where("level >= ?", util.Permissions[util.PermissionAdmin]).Find(&ranksWithAdminPerms).Error; err != nil {
+		if err := database.DBConn.Model(&database.Rank{}).Select("id").Where("level >= ?", verify.Permissions[verify.PermissionAdmin]).Find(&ranksWithAdminPerms).Error; err != nil {
 			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 		var count int64

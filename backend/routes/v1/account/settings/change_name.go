@@ -4,6 +4,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -19,8 +20,8 @@ func changeName(c *fiber.Ctx) error {
 	if err := util.BodyParser(c, &req); err != nil {
 		return util.InvalidRequest(c)
 	}
-	accId, valid := util.GetAcc(c)
-	if !valid {
+	accId, err := verify.InfoLocals(c).GetAccountUUID()
+	if err != nil {
 		return util.InvalidRequest(c)
 	}
 
@@ -30,7 +31,7 @@ func changeName(c *fiber.Ctx) error {
 	}
 
 	// Change username
-	err := database.DBConn.Model(&database.Account{}).Where("id = ?", accId).Update("username", req.Username).Error
+	err = database.DBConn.Model(&database.Account{}).Where("id = ?", accId).Update("username", req.Username).Error
 	if err != nil {
 		return util.FailedRequest(c, localization.ErrorUsernameTaken, err)
 	}
