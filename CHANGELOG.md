@@ -1,3 +1,8 @@
+## Currently in dev
+
+- Incremented protocol version to v7
+- Changed the way clients connect to the websocket gateway to get the data through a packet instead of protocols
+
 ## 0.4.0
 
 ### Notes for town administrators

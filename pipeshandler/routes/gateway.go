@@ -23,42 +23,6 @@ func gatewayRouter(router fiber.Router, localNode *pipes.LocalNode, instance *pi
 
 		// Check if it is a websocket upgrade request
 		if websocket.IsWebSocketUpgrade(c) {
-
-			// Check if the request has a token
-			protocolSeperated := c.Get("Sec-WebSocket-Protocol")
-			protocols := strings.Split(protocolSeperated, ", ")
-			token := protocols[0]
-
-			// Get attachments from the connection (passed to the node)
-			attachments := ""
-			if len(protocols) > 1 {
-				attachments = protocols[1]
-			}
-
-			if len(token) == 0 {
-				return c.SendStatus(fiber.StatusUnauthorized)
-			}
-
-			// Check if the token is valid
-			tk, ok := instance.CheckToken(token, localNode)
-			if !ok {
-				return c.SendStatus(fiber.StatusBadRequest)
-			}
-
-			// Make sure the session isn't already connected
-			if instance.ExistsConnection(tk.Account, tk.Session) {
-				return c.SendStatus(fiber.StatusConflict)
-			}
-
-			// Ask the node if the connection should be accepted
-			if instance.Config.TokenValidateHandler(tk, attachments) {
-				return c.SendStatus(fiber.StatusBadRequest)
-			}
-
-			// Set the token as a local variable
-			c.Locals("ws", true)
-			c.Locals("tk", tk)
-			c.Locals("attached", attachments)
 			return c.Next()
 		}
 
@@ -71,7 +35,50 @@ func gatewayRouter(router fiber.Router, localNode *pipes.LocalNode, instance *pi
 }
 
 func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Instance) {
-	tk := conn.Locals("tk").(*pipeshandler.ConnectionTokenClaims)
+
+	defer func() {
+		if err := recover(); err != nil {
+			util.Log.Println("There was an error with a connection: ", err)
+		}
+
+		// Close the connection
+		conn.Close()
+	}()
+
+	// Let the connection time out after 30 seconds
+	conn.SetReadDeadline(time.Now().Add(time.Second * 30))
+
+	// Read the auth packet
+	var authPacket struct {
+		Token       string `json:"token"`
+		Attachments string `json:"attachments"`
+	}
+	if err := conn.ReadJSON(&authPacket); err != nil {
+		return
+	}
+
+	if len(authPacket.Token) == 0 {
+		return
+	}
+
+	// Check if the token is valid
+	tk, ok := instance.CheckToken(authPacket.Token, local)
+	if !ok {
+		return
+	}
+
+	// Make sure the session isn't already connected
+	if instance.ExistsConnection(tk.Account, tk.Session) {
+		return
+	}
+
+	// Ask the node if the connection should be accepted
+	if instance.Config.TokenValidateHandler(tk, authPacket.Attachments) {
+		return
+	}
+
+	// Make sure there is an infinite read timeout again
+	conn.SetReadDeadline(time.UnixMilli(0))
 
 	client := instance.AddClient(tk.ToClient(conn, time.Now().Add(instance.Config.SessionDuration)))
 	defer func() {

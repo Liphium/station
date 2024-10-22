@@ -118,6 +118,7 @@ func listenForCommands() {
 			database.DBConn.Where("id = ?", acc.ID).Delete(&database.StoredActionKey{})
 			database.DBConn.Where("id = ?", acc.ID).Delete(&database.PublicKey{})
 			database.DBConn.Where("id = ?", acc.ID).Delete(&database.SignatureKey{})
+			database.DBConn.Where("id = ?", acc.ID).Delete(&database.VaultKey{})
 			database.DBConn.Where("account = ?", acc.ID).Delete(&database.AStoredAction{})
 			database.DBConn.Where("account = ?", acc.ID).Delete(&database.StoredAction{})
 			database.DBConn.Where("account = ?", acc.ID).Delete(&database.Friendship{})
