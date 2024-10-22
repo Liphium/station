@@ -15,6 +15,7 @@ import (
 	"github.com/Liphium/station/pipes"
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
@@ -44,6 +45,7 @@ func Start(routine bool) {
 		JSONEncoder: sonic.Marshal,
 		JSONDecoder: sonic.Unmarshal,
 	})
+	app.Use(cors.New())
 
 	// Query current node
 	_, _, currentApp, domain := integration.GetCurrent(integration.IdentifierChatNode)
