@@ -67,6 +67,6 @@ func NodeTo64(id string) int64 {
 
 func PrintIfTesting(v ...any) {
 	if integration.Testing {
-		Log.Println(v)
+		Log.Println(v...)
 	}
 }
