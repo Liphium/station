@@ -9,6 +9,8 @@ import (
 	"math/big"
 	"os"
 	"strconv"
+
+	"github.com/Liphium/station/main/integration"
 )
 
 // The domain of the chat server
@@ -61,4 +63,10 @@ func NodeTo64(id string) int64 {
 	}
 
 	return i
+}
+
+func PrintIfTesting(v ...any) {
+	if integration.Testing {
+		Log.Println(v)
+	}
 }

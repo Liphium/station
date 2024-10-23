@@ -37,6 +37,7 @@ func gatewayRouter(router fiber.Router, localNode *pipes.LocalNode, instance *pi
 func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Instance) {
 
 	defer func() {
+		util.PrintIfTesting("failed connection attempt")
 		if err := recover(); err != nil {
 			util.Log.Println("There was an error with a connection: ", err)
 		}
@@ -54,31 +55,31 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 		Attachments string `json:"attachments"`
 	}
 	if err := conn.ReadJSON(&authPacket); err != nil {
-		return
-	}
-
-	if len(authPacket.Token) == 0 {
+		util.PrintIfTesting("closed connection: couldn't decode auth packet: ", err)
 		return
 	}
 
 	// Check if the token is valid
 	tk, ok := instance.CheckToken(authPacket.Token, local)
 	if !ok {
+		util.PrintIfTesting("closed connection: invalid auth token")
 		return
 	}
 
 	// Make sure the session isn't already connected
 	if instance.ExistsConnection(tk.Account, tk.Session) {
+		util.PrintIfTesting("closed connection: already connected")
 		return
 	}
 
 	// Ask the node if the connection should be accepted
 	if instance.Config.TokenValidateHandler(tk, authPacket.Attachments) {
+		util.PrintIfTesting("closed connection: token was rejected by service")
 		return
 	}
 
-	// Make sure there is an infinite read timeout again
-	conn.SetReadDeadline(time.UnixMilli(0))
+	// Make sure there is an infinite read timeout again (1 week should be enough)
+	conn.SetReadDeadline(time.Now().Add(time.Hour * 24 * 7))
 
 	client := instance.AddClient(tk.ToClient(conn, time.Now().Add(instance.Config.SessionDuration)))
 	defer func() {
@@ -104,7 +105,7 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 		}
 	}()
 
-	if instance.Config.ClientConnectHandler(client, conn.Locals("attached").(string)) {
+	if instance.Config.ClientConnectHandler(client, authPacket.Attachments) {
 		return
 	}
 
@@ -142,7 +143,7 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 		})
 	}
 
-	if instance.Config.ClientEnterNetworkHandler(client, conn.Locals("attached").(string)) {
+	if instance.Config.ClientEnterNetworkHandler(client, authPacket.Attachments) {
 		return
 	}
 
