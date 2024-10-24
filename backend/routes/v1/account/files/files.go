@@ -76,7 +76,7 @@ func Unauthorized(router fiber.Router) {
 }
 
 func UnencryptedUnauthorized(router fiber.Router) {
-	router.Post("/download/:id", downloadFile)
+	router.Get("/download/:id", downloadFile)
 }
 
 func GetIntEnv(key string, standard int64) int64 {

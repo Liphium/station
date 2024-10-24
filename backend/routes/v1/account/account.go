@@ -18,7 +18,7 @@ import (
 )
 
 func Unencrypted(router fiber.Router) {
-	router.Route("/files", files.UnencryptedUnauthorized)
+	router.Route("/files_unencrypted", files.UnencryptedUnauthorized)
 	router.Route("/files", files.Unencrypted)
 	router.Route("/auth", auth_routes.Unencrypted)
 }
