@@ -2,6 +2,7 @@
 
 - Incremented protocol version to v7
 - Changed the way clients connect to the websocket gateway to get the data through a packet instead of protocols
+- Removed LiveKit support from Spaces (read main/README.md for more info)
 
 ## 0.4.0
 

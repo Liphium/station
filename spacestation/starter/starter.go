@@ -31,11 +31,6 @@ func Start(loadEnv bool) bool {
 		return false
 	}
 
-	worked := caching.InitLiveKit()
-	if !worked {
-		return false
-	}
-
 	util.Log.Println("Starting..")
 
 	// Query current node AND JWT TOKEN
