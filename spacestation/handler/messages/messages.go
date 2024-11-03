@@ -15,6 +15,11 @@ func SetupHandler() {
 	// Handlers for sending messages
 	pipeshandler.CreateHandlerFor(caching.SSInstance, "msg_timestamp", generateTimestampToken)
 	pipeshandler.CreateHandlerFor(caching.SSInstance, "msg_send", sendMessage)
+
+	// Handlers for getting and listing messages
+	pipeshandler.CreateHandlerFor(caching.SSInstance, "msg_get", getMessage)
+	pipeshandler.CreateHandlerFor(caching.SSInstance, "msg_list_before", listMessageBefore)
+	pipeshandler.CreateHandlerFor(caching.SSInstance, "msg_list_after", listMessagesAfter)
 }
 
 type timestampClaims struct {
