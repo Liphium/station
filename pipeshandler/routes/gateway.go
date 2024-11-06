@@ -148,8 +148,6 @@ func ws(conn *websocket.Conn, local *pipes.LocalNode, instance *pipeshandler.Ins
 	}
 
 	for {
-		log.Println("reading..")
-
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
 
