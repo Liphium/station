@@ -1,6 +1,7 @@
 package message_handlers
 
 import (
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
@@ -34,7 +35,7 @@ func sendMessage(c *pipeshandler.Context, action struct {
 	// Create the message and save it
 	message := caching.Message{
 		ID:           uuid.NewString(),
-		Conversation: c.Client.Session,
+		Conversation: c.Client.Session + "@" + integration.Domain,
 		Creation:     timestamp,
 		Data:         action.Data,
 		Edited:       false,
