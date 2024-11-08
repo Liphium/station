@@ -63,13 +63,20 @@ func setupPipesFiber(router fiber.Router) {
 		// Validate token and create room
 		TokenValidateHandler: func(claims *pipeshandler.ConnectionTokenClaims, attachments string) bool {
 
+			// Make sure it is an actual session id
+			if len(claims.Extra) != 16 {
+				util.Log.Println("Not length 16")
+				return true
+			}
+
 			// Create room (if needed)
-			_, valid := caching.GetRoom(claims.Session)
+			claims.Session = claims.Extra // Session is the room id and since that's now passed through extra we'll just set session to it
+			_, valid := caching.GetRoom(claims.Extra)
 			if !valid {
-				util.Log.Println("Creating new room for", claims.Account, "("+claims.Session+")")
-				caching.CreateRoom(claims.Session)
+				util.Log.Println("Creating new room for", claims.Account, "("+claims.Extra+")")
+				caching.CreateRoom(claims.Extra)
 			} else {
-				util.Log.Println("Room already exists for", claims.Account, "("+claims.Session+")")
+				util.Log.Println("Room already exists for", claims.Account, "("+claims.Extra+")")
 			}
 
 			return false

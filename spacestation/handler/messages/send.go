@@ -47,7 +47,14 @@ func sendMessage(c *pipeshandler.Context, action struct {
 		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
-	// TODO: Broadcast in an event
+	// Send the message to all members of the Space using an event
+	// We don't handle the error here to leave open the list_after endpoints as a backup solution
+	SendEventToMembers(c.Client.Session, pipes.Event{
+		Name: "msg",
+		Data: map[string]interface{}{
+			"msg": message,
+		},
+	})
 
 	return pipeshandler.SuccessResponse(c)
 }

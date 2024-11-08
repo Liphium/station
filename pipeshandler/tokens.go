@@ -12,10 +12,11 @@ import (
 
 // Connection token struct
 type ConnectionTokenClaims struct {
-	Account        string `json:"acc"`  // Account id of the connecting client
-	ExpiredUnixSec int64  `json:"e_u"`  // Expiration time in unix seconds
-	Session        string `json:"ses"`  // Session id of the connecting client
-	Node           string `json:"node"` // Node id of the node the client is connecting to
+	Account        string `json:"acc"`             // Account id of the connecting client
+	ExpiredUnixSec int64  `json:"e_u"`             // Expiration time in unix seconds
+	Session        string `json:"ses"`             // Session id of the connecting client
+	Node           string `json:"node"`            // Node id of the node the client is connecting to
+	Extra          string `json:"extra,omitempty"` // Extra arguments for the connection
 
 	jwt.RegisteredClaims
 }

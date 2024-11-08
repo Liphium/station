@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Liphium/station/main/integration"
+	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
 	"github.com/gofiber/fiber/v2"
@@ -69,4 +70,19 @@ func IsExpired(c *fiber.Ctx) bool {
 	exp := int64(num)
 
 	return time.Now().Unix() > exp
+}
+
+// Send an event to all room members
+func SendEventToMembers(room string, event pipes.Event) bool {
+	adapters, valid := caching.GetAllAdapters(room)
+	if !valid {
+		return false
+	}
+
+	caching.SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
+		Channel: pipes.BroadcastChannel(adapters),
+		Local:   true,
+		Event:   event,
+	})
+	return valid
 }

@@ -1,11 +1,11 @@
 package caching
 
 import (
+	"errors"
+	"log"
 	"slices"
 	"sync"
 	"unsafe"
-
-	"github.com/Liphium/station/spacestation/util"
 )
 
 type Message struct {
@@ -47,6 +47,7 @@ func GetMessagesBefore(room string, time int64) ([]Message, error) {
 	// Get the message sink
 	obj, valid := messageMap.Load(room)
 	if !valid {
+		log.Println("no messages yet")
 		return []Message{}, nil
 	}
 	sink := obj.(*MessageSink)
@@ -69,8 +70,8 @@ func GetMessagesBefore(room string, time int64) ([]Message, error) {
 	// Find the nearest message to the time
 	found := false
 	length := len(messagesCopy)
-	currentJump := length / 2
-	currentIndex := currentJump - 1
+	currentJump := length / 4
+	currentIndex := length / 2
 	maxIndex := length - 1
 	for {
 		msg := messagesCopy[currentIndex]
@@ -125,12 +126,11 @@ func GetMessagesBefore(room string, time int64) ([]Message, error) {
 	}
 
 	// Get 10 messages before the current index
-	messages := make([]Message, 10)
-	copied := copy(messages, messagesCopy[currentIndex:])
-
-	// TODO: Remove this debug messages after testing
-	util.Log.Println("Copied ", copied, " messages into the array (before)")
-
+	minIndex := max(currentIndex-9, 0)
+	length = (currentIndex - minIndex) + 1
+	messages := make([]Message, length)
+	copy(messages, messagesCopy[minIndex:currentIndex+1])
+	slices.Reverse(messages)
 	return messages, nil
 }
 
@@ -164,14 +164,14 @@ func GetMessagesAfter(room string, time int64) ([]Message, error) {
 	// Find the nearest message to the time
 	found := false
 	length := len(messagesCopy)
-	currentJump := length / 2
-	currentIndex := currentJump - 1
+	currentJump := length / 4
+	currentIndex := length / 2
 	maxIndex := length - 1
 	for {
 		msg := messagesCopy[currentIndex]
 
-		// Check if the current message was sent before the specified time
-		if msg.Creation < time {
+		// Check if the current message was sent after the specified time
+		if msg.Creation > time {
 
 			// If the index is equal to zero, the process is done (no messages after time)
 			if currentIndex == 0 {
@@ -185,14 +185,14 @@ func GetMessagesAfter(room string, time int64) ([]Message, error) {
 				break
 			}
 
-			// If the message sent after the current message (at an index higher than the current message)
-			// is not below the time parameter, the current message is the start of the array
-			if messagesCopy[currentIndex+1].Creation < time {
+			// If the message that was sent before the current message (at a lower index than the current message)
+			// was sent before the time parameter, the message was found.
+			if messagesCopy[currentIndex-1].Creation <= time {
 				found = true
 				break
 			}
 
-			// If the message was before, but not enough, jump to a higher index
+			// If the message was after, but not enough, jump to a lower index
 			currentIndex = currentIndex - currentJump
 			if currentIndex < 0 {
 				currentIndex = 0
@@ -219,13 +219,11 @@ func GetMessagesAfter(room string, time int64) ([]Message, error) {
 		return []Message{}, nil
 	}
 
-	// Get 10 messages before the current index
-	messages := make([]Message, 10)
-	copied := copy(messages, messagesCopy[:currentIndex])
-
-	// TODO: Remove this debug messages after testing
-	util.Log.Println("Copied ", copied, " messages into the array (after)")
-
+	// Get 10 messages after the current index
+	maxIndex = min(currentIndex+9, maxIndex)
+	length = (maxIndex - currentIndex) + 1
+	messages := make([]Message, length)
+	copy(messages, messagesCopy[currentIndex:])
 	return messages, nil
 }
 
@@ -236,7 +234,7 @@ func GetMessageById(room string, id string) (Message, error) {
 	// Get the message sink
 	obj, valid := messageMap.Load(room)
 	if !valid {
-		return Message{}, nil
+		return Message{}, errors.New("room message sink not found")
 	}
 	sink := obj.(*MessageSink)
 
@@ -250,6 +248,9 @@ func GetMessageById(room string, id string) (Message, error) {
 	index := slices.IndexFunc(messagesCopy, func(msg Message) bool {
 		return msg.ID == id
 	})
+	if index == -1 {
+		return Message{}, errors.New("message not found")
+	}
 
 	return messagesCopy[index], nil
 }
@@ -267,6 +268,9 @@ func AddMessage(room string, msg Message) error {
 	// Lock the mutex and make sure
 	sink.Mutex.Lock()
 	defer sink.Mutex.Unlock()
+
+	// Add the message
+	sink.Messages = append(sink.Messages, msg)
 
 	return nil
 }

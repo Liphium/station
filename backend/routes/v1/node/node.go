@@ -15,7 +15,6 @@ func Unauthorized(router fiber.Router) {
 
 	router.Post("/this", this)
 	router.Post("/disconnect", connect.Disconnect)
-	router.Post("/get_lowest", connect.GetLowest)
 	router.Post("/get_bool_setting", getBoolSetting)
 	router.Post("/get_session", getSession)
 }

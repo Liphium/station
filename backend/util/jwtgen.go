@@ -11,16 +11,17 @@ import (
 
 // Connection token struct
 type ConnectionTokenClaims struct {
-	Account        string `json:"acc"`  // Account id of the connecting client
-	ExpiredUnixSec int64  `json:"e_u"`  // Expiration time in unix seconds
-	Session        string `json:"ses"`  // Session id of the connecting client
-	Node           string `json:"node"` // Node id of the node the client is connecting to
+	Account        string `json:"acc"`             // Account id of the connecting client
+	ExpiredUnixSec int64  `json:"e_u"`             // Expiration time in unix seconds
+	Session        string `json:"ses"`             // Session id of the connecting client
+	Node           string `json:"node"`            // Node id of the node the client is connecting to
+	Extra          string `json:"extra,omitempty"` // Extra information for the connection
 
 	jwt.RegisteredClaims
 }
 
 // Generate a connection token for a node
-func ConnectionToken(account uuid.UUID, session string, node uint) (string, error) {
+func ConnectionToken(account uuid.UUID, session string, extra string, node uint) (string, error) {
 
 	// Create jwt token
 	exp := time.Now().Add(time.Hour * 2)
@@ -28,28 +29,8 @@ func ConnectionToken(account uuid.UUID, session string, node uint) (string, erro
 		Account:        account.String(),
 		ExpiredUnixSec: exp.Unix(),
 		Session:        session,
+		Extra:          extra,
 		Node:           fmt.Sprintf("%d", node),
-	})
-
-	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := tk.SignedString([]byte(JWT_SECRET))
-
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
-}
-
-// Create a token with current session information (some nodes may require this)
-func SessionInformationToken(account uuid.UUID, sessions []string) (string, error) {
-
-	// Create jwt token
-	exp := time.Now().Add(time.Hour * 2)
-	tk := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
-		"acc": account.String(),
-		"e_u": exp.Unix(), // Expiration unix
-		"se":  sessions,   // Session list (for the node)
 	})
 
 	// Sign and get the complete encoded token as a string using the secret

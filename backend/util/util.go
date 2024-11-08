@@ -27,7 +27,7 @@ const LocalsKey = "key"
 const LocalsBody = "body"
 
 // Important variables
-const ProtocolVersion = 7
+const ProtocolVersion = 6
 
 var Testing = false
 var LogErrors = true

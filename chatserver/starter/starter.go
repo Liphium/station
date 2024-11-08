@@ -38,7 +38,6 @@ func Start(routine bool) {
 
 	// Connect to the database
 	database.Connect()
-	caching.SetupCaches()
 
 	// Create fiber app
 	app := fiber.New(fiber.Config{
