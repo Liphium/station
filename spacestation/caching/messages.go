@@ -274,3 +274,35 @@ func AddMessage(room string, msg Message) error {
 
 	return nil
 }
+
+// Delete message from the room.
+func DeleteMessage(room string, message string) error {
+
+	// Get the message sink
+	obj, valid := messageMap.Load(room)
+	if !valid {
+		return errors.New("room message sink not found")
+	}
+	sink := obj.(*MessageSink)
+
+	// Copy the messages out of the sink (to unlock the mutex faster)
+	sink.Mutex.Lock()
+	messagesCopy := make([]Message, len(sink.Messages))
+	copy(messagesCopy, sink.Messages)
+	sink.Mutex.Unlock()
+
+	// Find the message
+	index := slices.IndexFunc(messagesCopy, func(msg Message) bool {
+		return msg.ID == message
+	})
+	if index == -1 {
+		return errors.New("message not found")
+	}
+
+	// Delete the message
+	sink.Mutex.Lock()
+	defer sink.Mutex.Unlock()
+	sink.Messages = slices.Delete(sink.Messages, index, index+1)
+
+	return nil
+}

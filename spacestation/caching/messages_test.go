@@ -174,6 +174,26 @@ func TestGetMessageById(t *testing.T) {
 	assert.Equal(t, "Hello", msg.Data, "Message data should match the requested message")
 }
 
+func TestDeleteMessage(t *testing.T) {
+	roomID := "room1"
+	messageMap.Store(roomID, &MessageSink{
+		Mutex: &sync.Mutex{},
+		Messages: []Message{
+			{ID: "msg1", Data: "Hello"},
+			{ID: "msg2", Data: "World"},
+		},
+	})
+
+	err := DeleteMessage(roomID, "msg2")
+	assert.NoError(t, err, "Deleting message by ID should not return an error")
+
+	// Make sure the message has actually been deleted
+	obj, _ := messageMap.Load(roomID)
+	sink := obj.(*MessageSink)
+	assert.Equal(t, 1, len(sink.Messages), "Message should have been deleted")
+	assert.Equal(t, "msg1", sink.Messages[0].ID, "Wrong message was deleted")
+}
+
 func TestGetMessagesBeforeNoMessages(t *testing.T) {
 	roomID := "room4"
 	messageMap.Store(roomID, &MessageSink{
