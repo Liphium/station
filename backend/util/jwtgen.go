@@ -1,11 +1,7 @@
 package util
 
 import (
-	"crypto/rsa"
-	"encoding/base64"
-	"errors"
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,16 +11,17 @@ import (
 
 // Connection token struct
 type ConnectionTokenClaims struct {
-	Account        string `json:"acc"`  // Account id of the connecting client
-	ExpiredUnixSec int64  `json:"e_u"`  // Expiration time in unix seconds
-	Session        string `json:"ses"`  // Session id of the connecting client
-	Node           string `json:"node"` // Node id of the node the client is connecting to
+	Account        string `json:"acc"`             // Account id of the connecting client
+	ExpiredUnixSec int64  `json:"e_u"`             // Expiration time in unix seconds
+	Session        string `json:"ses"`             // Session id of the connecting client
+	Node           string `json:"node"`            // Node id of the node the client is connecting to
+	Extra          string `json:"extra,omitempty"` // Extra information for the connection
 
 	jwt.RegisteredClaims
 }
 
 // Generate a connection token for a node
-func ConnectionToken(account uuid.UUID, session string, node uint) (string, error) {
+func ConnectionToken(account uuid.UUID, session string, extra string, node uint) (string, error) {
 
 	// Create jwt token
 	exp := time.Now().Add(time.Hour * 2)
@@ -32,28 +29,8 @@ func ConnectionToken(account uuid.UUID, session string, node uint) (string, erro
 		Account:        account.String(),
 		ExpiredUnixSec: exp.Unix(),
 		Session:        session,
+		Extra:          extra,
 		Node:           fmt.Sprintf("%d", node),
-	})
-
-	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := tk.SignedString([]byte(JWT_SECRET))
-
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
-}
-
-// Create a token with current session information (some nodes may require this)
-func SessionInformationToken(account uuid.UUID, sessions []string) (string, error) {
-
-	// Create jwt token
-	exp := time.Now().Add(time.Hour * 2)
-	tk := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
-		"acc": account.String(),
-		"e_u": exp.Unix(), // Expiration unix
-		"se":  sessions,   // Session list (for the node)
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
@@ -73,8 +50,6 @@ func Token(session uuid.UUID, account uuid.UUID, lvl uint, exp time.Time) (strin
 	tk := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
 		"ses": session.String(),
 		"e_u": exp.Unix(), // Expiration unix
-		"acc": account.String(),
-		"lvl": lvl,
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
@@ -104,73 +79,14 @@ func IsExpired(c *fiber.Ctx) bool {
 	return time.Now().Unix() > exp
 }
 
-// Permission checks if the user has the required permission level
-func Permission(c *fiber.Ctx, perm string) bool {
+/*
+This is staying here for now (even if not used) because we may need it
+again in the future and because I might not want to recode this at that
+time, this can slumber here until it is needed again (maybe).
 
-	// Check if there is a JWT token
-	if c.Locals("user") == nil || reflect.TypeOf(c.Locals("user")).String() != "*jwt.Token" {
-		return false
-	}
-
-	// Get the permission from the map
-	permission, valid := Permissions[perm]
-	if !valid {
-		return false
-	}
-
-	user := c.Locals("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-	lvl := int16(claims["lvl"].(float64))
-
-	return lvl >= permission
-}
-
-func GetPermissionLevel(c *fiber.Ctx) (int16, bool) {
-
-	// Check if there is a JWT token
-	if c.Locals("user") == nil || reflect.TypeOf(c.Locals("user")).String() != "*jwt.Token" {
-		return 0, false
-	}
-
-	user := c.Locals("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-	lvl := int16(claims["lvl"].(float64))
-
-	return lvl, true
-}
-
-// Get session from JWT token (only use on authorized routes)
-func GetSession(c *fiber.Ctx) (uuid.UUID, error) {
-	if c.Locals("user") == nil || reflect.TypeOf(c.Locals("user")).String() != "*jwt.Token" {
-		return uuid.UUID{}, errors.New("token wasn't found")
-	}
-	user := c.Locals("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-
-	// Parse the uuid
-	id, err := uuid.Parse(claims["ses"].(string))
-	if err != nil {
-		return uuid.UUID{}, err
-	}
-
-	return id, nil
-}
-
-// Get account from JWT token (only use on authorized routes)
-func GetAcc(c *fiber.Ctx) (uuid.UUID, bool) {
-	if c.Locals("user") == nil || reflect.TypeOf(c.Locals("user")).String() != "*jwt.Token" {
-		return uuid.UUID{}, false
-	}
-	user := c.Locals("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-
-	id, err := uuid.Parse(claims["acc"].(string))
-	if err != nil {
-		return uuid.UUID{}, false
-	}
-
-	return id, true
-}
+If this isn't needed for another year, I think it can be removed. Currently
+is the 14th of October in 2024. In case this project is still around in a few
+years from now, let's celebrate by removing this piece of code!!! yay
 
 // Generate a JWT value that the client can't read (can't be really long because of RSA encryption)
 func MakeHiddenJWTValue(c *fiber.Ctx, value []byte) (string, error) {
@@ -204,3 +120,4 @@ func ReadHiddenJWTValue(c *fiber.Ctx, encoded string) ([]byte, error) {
 	}
 	return decrypted, nil
 }
+*/

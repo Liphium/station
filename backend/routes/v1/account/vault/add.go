@@ -4,6 +4,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -23,8 +24,8 @@ func addEntry(c *fiber.Ctx) error {
 	}
 
 	// Check if the account has too many entries
-	accId, valid := util.GetAcc(c)
-	if !valid {
+	accId, err := verify.InfoLocals(c).GetAccountUUID()
+	if err != nil {
 		return util.InvalidRequest(c)
 	}
 	var entryCount int64

@@ -6,13 +6,14 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
 func generateToken(c *fiber.Ctx) error {
 
-	if !util.Permission(c, util.PermissionAdmin) {
+	if !verify.InfoLocals(c).HasPermission(verify.PermissionAdmin) {
 		return util.InvalidRequest(c)
 	}
 

@@ -1,10 +1,9 @@
 package keys
 
 import (
-	"log"
-
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -13,9 +12,9 @@ import (
 func getPublicKey(c *fiber.Ctx) error {
 
 	// Get account
-	accId, valid := util.GetAcc(c)
-	log.Println(accId, valid)
-	if !valid {
+	accId, err := verify.InfoLocals(c).GetAccountUUID()
+	if err != nil {
+		util.Log.Println("couldn't get account uuid", verify.InfoLocals(c))
 		return util.InvalidRequest(c)
 	}
 
@@ -48,8 +47,8 @@ func setPublicKey(c *fiber.Ctx) error {
 	}
 
 	// Get account
-	accId, valid := util.GetAcc(c)
-	if !valid {
+	accId, err := verify.InfoLocals(c).GetAccountUUID()
+	if err != nil {
 		return util.InvalidRequest(c)
 	}
 

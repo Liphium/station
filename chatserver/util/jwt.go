@@ -57,12 +57,3 @@ func IsExpired(c *fiber.Ctx) bool {
 
 	return time.Now().Unix() > exp
 }
-
-// Permission checks if the user has the required permission level
-func Permission(c *fiber.Ctx, perm int16) bool {
-	user := c.Locals("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-	lvl := int16(claims["lvl"].(float64))
-
-	return lvl >= perm
-}

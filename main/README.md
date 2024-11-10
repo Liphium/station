@@ -1,3 +1,9 @@
+### Note
+
+LiveKit lost support in the last release. We're looking to rework the entire implementation of Spaces and getting rid of LiveKit is just the first step for the desire for more control. Expect voice chat to return in future versions of Liphium, but that will likely take months to years until arrival.
+
+What this means for you and why this notice is here is that you can now safely remove all environment variables in the previous environment file starting with the SS_LK prefix. They are no longer needed.
+
 ### Example .env file for this app
 
 ```bash
@@ -75,12 +81,4 @@ CN_DB_PASSWORD = "deinemutter123"
 CN_DB_DATABASE = "chat"
 CN_DB_HOST = "localhost"
 CN_DB_PORT = "5432"
-
-
-# SPACE STATION CONFIGURATION
-
-# LiveKit
-SS_LK_URL = "ws://localhost:7880"
-SS_LK_KEY = "devkey"
-SS_LK_SECRET = "secret"
 ```

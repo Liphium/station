@@ -3,6 +3,7 @@ package invite_routes
 import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -11,13 +12,13 @@ import (
 func generateInvite(c *fiber.Ctx) error {
 
 	// Get invite count of account
-	accId, valid := util.GetAcc(c)
-	if !valid {
+	accId, err := verify.InfoLocals(c).GetAccountUUID()
+	if err != nil {
 		return util.InvalidRequest(c)
 	}
 
 	// Only check for the invite code if the user isn't an admin
-	if !util.Permission(c, util.PermissionAdmin) {
+	if !verify.InfoLocals(c).HasPermission(verify.PermissionAdmin) {
 		var inviteCount database.InviteCount
 		if err := database.DBConn.Where("account = ?", accId).Take(&inviteCount).Error; err != nil {
 			return util.FailedRequest(c, localization.ErrorInvitesEmpty, err)

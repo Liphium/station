@@ -42,6 +42,10 @@ type Room struct {
 func CreateRoom(roomId string) {
 	roomsCache.Set(roomId, Room{&sync.Mutex{}, roomId, []string{}, time.Now().UnixMilli()}, 1)
 	roomConnectionsCache.Set(roomId, RoomConnections{}, 1)
+	messageMap.Store(roomId, &MessageSink{
+		Mutex:    &sync.Mutex{},
+		Messages: []Message{},
+	})
 	roomsCache.Wait()
 }
 
@@ -87,6 +91,7 @@ func JoinRoom(roomID string, connectionId string) bool {
 func DeleteRoom(roomID string) {
 	roomsCache.Del(roomID)
 	roomConnectionsCache.Del(roomID)
+	messageMap.Delete(roomID)
 }
 
 // GetRoom gets a room from the cache

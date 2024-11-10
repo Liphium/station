@@ -3,6 +3,7 @@ package friends
 import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -19,8 +20,8 @@ func getReceiveDate(c *fiber.Ctx) error {
 	if err := util.BodyParser(c, &req); err != nil {
 		return util.InvalidRequest(c)
 	}
-	accId, valid := util.GetAcc(c)
-	if !valid {
+	accId, err := verify.InfoLocals(c).GetAccountUUID()
+	if err != nil {
 		return util.InvalidRequest(c)
 	}
 
@@ -49,8 +50,8 @@ func updateReceiveDate(c *fiber.Ctx) error {
 	if err := util.BodyParser(c, &req); err != nil {
 		return util.InvalidRequest(c)
 	}
-	accId, valid := util.GetAcc(c)
-	if !valid {
+	accId, err := verify.InfoLocals(c).GetAccountUUID()
+	if err != nil {
 		return util.InvalidRequest(c)
 	}
 

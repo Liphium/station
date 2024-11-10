@@ -10,13 +10,13 @@ import (
 
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -56,31 +56,7 @@ func Unencrypted(router fiber.Router) {
 	}
 
 	// Autorized by using a normal JWT token
-	router.Use(jwtware.New(jwtware.Config{
-		SigningKey: jwtware.SigningKey{
-			JWTAlg: jwtware.HS512,
-			Key:    []byte(util.JWT_SECRET),
-		},
-
-		// Checks if the token is expired
-		SuccessHandler: func(c *fiber.Ctx) error {
-
-			if util.IsExpired(c) {
-				return util.InvalidRequest(c)
-			}
-
-			return c.Next()
-		},
-
-		// Error handler
-		ErrorHandler: func(c *fiber.Ctx, err error) error {
-
-			util.Log.Println(err.Error())
-
-			// Return error message
-			return c.SendStatus(401)
-		},
-	}))
+	router.Use(verify.AuthMiddleware())
 
 	if os.Getenv("FILE_REPO_TYPE") != "" {
 		fileRepoType = os.Getenv("FILE_REPO_TYPE")
@@ -100,7 +76,7 @@ func Unauthorized(router fiber.Router) {
 }
 
 func UnencryptedUnauthorized(router fiber.Router) {
-	router.Post("/download/:id", downloadFile)
+	router.Get("/download/:id", downloadFile)
 }
 
 func GetIntEnv(key string, standard int64) int64 {

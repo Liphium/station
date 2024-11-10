@@ -1,3 +1,11 @@
+## 0.5.0
+
+- Incremented protocol version to v6
+- Changed the way clients connect to the websocket gateway to get the data through a packet instead of protocols
+- Removed LiveKit support from Spaces (read main/README.md for more info)
+- Added handlers for actions from Spaces messaging
+- Removed some old and unused code
+
 ## 0.4.0
 
 ### Notes for town administrators

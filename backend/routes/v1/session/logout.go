@@ -4,6 +4,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/requests"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -11,7 +12,7 @@ import (
 func logOut(c *fiber.Ctx) error {
 
 	// Get token
-	sessionId, err := util.GetSession(c)
+	sessionId, err := verify.InfoLocals(c).GetSessionUUID()
 	if err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}

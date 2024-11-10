@@ -9,7 +9,7 @@ import (
 	"github.com/Liphium/station/backend/routes/v1/node"
 	townhall_routes "github.com/Liphium/station/backend/routes/v1/townhall"
 	"github.com/Liphium/station/backend/util"
-	jwtware "github.com/gofiber/contrib/jwt"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -102,32 +102,8 @@ func encryptedRoutes(router fiber.Router, serverPublicKey *rsa.PublicKey, server
 
 func authorizedRoutes(router fiber.Router) {
 
-	// Autorized by using a normal JWT token
-	router.Use(jwtware.New(jwtware.Config{
-		SigningKey: jwtware.SigningKey{
-			JWTAlg: jwtware.HS512,
-			Key:    []byte(util.JWT_SECRET),
-		},
-
-		// Checks if the token is expired
-		SuccessHandler: func(c *fiber.Ctx) error {
-
-			if util.IsExpired(c) {
-				return util.InvalidRequest(c)
-			}
-
-			return c.Next()
-		},
-
-		// Error handler
-		ErrorHandler: func(c *fiber.Ctx, err error) error {
-
-			util.Log.Println(err.Error())
-
-			// Return error message
-			return c.SendStatus(401)
-		},
-	}))
+	// Authorized by using a jwt token + verifiying it with the database
+	router.Use(verify.AuthMiddleware())
 
 	// Authorized routes
 	router.Route("/account", account.Authorized)

@@ -27,22 +27,12 @@ const LocalsKey = "key"
 const LocalsBody = "body"
 
 // Important variables
-const ProtocolVersion = 5
+const ProtocolVersion = 6
 
 var Testing = false
 var LogErrors = true
 
 var Log = log.New(os.Stdout, "backend ", log.Flags())
-
-// Permissions
-var Permissions = map[string]int16{
-	"use_services": 10,
-	"admin":        100,
-}
-
-// Permission names
-const PermissionUseServices = "use_services"
-const PermissionAdmin = "admin"
 
 var JWT_SECRET = ""
 
