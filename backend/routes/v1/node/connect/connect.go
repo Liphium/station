@@ -83,6 +83,12 @@ func Connect(c *fiber.Ctx) error {
 	}
 
 	currentSession.LastConnection = time.Now()
+
+	// Only chat receives stored actions (in the future this could be in the database)
+	if application.Tag == "liphium_chat" {
+		currentSession.Node = chosenNode.ID
+		currentSession.App = application.ID
+	}
 	if err := database.DBConn.Save(&currentSession).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
