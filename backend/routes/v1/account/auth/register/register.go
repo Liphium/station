@@ -11,14 +11,15 @@ import (
 )
 
 func Unauthorized(router fiber.Router) {
-	router.Post("/email", checkEmail)          // Step 0: Check the email and redirect to save the token
-	router.Post("/start", startRegister)       // Step 1: Render the invite form
-	router.Post("/invite", checkInvite)        // Step 2: Check the invite code
-	router.Post("/email_code", checkEmailCode) // Step 3: Check the email code
-	router.Post("/from_sso", fromSSO)          // Step 3 from SSO: Render the username form (everything before was already done)
-	router.Post("/resend_email", resendEmail)  // Step 3: Resend email endpoint
-	router.Post("/username", checkUsername)    // Step 4: Check the username
-	router.Post("/password", checkPassword)    // Step 5: Check the password & return tokens
+	router.Post("/email", checkEmail)              // Step 0: Check the email and redirect to save the token
+	router.Post("/start", startRegister)           // Step 1: Render the invite form
+	router.Post("/invite", checkInvite)            // Step 2: Check the invite code
+	router.Post("/email_code", checkEmailCode)     // Step 3: Check the email code
+	router.Post("/from_sso", fromSSO)              // Step 3 from SSO: Render the username form (everything before was already done)
+	router.Post("/resend_email", resendEmail)      // Step 3: Resend email endpoint
+	router.Post("/display_name", checkDisplayName) // Step 4: Check the display name
+	router.Post("/username", checkUsername)        // Step 4: Check the username
+	router.Post("/password", checkPassword)        // Step 6: Check the password & return tokens
 }
 
 type RegisterState struct {

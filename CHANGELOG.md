@@ -1,3 +1,16 @@
+## Currently in dev
+
+- Made the registration a little bit more user friendly
+  - The display name and username input now have a max length associated with them
+  - The display name and username errors for requirements now include the requirements
+  - The display name and username creation have been separated to avoid confusion between the two
+  - Display name creation now has a better description of what it actually is
+  - Username creation now has a better description of what it actually is
+
+## 0.5.1
+
+- Fixed a bug where stored actions would be completely broken (friend requests and stuff)
+
 ## 0.5.0
 
 - Incremented protocol version to v6

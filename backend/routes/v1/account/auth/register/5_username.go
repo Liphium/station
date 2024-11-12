@@ -13,24 +13,20 @@ func checkUsername(c *fiber.Ctx) error {
 
 	// Parse the request
 	var req struct {
-		Token       string `json:"token"`
-		Username    string `json:"username"`
-		DisplayName string `json:"display_name"`
+		Token    string `json:"token"`
+		Username string `json:"username"`
 	}
 	if err := util.BodyParser(c, &req); err != nil {
 		return util.InvalidRequest(c)
 	}
 
 	// Validate the token and stuff
-	state, msg := validateToken(req.Token, 4)
+	state, msg := validateToken(req.Token, 5)
 	if msg != nil {
 		return util.FailedRequest(c, msg, nil)
 	}
 
 	// Verify display name and username
-	if msg := standards.CheckDisplayName(req.DisplayName); msg != nil {
-		return util.FailedRequest(c, msg, nil)
-	}
 	if msg := standards.CheckUsername(req.Username); msg != nil {
 		return util.FailedRequest(c, msg, nil)
 	}
@@ -38,11 +34,10 @@ func checkUsername(c *fiber.Ctx) error {
 	// Add username and stuff to the state
 	state.Mutex.Lock()
 	state.Username = req.Username
-	state.DisplayName = req.DisplayName
 	state.Mutex.Unlock()
 
 	// Upgrade the token
-	if msg := upgradeToken(req.Token, 5); msg != nil {
+	if msg := upgradeToken(req.Token, 6); msg != nil {
 		return util.FailedRequest(c, msg, nil)
 	}
 

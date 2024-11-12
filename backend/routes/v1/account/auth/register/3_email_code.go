@@ -3,6 +3,7 @@ package register_routes
 import (
 	"time"
 
+	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/main/ssr"
@@ -50,37 +51,21 @@ func checkEmailCode(c *fiber.Ctx) error {
 func renderUsernameForm(c *fiber.Ctx) error {
 	return util.ReturnJSON(c, ssr.RenderResponse(c, ssr.Components{
 		ssr.Text{
-			Text:  localization.RegisterUsernameTitle,
+			Text:  localization.RegisterDisplayNameTitle,
 			Style: ssr.TextStyleHeadline,
 		},
 		ssr.Text{
-			Text:  localization.RegisterUsername,
-			Style: ssr.TextStyleSeperator,
-		},
-		ssr.Text{
-			Text:  localization.RegisterUsernameRequirements,
-			Style: ssr.TextStyleDescription,
-		},
-		ssr.Input{
-			Placeholder: localization.RegisterUsernamePlaceholder,
-			Name:        "username",
-		},
-		ssr.Text{
-			Text:  localization.RegisterDisplayName,
-			Style: ssr.TextStyleSeperator,
-		},
-		ssr.Text{
-			Text:  localization.RegisterDisplayNameRequirements,
+			Text:  localization.RegisterDisplayNameDescription,
 			Style: ssr.TextStyleDescription,
 		},
 		ssr.Input{
 			Placeholder: localization.RegisterDisplayNamePlaceholder,
 			Name:        "display_name",
-			UTF8:        true,
+			MaxLength:   standards.MaxUsernameLength,
 		},
 		ssr.SubmitButton{
 			Label: localization.AuthNextStepButton,
-			Path:  "/account/auth/register/username",
+			Path:  "/account/auth/register/display_name",
 		},
 	}))
 }

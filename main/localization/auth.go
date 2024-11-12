@@ -9,10 +9,7 @@ var (
 		englishUS: "This username is taken. Please choose a different one.",
 	}
 	ErrorUsernameInvalid = Translations{
-		englishUS: "Your username doesn't match the requirements.",
-	}
-	ErrorDisplayNameInvalid = Translations{
-		englishUS: "Your display name doesn't match the requirements.",
+		englishUS: "Your username can only contain lowercase letters, numbers together with _ and -.",
 	}
 	ErrorEmailInvalid = Translations{
 		englishUS: "Please enter a valid email address.",
@@ -104,19 +101,18 @@ var (
 	RegisterUsernameTitle = Translations{
 		englishUS: "Create your username.",
 	}
-	RegisterUsername = Translations{
-		englishUS: "Username",
-	}
-	RegisterUsernameRequirements = Translations{
-		englishUS: "Your username can only contain lowercase characters, numbers and '_' or '-'.",
+	RegisterUsernameDescription = Translations{
+		englishUS: "Your username is the name other people can use to add you as a friend. It can only contain lowercase characters, numbers together with _ or -.",
 	}
 	RegisterUsernamePlaceholder = Translations{
 		englishUS: "test123",
 	}
-	RegisterDisplayName = Translations{
-		englishUS: "Display name",
+
+	// Localization for display name registration form
+	RegisterDisplayNameTitle = Translations{
+		englishUS: "Create your display name.",
 	}
-	RegisterDisplayNameRequirements = Translations{
+	RegisterDisplayNameDescription = Translations{
 		englishUS: "Your display name is the name everyone sees. No special requirements.",
 	}
 	RegisterDisplayNamePlaceholder = Translations{

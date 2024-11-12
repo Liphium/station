@@ -30,18 +30,26 @@ func (t Text) render(locale string) fiber.Map {
 type Input struct {
 	Placeholder localization.Translations // Placeholder inside the input on the client
 	Hidden      bool                      // If the characters inside the input should be hidden
-	UTF8        bool                      // If the string should be encoded using UTF8
 	Value       string                    // A pre-filled value already in the input
 	Name        string                    // Name in the return json
+	MaxLength   uint                      // The maximum length of the returned string
 }
 
 func (i Input) render(locale string) fiber.Map {
+
+	// Make sure the length doesn't become zero when not set
+	maxLength := i.MaxLength
+	if maxLength == 0 {
+		maxLength = 1000
+	}
+
 	return fiber.Map{
 		"type":        "input",
 		"placeholder": localization.TranslateLocale(locale, i.Placeholder),
 		"hidden":      i.Hidden,
 		"value":       i.Value,
 		"name":        i.Name,
+		"max":         maxLength,
 	}
 }
 

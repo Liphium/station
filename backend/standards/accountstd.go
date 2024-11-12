@@ -48,7 +48,7 @@ func CheckEmail(email string) (bool, string) {
 
 // * Account name standard
 const MinUsernameLength = 3
-const MaxUsernameLength = 16
+const MaxUsernameLength = 20
 const UsernameAllowedCharacters = "^[\\p{Ll}\\p{N}_\\-]+$"
 
 // Check the requirements for a username
@@ -78,7 +78,7 @@ func CheckUsername(username string) localization.Translations {
 }
 
 // * Account display name standard
-const MaxDisplayNameLength = 32 // is 32 now cause it is encoded with base64 and utf8
+const MaxDisplayNameLength = 20
 
 // Check the requirements for a display name
 func CheckDisplayName(username string) localization.Translations {
