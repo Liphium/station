@@ -9,7 +9,9 @@ import (
 )
 
 // Route: /account/keys/encrypted
+// ! deprecated
 func getAllEncryptedKeys(c *fiber.Ctx) error {
+	// TODO: Remove in a future protocol upgrade
 
 	// Get account
 	accId, err := verify.InfoLocals(c).GetAccountUUID()

@@ -5,7 +5,6 @@ import (
 
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
-	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -29,8 +28,8 @@ func listStoredActions(c *fiber.Ctx) error {
 
 	// Get all normal stored actions and add them as non authenticated ones
 	var storedActions []database.StoredAction
-	if database.DBConn.Where("account = ?", accId).Find(&storedActions).Error != nil {
-		return util.FailedRequest(c, localization.ErrorServer, nil)
+	if err := database.DBConn.Where("account = ?", accId).Find(&storedActions).Error; err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 	for _, storedAction := range storedActions {
 		returnables = append(returnables, returnableStoredAction{
@@ -42,8 +41,8 @@ func listStoredActions(c *fiber.Ctx) error {
 
 	// Get all authenticated stored actions and mark them as such in the returning phase
 	var aStoredActions []database.AStoredAction
-	if database.DBConn.Where("account = ?", accId).Find(&aStoredActions).Error != nil {
-		return util.FailedRequest(c, localization.ErrorServer, nil)
+	if err := database.DBConn.Where("account = ?", accId).Find(&aStoredActions).Error; err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 	for _, storedAction := range aStoredActions {
 		returnables = append(returnables, returnableStoredAction{
@@ -60,24 +59,14 @@ func listStoredActions(c *fiber.Ctx) error {
 
 	// Get authenticated stored action key
 	var storedActionKey database.StoredActionKey
-	if database.DBConn.Where(&database.StoredActionKey{ID: accId}).Take(&storedActionKey).Error != nil {
-
-		// Generate new stored action key
-		storedActionKey = database.StoredActionKey{
-			ID:  accId,
-			Key: auth.GenerateToken(StoredActionTokenLength),
-		}
-
-		// Save stored action key
-		if err := database.DBConn.Create(&storedActionKey).Error; err != nil {
-			return util.FailedRequest(c, localization.ErrorServer, err)
-		}
+	if err := database.DBConn.Where(&database.StoredActionKey{ID: accId}).Take(&storedActionKey).Error; err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Return stored actions
 	return util.ReturnJSON(c, fiber.Map{
 		"success": true,
-		"key":     storedActionKey.Key,
+		"key":     storedActionKey.Key, // TODO: Deprecated, remove with next protocol version
 		"actions": returnables,
 	})
 }
