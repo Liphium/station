@@ -57,16 +57,9 @@ func listStoredActions(c *fiber.Ctx) error {
 		return storedActions[i].CreatedAt < storedActions[j].CreatedAt
 	})
 
-	// Get authenticated stored action key
-	var storedActionKey database.StoredActionKey
-	if err := database.DBConn.Where(&database.StoredActionKey{ID: accId}).Take(&storedActionKey).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
-	}
-
 	// Return stored actions
 	return util.ReturnJSON(c, fiber.Map{
 		"success": true,
-		"key":     storedActionKey.Key, // TODO: Deprecated, remove with next protocol version
 		"actions": returnables,
 	})
 }

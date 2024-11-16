@@ -23,9 +23,6 @@ func Authorized(router fiber.Router) {
 	router.Post("/signature/get", getSignatureKey)
 	router.Post("/signature/set", setSignatureKey)
 
-	// Routes for all keys
-	router.Post("/encrypted", getAllEncryptedKeys)
-
 	// Routes to manage key synchronization requests
 	router.Route("/requests", key_request_routes.Authorized)
 }
