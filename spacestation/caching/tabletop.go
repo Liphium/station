@@ -13,12 +13,13 @@ import (
 var tablesCache *sync.Map = &sync.Map{}
 
 type TableData struct {
-	Mutex       *sync.Mutex
-	Room        string
-	MemberCount int
-	Members     *sync.Map // Client ID -> Client info
-	ObjectList  []string  // List of all object ids
-	Objects     *sync.Map // Cache for all objects on the table (Object ID -> Object)
+	Mutex         *sync.Mutex
+	Room          string
+	MemberCount   int
+	Members       *sync.Map    // Client ID -> Client info
+	ObjectList    []string     // List of all object ids
+	Objects       *sync.Map    // Cache for all objects on the table (Object ID -> Object)
+	highestObject *TableObject // Object with the highest layer (for swapping and creating)
 }
 
 type TableMember struct {
@@ -139,6 +140,7 @@ func LeaveTable(room string, client string) localization.Translations {
 type TableObject struct {
 	Mutex             *sync.Mutex `json:"-"`
 	ID                string      `json:"id"`
+	Order             uint        `json:"o"` // Drawing order
 	LocationX         float64     `json:"x"`
 	LocationY         float64     `json:"y"`
 	Width             float64     `json:"w"`
@@ -171,6 +173,15 @@ func AddObjectToTable(room string, object *TableObject) localization.Translation
 	table.ObjectList = append(table.ObjectList, id)
 	object.ID = id
 	table.Objects.Store(id, object)
+
+	// Give the object the highest order
+	if table.highestObject == nil {
+		object.Order = 1
+		table.highestObject = object
+	} else {
+		object.Order = table.highestObject.Order + 1
+		table.highestObject = object
+	}
 
 	table.Mutex.Unlock()
 
@@ -296,8 +307,14 @@ func TableObjects(room string) ([]*TableObject, localization.Translations) {
 	}
 	table := obj.(*TableData)
 
+	// Copy the object list to prevent concurrent reads
+	table.Mutex.Lock()
+	objectListCopy := make([]string, len(table.ObjectList))
+	copy(objectListCopy, table.ObjectList)
+	table.Mutex.Unlock()
+
 	objects := make([]*TableObject, len(table.ObjectList))
-	for i, value := range table.ObjectList {
+	for i, value := range objectListCopy {
 		object, valid := table.Objects.Load(value)
 		if !valid {
 			return nil, localization.ErrorObjectNotFound
@@ -471,4 +488,35 @@ func GetMemberData(room string, connId string) (*TableMember, bool) {
 		return nil, false
 	}
 	return tObj.(*TableMember), true
+}
+
+func MarkAsNewHighest(room string, objectId string) localization.Translations {
+	obj, valid := tablesCache.Load(room)
+	if !valid {
+		return localization.ErrorTableNotFound
+	}
+	table := obj.(*TableData)
+
+	// Load the object
+	tObj, valid := table.Objects.Load(objectId)
+	if !valid {
+		return localization.ErrorObjectNotFound
+	}
+	object := tObj.(*TableObject)
+
+	// Prevent object from being modified at the same time
+	object.Mutex.Lock()
+	defer object.Mutex.Unlock()
+
+	// Prevent table from being modified at the same time
+	table.Mutex.Lock()
+	defer table.Mutex.Unlock()
+
+	// Mark the object as the new highest object
+	orderCopy := object.Order
+	object.Order = table.highestObject.Order
+	table.highestObject.Order = orderCopy
+	table.highestObject = object
+
+	return nil
 }
