@@ -41,7 +41,7 @@ type SendRange struct {
 }
 
 const ChunksAhead = 10
-const ChunkSize = 512 * 1024            // 512 KB
+const ChunkSize = 1024 * 1024           // 512 KB
 const MaxChunkSize = ChunkSize + 4*1024 // 516 KB (actual chunk is 512KB, but there are additional headers for encryption)
 
 // SessionId -> Transaction ID

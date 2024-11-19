@@ -7,6 +7,7 @@
   - Display name creation now has a better description of what it actually is
   - Username creation now has a better description of what it actually is
 - Fixed the email not changing when pressing the resend email button and with a changed email
+- Allows for a new Zap chunking size for faster performance
 
 ## 0.5.1
 
