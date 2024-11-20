@@ -490,17 +490,35 @@ func GetMemberData(room string, connId string) (*TableMember, bool) {
 	return tObj.(*TableMember), true
 }
 
-func MarkAsNewHighest(room string, objectId string) localization.Translations {
+// A struct representing a swapped object and its new order
+type SwapData struct {
+	Object     string // The object now at the new order
+	LastObject string // The object that was at the highest order previously
+	Order      uint   // The order of the new object
+	LastOrder  uint   // The new order of the object that was previously highest
+}
+
+func (s SwapData) ToMap() map[string]interface{} {
+	return map[string]interface{}{
+		"o":   s.Object,
+		"or":  s.Order,
+		"lo":  s.LastObject,
+		"lor": s.LastOrder,
+	}
+}
+
+// Returns a struct containing all the data related to the swap
+func MarkAsNewHighest(room string, objectId string) (SwapData, localization.Translations) {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
-		return localization.ErrorTableNotFound
+		return SwapData{}, localization.ErrorTableNotFound
 	}
 	table := obj.(*TableData)
 
 	// Load the object
 	tObj, valid := table.Objects.Load(objectId)
 	if !valid {
-		return localization.ErrorObjectNotFound
+		return SwapData{}, localization.ErrorObjectNotFound
 	}
 	object := tObj.(*TableObject)
 
@@ -513,10 +531,15 @@ func MarkAsNewHighest(room string, objectId string) localization.Translations {
 	defer table.Mutex.Unlock()
 
 	// Mark the object as the new highest object
-	orderCopy := object.Order
-	object.Order = table.highestObject.Order
-	table.highestObject.Order = orderCopy
+	swap := SwapData{
+		Object:     objectId,
+		Order:      table.highestObject.Order,
+		LastObject: table.highestObject.ID,
+		LastOrder:  object.Order,
+	}
+	object.Order = swap.Order
+	table.highestObject.Order = swap.LastOrder
 	table.highestObject = object
 
-	return nil
+	return swap, nil
 }

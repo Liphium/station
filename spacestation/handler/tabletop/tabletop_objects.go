@@ -55,6 +55,7 @@ func createObject(c *pipeshandler.Context, action struct {
 			"id":   object.ID,
 			"x":    action.X,
 			"y":    action.Y,
+			"o":    object.Order,
 			"w":    action.Width,
 			"h":    action.Height,
 			"r":    action.Rotation,
@@ -69,7 +70,8 @@ func createObject(c *pipeshandler.Context, action struct {
 
 	return pipeshandler.NormalResponse(c, map[string]interface{}{
 		"success": true,
-		"id":      object.ID, // So the client can set the new id
+		"id":      object.ID,    // So the client can set the new id
+		"o":       object.Order, // Cause the client doesn't know order at creation
 	})
 }
 
@@ -108,6 +110,18 @@ func selectObject(c *pipeshandler.Context, id string) pipes.Event {
 	if msg != nil {
 		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
+
+	// Move to the highest order
+	data, msg := caching.MarkAsNewHighest(c.Client.Session, id)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
+	}
+
+	// Send an event notifying everyone of the swap
+	SendEventToMembers(c.Client.Session, pipes.Event{
+		Name: "tobj_order",
+		Data: data.ToMap(),
+	})
 
 	return pipeshandler.SuccessResponse(c)
 }
