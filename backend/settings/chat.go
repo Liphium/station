@@ -13,3 +13,9 @@ var DecentralizationAllowUnsafe = &setting[bool]{
 	Name:         "decentralization.allow_unsafe",
 	DefaultValue: false,
 }
+
+var ChatMessagePullThreads = &setting[int]{
+	Label:        localization.SettingChatMessagePullThreads,
+	Name:         "chat.message_pull_threads",
+	DefaultValue: 5,
+}
