@@ -120,6 +120,7 @@ func subscribe(c *pipeshandler.Context, action struct {
 			// of importance and because this would need a lot of code changes to fix, I'll
 			// just leave this reminder here. If anyone finds this in the future, have
 			// fun exploiting this! :D
+			// And if you find anything actually serious, well, you know who to blame this on.
 			for conv, info := range res.Answer.Info {
 				convInfo[conv] = info
 			}
