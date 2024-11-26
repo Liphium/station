@@ -12,4 +12,4 @@ Liphium Chat is not a new kind of chat app. It's just what all other chat apps h
 
 ## This repository
 
-Everything you can see in this repository are services that, together, power the Liphium Chat app. For now there is no guide to installing this thing. I'll provide that soon enough when the app is at least somewhat ready for release, so you'll have to wait for now.
+Everything you can see in this repository are services that, together, power the Liphium app. For using Liphium, you need to have this installed on some VPS in the cloud or even your own home server. How to do that and what to look out for is available in [our documentation](https://liphium.com/docs/town-setup/docker). There is currently only a guide for installing it with Docker. But since that's the best way for now, you'll just have to get used to Docker.
