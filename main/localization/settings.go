@@ -5,8 +5,8 @@ var (
 	SettingCategoryFiles = Translations{
 		englishUS: "Files",
 	}
-	SettingCategoryDecentralization = Translations{
-		englishUS: "Decentralization",
+	SettingCategoryChat = Translations{
+		englishUS: "Chatting",
 	}
 
 	// File settings
@@ -17,11 +17,14 @@ var (
 		englishUS: "Maximum amount of storage one account can use (in MB)",
 	}
 
-	// Decentralization settings
+	// Chat settings
 	SettingDecentralizationEnabled = Translations{
 		englishUS: "Enable decentralization",
 	}
 	SettingDecentralizationAllowUnsafe = Translations{
 		englishUS: "Allow unsafe connections (not recommended)",
+	}
+	SettingChatMessagePullThreads = Translations{
+		englishUS: "Amount of threads to pull new messages",
 	}
 )

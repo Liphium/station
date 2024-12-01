@@ -17,10 +17,11 @@ import (
 )
 
 type RemoteSubscribeAction struct {
-	Tokens []conversations.SentConversationToken `json:"tokens"`
-	Status string                                `json:"status"`
-	Data   string                                `json:"data"`
-	Node   string                                `json:"node"`
+	Tokens   []conversations.SentConversationToken `json:"tokens"`
+	Status   string                                `json:"status"`
+	Data     string                                `json:"data"`
+	SyncDate int64                                 `json:"sync"` // Time of last sent message for message sync
+	Node     string                                `json:"node"`
 }
 
 // Action: conv_sub
@@ -104,6 +105,26 @@ func HandleRemoteSubscription(c *fiber.Ctx, action RemoteSubscribeAction) error 
 		}
 	}()
 
+	// Synchronize messages for the local tokens
+	go func() {
+		// Wait for the client to receive the response
+		time.Sleep(1 * time.Second)
+
+		// Go through local tokens to add them to the message sync queue (if desired)
+		if action.SyncDate != -1 {
+			for _, token := range conversationTokens {
+				if token.Activated {
+					if err := caching.AddSyncToQueue(caching.SyncData{
+						TokenID:      token.ID,
+						Conversation: token.Conversation,
+						Since:        action.SyncDate,
+					}); err != nil {
+						util.Log.Println("error completing message sync for ", token.ID, ":", err)
+					}
+				}
+			}
+		}
+	}()
 	log.Println("missing tokens: ", missingTokens)
 
 	return integration.ReturnJSON(c, fiber.Map{

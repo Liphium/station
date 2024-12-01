@@ -17,7 +17,7 @@ var categories = []category{
 		ID:   "files",
 	},
 	{
-		Name: localization.SettingCategoryDecentralization,
+		Name: localization.SettingCategoryChat,
 		ID:   "decentralization",
 	},
 }
