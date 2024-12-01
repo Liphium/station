@@ -136,8 +136,9 @@ func (s setting[T]) ToMap(locale string) fiber.Map {
 
 // Settings registry for integers (int64)
 var SettingRegistryInteger = map[string]*intSetting{
-	FilesMaxUploadSize.Name:   FilesMaxUploadSize,
-	FilesMaxTotalStorage.Name: FilesMaxTotalStorage,
+	FilesMaxUploadSize.Name:     FilesMaxUploadSize,
+	FilesMaxTotalStorage.Name:   FilesMaxTotalStorage,
+	ChatMessagePullThreads.Name: ChatMessagePullThreads,
 }
 
 // Settings registry for booleans

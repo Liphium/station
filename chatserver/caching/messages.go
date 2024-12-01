@@ -76,7 +76,9 @@ func AddSyncToQueue(data SyncData) error {
 
 		// Update state for the next iteration
 		finished = len(messages) < 30
-		data.Since = messages[len(messages)-1].Creation
+		if len(messages) != 0 {
+			data.Since = messages[len(messages)-1].Creation
+		}
 	}
 
 	return nil
