@@ -140,34 +140,9 @@ func GetWarp(room string, warp string) (*WarpData, error) {
 	return w.(*WarpData), nil
 }
 
-// Let a client join any warp in a room.
-func JoinWarp(clientId string, roomId string, warpId string) error {
+// Remove a client from receiving packets through Warp.
+func RemoveClientFromWarp(id string, roomId string, warpId string) error {
 
-	// Get the warp
-	warp, err := GetWarp(roomId, warpId)
-	if err != nil {
-		return err
-	}
-
-	// Make sure there are no concurrent reads/writes
-	warp.Mutex.Lock()
-	defer warp.Mutex.Unlock()
-
-	// Add the receiver
-	warp.Receivers = append(warp.Receivers, clientId)
-
-	// Let everyone know about the new receiver
-	return SendEventToAll(roomId, pipes.Event{
-		Name: "wp_join",
-		Data: map[string]interface{}{
-			"w": warpId,
-			"c": clientId,
-		},
-	})
-}
-
-// Let any client leave a warp in a room.
-func LeaveWarp(clientId string, roomId string, warpId string) error {
 	// Get the warp
 	warp, err := GetWarp(roomId, warpId)
 	if err != nil {
@@ -180,15 +155,25 @@ func LeaveWarp(clientId string, roomId string, warpId string) error {
 
 	// Remove the receiver from the list of receivers
 	warp.Receivers = slices.DeleteFunc(warp.Receivers, func(e string) bool {
-		return e == clientId
+		return e == id
 	})
 
-	// Let everyone know about the new receiver
-	return SendEventToAll(roomId, pipes.Event{
-		Name: "wp_leave",
-		Data: map[string]interface{}{
-			"w": warpId,
-			"c": clientId,
-		},
+	return nil
+}
+
+// Send an event to all receivers of a warp.
+func SendEventToWarp(room string, warpId string, event pipes.Event) error {
+
+	// Get warp
+	warp, err := GetWarp(room, warpId)
+	if err != nil {
+		return err
+	}
+
+	// Send event to all receivers of the warp using pipes
+	return SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
+		Channel: pipes.BroadcastChannel(warp.Receivers),
+		Local:   true,
+		Event:   event,
 	})
 }

@@ -2,7 +2,6 @@ package caching
 
 import (
 	"errors"
-	"net"
 
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/spacestation/util"
@@ -10,32 +9,22 @@ import (
 )
 
 type RoomConnection struct {
-	Connected      bool
-	Connection     *net.UDPAddr
-	Adapter        string
-	Key            *[]byte
-	ClientID       string
-	CurrentSession string
-	Data           string
-
-	//* Client status
-	Muted    bool
-	Deafened bool
+	Connected bool
+	Adapter   string
+	Data      string
 }
 
 func (r *RoomConnection) ToReturnableMember() ReturnableMember {
 	return ReturnableMember{
-		ID:       r.Data + ":" + r.ClientID,
-		Muted:    r.Muted,
-		Deafened: r.Deafened,
+		ID:   r.Adapter,
+		Data: r.Data,
 	}
 }
 
 // TODO: Implement as standard
 type ReturnableMember struct {
-	ID       string `json:"id"` // Syntax: data:clientID
-	Muted    bool   `json:"muted"`
-	Deafened bool   `json:"deafened"`
+	ID   string `json:"id"`
+	Data string `json:"data"`
 }
 
 // Member (Connection) ID -> Connections
@@ -62,53 +51,8 @@ func setupRoomConnectionsCache() {
 
 }
 
-// JoinRoom adds a member to a room in the cache
-func EnterUDP(roomID string, connectionId string, clientId string, addr *net.UDPAddr, key *[]byte) bool {
-
-	room, valid := GetRoom(roomID)
-	if !valid {
-		return false
-	}
-	room.Mutex.Lock()
-
-	room, valid = GetRoom(roomID)
-	if !valid {
-		room.Mutex.Unlock()
-		return false
-	}
-
-	obj, valid := roomConnectionsCache.Get(roomID)
-	if !valid {
-		room.Mutex.Unlock()
-		return false
-	}
-	connections := obj.(RoomConnections)
-	conn := connections[connectionId]
-	if conn.Connected {
-		util.Log.Println("Error: Connection already exists")
-		room.Mutex.Unlock()
-		return false
-	}
-	connections[connectionId] = RoomConnection{
-		Connected:      true,
-		Connection:     addr,
-		ClientID:       clientId,
-		Data:           conn.Data,
-		CurrentSession: "",
-		Adapter:        connectionId,
-		Key:            key,
-	}
-
-	// Refresh room
-	roomConnectionsCache.Set(roomID, connections, 1)
-	roomConnectionsCache.Wait()
-	room.Mutex.Unlock()
-
-	return true
-}
-
 // Sets the member data
-func SetMemberData(roomID string, connectionId string, clientId string, data string) bool {
+func SetMemberData(roomID string, connectionId string, data string) bool {
 
 	room, valid := GetRoom(roomID)
 	if !valid {
@@ -133,12 +77,9 @@ func SetMemberData(roomID string, connectionId string, clientId string, data str
 		return false
 	}
 	connections[connectionId] = RoomConnection{
-		Connected:      false,
-		Connection:     nil,
-		Adapter:        connectionId,
-		CurrentSession: "",
-		ClientID:       clientId,
-		Data:           data,
+		Connected: false,
+		Adapter:   connectionId,
+		Data:      data,
 	}
 
 	// Refresh room

@@ -94,15 +94,15 @@ func Start(loadEnv bool) bool {
 		}
 
 		for i := 0; i < amount; i++ {
-			clientId := util.GenerateToken(5)
-			connection := caching.EmptyConnection(clientId, "id")
-			valid := caching.JoinRoom("id", connection.ClientID)
+			connID := util.GenerateToken(5)
+			connection := caching.EmptyConnection(connID, "id")
+			valid := caching.JoinRoom("id", connection.ID)
 			if !valid {
 				util.Log.Println("Error: Couldn't join room")
 				return false
 			}
 			util.Log.Println("--- TESTING CLIENT ---")
-			util.Log.Println(connection.ClientID + ":" + connection.KeyBase64())
+			util.Log.Println(connection.ID + ":" + connection.KeyBase64())
 			util.Log.Println("----------------------")
 		}
 	}

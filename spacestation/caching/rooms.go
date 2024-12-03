@@ -71,10 +71,9 @@ func JoinRoom(roomID string, connectionId string) bool {
 	}
 	connections := obj.(RoomConnections)
 	connections[connectionId] = RoomConnection{
-		Connected:  false,
-		Connection: nil,
-		Adapter:    connectionId,
-		Data:       "",
+		Connected: false,
+		Adapter:   connectionId,
+		Data:      "",
 	}
 
 	// Refresh room

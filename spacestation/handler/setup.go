@@ -18,7 +18,7 @@ func setup(c *pipeshandler.Context, action struct {
 	connection := caching.EmptyConnection(c.Client.ID, c.Client.Session)
 
 	// Insert data
-	if !caching.SetMemberData(c.Client.Session, c.Client.ID, connection.ClientID, action.Data) {
+	if !caching.SetMemberData(c.Client.Session, c.Client.ID, action.Data) {
 		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
@@ -36,7 +36,6 @@ func setup(c *pipeshandler.Context, action struct {
 
 	return pipeshandler.NormalResponse(c, map[string]interface{}{
 		"success": true,
-		"id":      connection.ClientID,
 		"key":     connection.KeyBase64(),
 	})
 }

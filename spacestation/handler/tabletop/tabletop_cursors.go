@@ -15,12 +15,6 @@ type cursorMoveAction struct {
 // Action: tc_move
 func moveCursor(ctx *pipeshandler.Context, action cursorMoveAction) pipes.Event {
 
-	// Get the connection (for getting the client id)
-	connection, valid := caching.GetConnection(ctx.Client.ID)
-	if !valid {
-		return pipeshandler.ErrorResponse(ctx, localization.ErrorInvalidRequest, nil)
-	}
-
 	// Get all the data needed
 	member, valid := caching.GetMemberData(ctx.Client.Session, ctx.Client.ID)
 	if !valid {
@@ -31,7 +25,7 @@ func moveCursor(ctx *pipeshandler.Context, action cursorMoveAction) pipes.Event 
 	valid = SendEventToMembers(ctx.Client.Session, pipes.Event{
 		Name: "tc_moved",
 		Data: map[string]interface{}{
-			"c":   connection.ClientID,
+			"c":   ctx.Client.ID,
 			"x":   action.X,
 			"y":   action.Y,
 			"col": member.Color,

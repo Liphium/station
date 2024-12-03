@@ -26,7 +26,6 @@ func SetupRoutes(router fiber.Router) {
 	})
 
 	// These are publicly accessible yk (cause this can be public information cause encryption and stuff)
-	router.Post("/leave", leaveRoom)
 	router.Post("/info", roomInfo)
 
 	setupPipesFiber(router)
