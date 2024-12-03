@@ -1,8 +1,10 @@
 package caching
 
 import (
+	"errors"
 	"net"
 
+	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/spacestation/util"
 	"github.com/dgraph-io/ristretto"
 )
@@ -233,4 +235,25 @@ func SaveConnections(roomId string, connections RoomConnections) bool {
 	room.Mutex.Unlock()
 
 	return true
+}
+
+// Send an event to all members of a room.
+func SendEventToAll(room string, event pipes.Event) error {
+
+	// Get all adapters for the people in the room
+	adapters, valid := GetAllAdapters(room)
+	if !valid {
+		return errors.New("adapters couldn't be found for this room")
+	}
+
+	// Send the actual event using pipes
+	if err := SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
+		Channel: pipes.BroadcastChannel(adapters),
+		Local:   true,
+		Event:   event,
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }

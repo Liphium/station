@@ -151,15 +151,3 @@ func DeleteConnection(connId string) {
 	connectionsCache.Del(connId)
 	clientIDCache.Del(connection.ClientID)
 }
-
-func JoinSession(connId string, sessionId string) bool {
-	obj, valid := connectionsCache.Get(connId)
-	if !valid {
-		return false
-	}
-	connection := obj.(Connection)
-	connection.CurrentSession = sessionId
-	connectionsCache.Set(connId, connection, 1)
-	connectionsCache.Wait()
-	return true
-}
