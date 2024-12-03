@@ -1,9 +1,12 @@
 package caching
 
 import (
+	"errors"
+	"slices"
 	"sync"
 
 	"github.com/Liphium/station/pipes"
+	"github.com/Liphium/station/pipeshandler"
 	"github.com/google/uuid"
 )
 
@@ -11,8 +14,7 @@ import (
 var warpCache *sync.Map = &sync.Map{}
 
 type WarpList struct {
-	Mutex *sync.Mutex
-	List  []*WarpData // List of Warps for the room
+	List *sync.Map // Map of all Warps: ID -> *WarpData
 }
 
 type WarpData struct {
@@ -24,7 +26,7 @@ type WarpData struct {
 }
 
 // Create a new Warp in a room
-func NewWarp(room string, hoster string, port uint) {
+func NewWarp(room string, hoster string, port uint) error {
 
 	// Get the list of warps for the current room
 	obj, valid := warpCache.Load(room)
@@ -33,8 +35,7 @@ func NewWarp(room string, hoster string, port uint) {
 
 		// If there isn't a list yet, create a new one
 		list = &WarpList{
-			Mutex: &sync.Mutex{},
-			List:  []*WarpData{},
+			List: &sync.Map{},
 		}
 		warpCache.Store(room, list)
 	} else {
@@ -42,10 +43,6 @@ func NewWarp(room string, hoster string, port uint) {
 		// If there is one, cast obj to the list
 		list = obj.(*WarpList)
 	}
-
-	// Lock the mutex to prevent concurrent reads/writes
-	list.Mutex.Lock()
-	defer list.Mutex.Unlock()
 
 	// Add the warp to the list
 	warp := &WarpData{
@@ -55,9 +52,9 @@ func NewWarp(room string, hoster string, port uint) {
 		Mutex:     &sync.Mutex{},
 		Receivers: []string{},
 	}
-	list.List = append(list.List, warp)
+	list.List.Store(warp.ID, warp)
 
-	SendEventToAll(room, pipes.Event{
+	return SendEventToAll(room, pipes.Event{
 		Name: "wp_new",
 		Data: map[string]interface{}{
 			"w": warp,
@@ -66,7 +63,7 @@ func NewWarp(room string, hoster string, port uint) {
 }
 
 // Get a list of all the Warps for a specified room.
-func GetWarps(room string) ([]*WarpData, error) {
+func RangeOverWarps(room string, rangeFunc func(warpId string, w *WarpData) bool) error {
 
 	// Get the list of warps for the current room
 	obj, valid := warpCache.Load(room)
@@ -75,8 +72,7 @@ func GetWarps(room string) ([]*WarpData, error) {
 
 		// If there isn't a list yet, create a new one
 		list = &WarpList{
-			Mutex: &sync.Mutex{},
-			List:  []*WarpData{},
+			List: &sync.Map{},
 		}
 		warpCache.Store(room, list)
 	} else {
@@ -85,13 +81,114 @@ func GetWarps(room string) ([]*WarpData, error) {
 		list = obj.(*WarpList)
 	}
 
-	// Lock the mutex to prevent concurrent reads
-	list.Mutex.Lock()
-	defer list.Mutex.Unlock()
+	// Range over everything
+	list.List.Range(func(key, value any) bool {
+		return rangeFunc(key.(string), value.(*WarpData))
+	})
 
-	return list.List, nil
+	return nil
 }
 
-func InitializeWarps(client string) {
+// Send a client all the warps upon joining a Space.
+func InitializeWarps(client *pipeshandler.Client) {
+	RangeOverWarps(client.Session, func(warpId string, w *WarpData) bool {
+		return SSNode.SendClient(client.ID, pipes.Event{
+			Name: "wp_new",
+			Data: map[string]interface{}{
+				"w": w,
+			},
+		}) != nil
+	})
+}
 
+// Stop a warp and disconnect all clients from it.
+func StopWarp(room string, warp string) error {
+
+	// Get the list of warps for the current room
+	obj, valid := warpCache.Load(room)
+	if !valid {
+		return errors.New("no warps found")
+	}
+	list := obj.(*WarpList)
+
+	// Add the warp to the list
+	list.List.Delete(warp)
+
+	return SendEventToAll(room, pipes.Event{
+		Name: "wp_end",
+		Data: map[string]interface{}{
+			"w": warp,
+		},
+	})
+}
+
+// Get any warp in a room by ID.
+func GetWarp(room string, warp string) (*WarpData, error) {
+
+	// Get the list of warps for the current room
+	obj, valid := warpCache.Load(room)
+	if !valid {
+		return nil, errors.New("no warps found")
+	}
+	list := obj.(*WarpList)
+
+	// Get the warp by id
+	w, valid := list.List.Load(warp)
+	if !valid {
+		return nil, errors.New("warp not found")
+	}
+	return w.(*WarpData), nil
+}
+
+// Let a client join any warp in a room.
+func JoinWarp(clientId string, roomId string, warpId string) error {
+
+	// Get the warp
+	warp, err := GetWarp(roomId, warpId)
+	if err != nil {
+		return err
+	}
+
+	// Make sure there are no concurrent reads/writes
+	warp.Mutex.Lock()
+	defer warp.Mutex.Unlock()
+
+	// Add the receiver
+	warp.Receivers = append(warp.Receivers, clientId)
+
+	// Let everyone know about the new receiver
+	return SendEventToAll(roomId, pipes.Event{
+		Name: "wp_join",
+		Data: map[string]interface{}{
+			"w": warpId,
+			"c": clientId,
+		},
+	})
+}
+
+// Let any client leave a warp in a room.
+func LeaveWarp(clientId string, roomId string, warpId string) error {
+	// Get the warp
+	warp, err := GetWarp(roomId, warpId)
+	if err != nil {
+		return err
+	}
+
+	// Make sure there are no concurrent reads/writes
+	warp.Mutex.Lock()
+	defer warp.Mutex.Unlock()
+
+	// Remove the receiver from the list of receivers
+	warp.Receivers = slices.DeleteFunc(warp.Receivers, func(e string) bool {
+		return e == clientId
+	})
+
+	// Let everyone know about the new receiver
+	return SendEventToAll(roomId, pipes.Event{
+		Name: "wp_leave",
+		Data: map[string]interface{}{
+			"w": warpId,
+			"c": clientId,
+		},
+	})
 }
