@@ -9,10 +9,9 @@ import (
 	"github.com/Liphium/station/spacestation/caching"
 )
 
-// Action: wp_send_back
-func sendPacketBack(c *pipeshandler.Context, action struct {
+// Action: wp_send_to
+func sendPacketTo(c *pipeshandler.Context, action struct {
 	Warp   string `json:"w"` // The id of the Warp
-	Target string `json:"t"` // The target receiver of the packet
 	Packet string `json:"p"` // The TCP packet that needs to be sent through Warp
 }) pipes.Event {
 
@@ -20,11 +19,6 @@ func sendPacketBack(c *pipeshandler.Context, action struct {
 	warp, err := caching.GetWarp(c.Client.Session, action.Warp)
 	if err != nil {
 		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequestContent, err)
-	}
-
-	// Make sure it's the hoster sending the event
-	if warp.Hoster != c.Client.ID {
-		return pipeshandler.ErrorResponse(c, localization.ErrorNoPermission, err)
 	}
 
 	// Lock the mutex to ensure there are no concurrent reads/writes

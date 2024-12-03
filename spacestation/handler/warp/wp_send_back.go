@@ -9,9 +9,10 @@ import (
 	"github.com/Liphium/station/spacestation/caching"
 )
 
-// Action: wp_send_to
-func sendPacket(c *pipeshandler.Context, action struct {
+// Action: wp_send_back
+func sendPacketBack(c *pipeshandler.Context, action struct {
 	Warp   string `json:"w"` // The id of the Warp
+	Target string `json:"t"` // The target receiver of the packet
 	Packet string `json:"p"` // The TCP packet that needs to be sent through Warp
 }) pipes.Event {
 
@@ -21,22 +22,26 @@ func sendPacket(c *pipeshandler.Context, action struct {
 		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequestContent, err)
 	}
 
+	// Make sure it's the hoster sending the event
+	if warp.Hoster != c.Client.ID {
+		return pipeshandler.ErrorResponse(c, localization.ErrorNoPermission, err)
+	}
+
 	// Lock the mutex to ensure there are no concurrent reads/writes
 	warp.Mutex.Lock()
 
-	// Check if the client is already in there
-	if !slices.Contains(warp.Receivers, c.Client.ID) {
-
-		// Add the client to the warp
-		warp.Receivers = append(warp.Receivers, c.Client.ID)
+	// Make sure the target is in the warp
+	if !slices.Contains(warp.Receivers, action.Target) {
+		warp.Mutex.Unlock()
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequestContent, err)
 	}
 
 	// Unlock the mutex as it's not needed anymore (hoster shouldn't change?)
 	warp.Mutex.Unlock()
 
 	// Send the event to the hoster through the event channel
-	if err := caching.SSNode.SendClient(warp.Hoster, pipes.Event{
-		Name: "wp_to",
+	if err := caching.SSNode.SendClient(action.Target, pipes.Event{
+		Name: "wp_back",
 		Data: map[string]interface{}{
 			"p": action.Packet,
 		},

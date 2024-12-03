@@ -26,7 +26,7 @@ type WarpData struct {
 }
 
 // Create a new Warp in a room
-func NewWarp(room string, hoster string, port uint) error {
+func NewWarp(room string, hoster string, port uint) (string, error) {
 
 	// Get the list of warps for the current room
 	obj, valid := warpCache.Load(room)
@@ -54,7 +54,7 @@ func NewWarp(room string, hoster string, port uint) error {
 	}
 	list.List.Store(warp.ID, warp)
 
-	return SendEventToAll(room, pipes.Event{
+	return warp.ID, SendEventToAll(room, pipes.Event{
 		Name: "wp_new",
 		Data: map[string]interface{}{
 			"w": warp,
