@@ -34,6 +34,9 @@ func setup(c *pipeshandler.Context, action struct {
 		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
+	// Send the guy all the warps
+	caching.InitializeWarps(c.Client)
+
 	return pipeshandler.NormalResponse(c, map[string]interface{}{
 		"success": true,
 		"key":     connection.KeyBase64(),

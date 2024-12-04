@@ -51,6 +51,9 @@ func setupPipesFiber(router fiber.Router) {
 			// Remove from the table
 			caching.LeaveTable(client.Session, client.ID)
 
+			// Delete all the Warps the guy has
+			caching.StopWarpsBy(client.Session, client.ID)
+
 			// Remove from room
 			caching.RemoveMember(client.Session, client.ID)
 			caching.DeleteConnection(client.ID)

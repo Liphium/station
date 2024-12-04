@@ -13,6 +13,7 @@ import (
 func sendPacketBack(c *pipeshandler.Context, action struct {
 	Warp       string `json:"w"` // The id of the Warp
 	Target     string `json:"t"` // The target receiver of the packet
+	Sequence   uint   `json:"s"`
 	Connection uint   `json:"c"` // The id of the connection this goes to (sometimes multiple ones need to be proxied)
 	Packet     string `json:"p"` // The TCP packet that needs to be sent through Warp
 }) pipes.Event {
@@ -46,6 +47,7 @@ func sendPacketBack(c *pipeshandler.Context, action struct {
 		Data: map[string]interface{}{
 			"w": warp.ID,
 			"c": action.Connection,
+			"s": action.Sequence,
 			"p": action.Packet,
 		},
 	}); err != nil {

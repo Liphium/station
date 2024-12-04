@@ -126,6 +126,16 @@ func StopWarp(room string, warp string) error {
 	})
 }
 
+// Stop all warps in a room created by a certain client id.
+func StopWarpsBy(room string, client string) {
+	RangeOverWarps(room, func(warpId string, w *WarpData) bool {
+		if w.Hoster == client {
+			StopWarp(room, warpId)
+		}
+		return true
+	})
+}
+
 // Get any warp in a room by ID.
 func GetWarp(room string, warp string) (*WarpData, error) {
 
