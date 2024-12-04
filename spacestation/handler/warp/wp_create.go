@@ -8,17 +8,15 @@ import (
 )
 
 // Action: wp_create
-func create(c *pipeshandler.Context, action struct {
-	Port uint `json:"port"`
-}) pipes.Event {
+func create(c *pipeshandler.Context, port uint) pipes.Event {
 
 	// Make sure the port is valid
-	if action.Port < 1024 || action.Port > 65535 {
+	if port < 1024 || port > 65535 {
 		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequestContent, nil)
 	}
 
 	// Create a new Warp for this port
-	warpId, err := caching.NewWarp(c.Client.Session, c.Client.ID, action.Port)
+	warpId, err := caching.NewWarp(c.Client.Session, c.Client.ID, port)
 	if err != nil {
 		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 	}

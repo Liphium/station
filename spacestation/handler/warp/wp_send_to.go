@@ -11,8 +11,9 @@ import (
 
 // Action: wp_send_to
 func sendPacketTo(c *pipeshandler.Context, action struct {
-	Warp   string `json:"w"` // The id of the Warp
-	Packet string `json:"p"` // The TCP packet that needs to be sent through Warp
+	Warp       string `json:"w"` // The id of the Warp
+	Connection uint   `json:"c"` // The id of the current connection (sometimes multiple ones need to be proxied)
+	Packet     string `json:"p"` // The TCP packet that needs to be sent through Warp
 }) pipes.Event {
 
 	// Get the Warp related to the packet
@@ -38,6 +39,7 @@ func sendPacketTo(c *pipeshandler.Context, action struct {
 	if err := caching.SSNode.SendClient(warp.Hoster, pipes.Event{
 		Name: "wp_to",
 		Data: map[string]interface{}{
+			"c": action.Connection,
 			"p": action.Packet,
 		},
 	}); err != nil {

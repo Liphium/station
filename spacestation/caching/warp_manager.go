@@ -57,7 +57,9 @@ func NewWarp(room string, hoster string, port uint) (string, error) {
 	return warp.ID, SendEventToAll(room, pipes.Event{
 		Name: "wp_new",
 		Data: map[string]interface{}{
-			"w": warp,
+			"w": warp.ID,
+			"h": hoster,
+			"p": port,
 		},
 	})
 }
@@ -95,7 +97,9 @@ func InitializeWarps(client *pipeshandler.Client) {
 		return SSNode.SendClient(client.ID, pipes.Event{
 			Name: "wp_new",
 			Data: map[string]interface{}{
-				"w": w,
+				"w": w.ID,
+				"h": w.Hoster,
+				"p": w.Port,
 			},
 		}) != nil
 	})
@@ -158,7 +162,13 @@ func RemoveClientFromWarp(id string, roomId string, warpId string) error {
 		return e == id
 	})
 
-	return nil
+	// Tell the hoster the client has disconnected
+	return SSNode.SendClient(warp.Hoster, pipes.Event{
+		Name: "wp_disconnected",
+		Data: map[string]interface{}{
+			"c": id,
+		},
+	})
 }
 
 // Send an event to all receivers of a warp.
