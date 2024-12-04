@@ -166,6 +166,7 @@ func RemoveClientFromWarp(id string, roomId string, warpId string) error {
 	return SSNode.SendClient(warp.Hoster, pipes.Event{
 		Name: "wp_disconnected",
 		Data: map[string]interface{}{
+			"w": warpId,
 			"c": id,
 		},
 	})

@@ -42,8 +42,9 @@ func sendPacketBack(c *pipeshandler.Context, action struct {
 
 	// Send the event to the hoster through the event channel
 	if err := caching.SSNode.SendClient(action.Target, pipes.Event{
-		Name: "wp_back",
+		Name: "wp_to",
 		Data: map[string]interface{}{
+			"w": warp.ID,
 			"c": action.Connection,
 			"p": action.Packet,
 		},
