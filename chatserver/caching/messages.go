@@ -55,7 +55,7 @@ func AddSyncToQueue(data SyncData) error {
 
 		// Get the messages
 		var messages []conversations.Message
-		if err := database.DBConn.Where("creation >= ?", data.Since).Order("creation ASC").Limit(30).Find(&messages).Error; err != nil {
+		if err := database.DBConn.Where("creation > ?", data.Since).Order("creation ASC").Limit(30).Find(&messages).Error; err != nil {
 			return err
 		}
 
