@@ -2,6 +2,7 @@ package profile
 
 import (
 	"github.com/Liphium/station/backend/database"
+	"github.com/Liphium/station/backend/routes/v1/account/files"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
@@ -24,9 +25,8 @@ func removeProfilePicture(c *fiber.Ctx) error {
 	// Check if the profile was found (error has to be gorm.ErrRecordNotFound here cause excluded before)
 	if err == nil {
 
-		// TODO: Delete the file in the future
-		// Make previous profile picture no longer saved when it wasn't found
-		if err := database.DBConn.Model(&database.CloudFile{}).Where("id = ?", profile.Picture).Update("system", false).Error; err != nil {
+		// Delete the file from the server (no longer needed)
+		if err := files.Delete([]string{profile.Picture}); err != nil {
 			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 
