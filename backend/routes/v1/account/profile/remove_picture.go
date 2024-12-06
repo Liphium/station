@@ -30,7 +30,9 @@ func removeProfilePicture(c *fiber.Ctx) error {
 			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 
+		profile.Picture = ""
 		profile.Container = ""
+		profile.PictureData = ""
 
 		// Save new profile
 		if err := database.DBConn.Save(&profile).Error; err != nil {

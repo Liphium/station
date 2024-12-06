@@ -83,7 +83,9 @@ func setProfilePicture(c *fiber.Ctx) error {
 
 	// Update all things in the profile
 	profile.ID = accId
+	profile.Picture = req.File
 	profile.Container = req.Container
+	profile.PictureData = req.Data
 
 	// Save new profile
 	if err := database.DBConn.Save(&profile).Error; err != nil {
