@@ -222,7 +222,7 @@ func listenForCommands() {
 
 			acc := &database.Account{
 				Email:       name + "@liphium.app",
-				DisplayName: "",
+				DisplayName: name,
 				Username:    name,
 				RankID:      1, // Default
 			}
