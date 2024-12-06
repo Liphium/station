@@ -9,6 +9,7 @@
 - Fixed the email not changing when pressing the resend email button and with a changed email
 - Allow a new Zap chunking size for faster performance
 - Added automatic layering to Tabletop to make playing card games with card stacking easier
+- Added new events for Warp to make port sharing a possibility (in Spaces)
 
 ## 0.5.1
 
