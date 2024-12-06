@@ -31,6 +31,7 @@ func removeProfilePicture(c *fiber.Ctx) error {
 		}
 
 		profile.Picture = ""
+		profile.Container = ""
 		profile.PictureData = ""
 
 		// Save new profile
