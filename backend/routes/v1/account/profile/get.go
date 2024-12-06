@@ -39,5 +39,7 @@ func getProfile(c *fiber.Ctx) error {
 		"profile":      profile,
 		"name":         acc.Username,
 		"display_name": acc.DisplayName,
+		"picture":      profile.Picture,
+		"container":    profile.Container,
 	})
 }
