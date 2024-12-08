@@ -22,7 +22,7 @@ func moveCursor(ctx *pipeshandler.Context, action cursorMoveAction) pipes.Event 
 	}
 
 	// Notify other clients
-	valid = SendEventToMembers(ctx.Client.Session, pipes.Event{
+	valid = caching.SendEventToMembers(ctx.Client.Session, pipes.Event{
 		Name: "tc_moved",
 		Data: map[string]interface{}{
 			"c":   ctx.Client.ID,

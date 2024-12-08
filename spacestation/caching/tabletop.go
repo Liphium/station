@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/Liphium/station/main/localization"
+	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/spacestation/util"
 )
 
@@ -17,7 +18,6 @@ type TableData struct {
 	Room          string
 	MemberCount   int
 	Members       *sync.Map    // Client ID -> Client info
-	ObjectList    []string     // List of all object ids
 	Objects       *sync.Map    // Cache for all objects on the table (Object ID -> Object)
 	highestObject *TableObject // Object with the highest layer (for swapping and creating)
 }
@@ -99,23 +99,6 @@ func GetTable(room string) (bool, *TableData) {
 	return true, obj.(*TableData)
 }
 
-// rangeFunc returns whether or not the loop should be continued
-func RangeOverTableMembers(room string, rangeFunc func(*TableMember) bool) bool {
-	obj, valid := tablesCache.Load(room)
-	if !valid {
-		return false
-	}
-	data := obj.(*TableData)
-
-	// Range over all members
-	data.Members.Range(func(_, value any) bool {
-		member := value.(*TableMember)
-		return rangeFunc(member)
-	})
-
-	return true
-}
-
 func LeaveTable(room string, client string) localization.Translations {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
@@ -164,13 +147,16 @@ func AddObjectToTable(room string, object *TableObject) localization.Translation
 	table.Mutex.Lock()
 
 	// Generate random and unique id
-	id := util.GenerateToken(5)
-	for slices.Contains(table.ObjectList, id) {
-		id = util.GenerateToken(5)
+	id := util.GenerateToken(6)
+	for {
+		_, valid := table.Objects.Load(id)
+		if !valid {
+			break
+		}
+		id = util.GenerateToken(6)
 	}
 
 	// Put object into cache and list
-	table.ObjectList = append(table.ObjectList, id)
 	object.ID = id
 	table.Objects.Store(id, object)
 
@@ -195,18 +181,42 @@ func RemoveObjectFromTable(room string, object string) localization.Translations
 	}
 	table := obj.(*TableData)
 
-	table.Mutex.Lock()
-
-	// Put object into cache and list
-	for i, member := range table.ObjectList {
-		if member == object {
-			table.ObjectList = append(table.ObjectList[:i], table.ObjectList[i+1:]...)
-			break
-		}
-	}
+	// Remove object from cache and list
 	table.Objects.Delete(object)
 
-	table.Mutex.Unlock()
+	// Make sure there are no concurrent reads/writes on highestObject
+	table.Mutex.Lock()
+	defer table.Mutex.Unlock()
+
+	// Make sure the object is not the highest object
+	if table.highestObject.ID == object {
+
+		// Get the second highest object
+		objId := "-"
+		maxOrder := uint(0)
+		table.Objects.Range(func(key, value any) bool {
+			obj := value.(*TableObject)
+
+			// Prevent object from being modified at the same time
+			obj.Mutex.Lock()
+			defer obj.Mutex.Unlock()
+
+			if obj.Order > maxOrder {
+				maxOrder = obj.Order
+				objId = obj.ID
+			}
+
+			return true
+		})
+
+		if objId != "-" {
+			// Set the object as the new highest
+			return MarkAsNewHighest(room, objId, true, false)
+		} else {
+			// If it's the last object on the table, set the highest object to nil
+			table.highestObject = nil
+		}
+	}
 
 	return nil
 }
@@ -307,21 +317,12 @@ func TableObjects(room string) ([]*TableObject, localization.Translations) {
 	}
 	table := obj.(*TableData)
 
-	// Copy the object list to prevent concurrent reads
-	table.Mutex.Lock()
-	objectListCopy := make([]string, len(table.ObjectList))
-	copy(objectListCopy, table.ObjectList)
-	table.Mutex.Unlock()
-
-	objects := make([]*TableObject, len(table.ObjectList))
-	for i, value := range objectListCopy {
-		object, valid := table.Objects.Load(value)
-		if !valid {
-			return nil, localization.ErrorObjectNotFound
-		}
-
-		objects[i] = object.(*TableObject)
-	}
+	// Get all the objects from the map
+	objects := []*TableObject{}
+	table.Objects.Range(func(key, value any) bool {
+		objects = append(objects, value.(*TableObject))
+		return true
+	})
 
 	return objects, nil
 }
@@ -490,35 +491,22 @@ func GetMemberData(room string, connId string) (*TableMember, bool) {
 	return tObj.(*TableMember), true
 }
 
-// A struct representing a swapped object and its new order
-type SwapData struct {
-	Object     string // The object now at the new order
-	LastObject string // The object that was at the highest order previously
-	Order      uint   // The order of the new object
-	LastOrder  uint   // The new order of the object that was previously highest
-}
-
-func (s SwapData) ToMap() map[string]interface{} {
-	return map[string]interface{}{
-		"o":   s.Object,
-		"or":  s.Order,
-		"lo":  s.LastObject,
-		"lor": s.LastOrder,
-	}
-}
-
-// Returns a struct containing all the data related to the swap
-func MarkAsNewHighest(room string, objectId string) (SwapData, localization.Translations) {
+// Returns a struct containing all the data related to the swap.
+//
+// Set excludeLast to true, if you don't want the client to know about the last object.
+// Set lockTable to true, if you want the table mutex to be locked (should be true by default unless
+// you know what you're doing)
+func MarkAsNewHighest(room string, objectId string, excludeLast bool, lockTable bool) localization.Translations {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
-		return SwapData{}, localization.ErrorTableNotFound
+		return localization.ErrorTableNotFound
 	}
 	table := obj.(*TableData)
 
 	// Load the object
 	tObj, valid := table.Objects.Load(objectId)
 	if !valid {
-		return SwapData{}, localization.ErrorObjectNotFound
+		return localization.ErrorObjectNotFound
 	}
 	object := tObj.(*TableObject)
 
@@ -527,19 +515,91 @@ func MarkAsNewHighest(room string, objectId string) (SwapData, localization.Tran
 	defer object.Mutex.Unlock()
 
 	// Prevent table from being modified at the same time
-	table.Mutex.Lock()
-	defer table.Mutex.Unlock()
+	if lockTable {
+		table.Mutex.Lock()
+		defer table.Mutex.Unlock()
+	}
+
+	// Make sure the same object isn't swapped
+	if object.ID == table.highestObject.ID {
+		return nil
+	}
+
+	// Make sure there is currently a highest object
+	if table.highestObject == nil {
+		return nil
+	}
+
+	// Prevent highest object from being modified at the same time
+	currentHighest := table.highestObject
+	currentHighest.Mutex.Lock()
+	defer currentHighest.Mutex.Unlock()
 
 	// Mark the object as the new highest object
-	swap := SwapData{
-		Object:     objectId,
-		Order:      table.highestObject.Order,
-		LastObject: table.highestObject.ID,
-		LastOrder:  object.Order,
+	lastOrder := object.Order
+	lastObject := currentHighest.ID
+	object.Order = currentHighest.Order
+	if !excludeLast {
+		currentHighest.Order = lastOrder
 	}
-	object.Order = swap.Order
-	table.highestObject.Order = swap.LastOrder
 	table.highestObject = object
 
-	return swap, nil
+	// Send an event notifying everyone of the swap
+	if excludeLast {
+		SendEventToMembers(room, pipes.Event{
+			Name: "tobj_order",
+			Data: map[string]interface{}{
+				"o":  table.highestObject.ID,
+				"or": table.highestObject.Order,
+			},
+		})
+	} else {
+		SendEventToMembers(room, pipes.Event{
+			Name: "tobj_order",
+			Data: map[string]interface{}{
+				"o":   table.highestObject.ID,
+				"or":  table.highestObject.Order,
+				"lo":  lastObject,
+				"lor": lastOrder,
+			},
+		})
+	}
+
+	return nil
+}
+
+// Send an event to all table members
+func SendEventToMembers(room string, event pipes.Event) bool {
+	obj, valid := tablesCache.Load(room)
+	if !valid {
+		return false
+	}
+	data := obj.(*TableData)
+
+	// Get a list of all the adapters of the members
+	adapters := []string{}
+	data.Members.Range(func(_, value any) bool {
+
+		// Only add the member if they are part of the table
+		member := value.(*TableMember)
+		if member.Enabled {
+			adapters = append(adapters, member.Client)
+			util.Log.Println("adding ", member.Client)
+		}
+		return true
+	})
+
+	util.Log.Println("hi hi hi")
+
+	// Send the event through pipes
+	if err := SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
+		Channel: pipes.BroadcastChannel(adapters),
+		Local:   true,
+		Event:   event,
+	}); err != nil {
+		util.Log.Println("error during event sending to tabletop members:", err)
+		return false
+	}
+
+	return true
 }

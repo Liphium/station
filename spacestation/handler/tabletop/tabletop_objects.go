@@ -43,7 +43,7 @@ func createObject(c *pipeshandler.Context, action struct {
 	}
 
 	// Notify other clients about the object creation
-	valid := SendEventToMembers(c.Client.Session, pipes.Event{
+	valid := caching.SendEventToMembers(c.Client.Session, pipes.Event{
 		Name: "tobj_created",
 		Data: map[string]interface{}{
 			"id":   object.ID,
@@ -78,7 +78,7 @@ func deleteObject(c *pipeshandler.Context, id string) pipes.Event {
 	}
 
 	// Notify other clients
-	valid := SendEventToMembers(c.Client.Session, pipes.Event{
+	valid := caching.SendEventToMembers(c.Client.Session, pipes.Event{
 		Name: "tobj_deleted",
 		Data: map[string]interface{}{
 			"id": id,
@@ -100,17 +100,15 @@ func selectObject(c *pipeshandler.Context, id string) pipes.Event {
 		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
+	util.Log.Println("moving order..")
+
 	// Move to the highest order
-	data, msg := caching.MarkAsNewHighest(c.Client.Session, id)
+	msg = caching.MarkAsNewHighest(c.Client.Session, id, false, true)
 	if msg != nil {
 		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
-	// Send an event notifying everyone of the swap
-	SendEventToMembers(c.Client.Session, pipes.Event{
-		Name: "tobj_order",
-		Data: data.ToMap(),
-	})
+	util.Log.Println("select success")
 
 	return pipeshandler.SuccessResponse(c)
 }
@@ -146,7 +144,7 @@ func modifyObject(c *pipeshandler.Context, action struct {
 
 	// Notify other clients
 	util.Log.Println("Sending tobj_modified event")
-	if !SendEventToMembers(c.Client.Session, pipes.Event{
+	if !caching.SendEventToMembers(c.Client.Session, pipes.Event{
 		Name: "tobj_modified",
 		Data: map[string]interface{}{
 			"id":   action.ID,
@@ -176,7 +174,7 @@ func moveObject(c *pipeshandler.Context, action struct {
 	}
 
 	// Notify other clients
-	if !SendEventToMembers(c.Client.Session, pipes.Event{
+	if !caching.SendEventToMembers(c.Client.Session, pipes.Event{
 		Name: "tobj_moved",
 		Data: map[string]interface{}{
 			"id": action.ID,
@@ -206,7 +204,7 @@ func rotateObject(c *pipeshandler.Context, action struct {
 	}
 
 	// Notify other clients about the rotation
-	if !SendEventToMembers(c.Client.Session, pipes.Event{
+	if !caching.SendEventToMembers(c.Client.Session, pipes.Event{
 		Name: "tobj_rotated",
 		Data: map[string]interface{}{
 			"id": action.ID,

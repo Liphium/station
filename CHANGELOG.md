@@ -8,6 +8,7 @@
   - Username creation now has a better description of what it actually is
 - Fixed the email not changing when pressing the resend email button and with a changed email
 - Allow a new Zap chunking size for faster performance
+- Made Zap a little faster by increasing the chunks loaded ahead (now from 10 MB max -> 20 MB max)
 - Added automatic layering to Tabletop to make playing card games with card stacking easier
 - Added new events for Warp to make port sharing a possibility (in Spaces)
 
