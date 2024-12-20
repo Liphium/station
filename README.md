@@ -1,8 +1,16 @@
 # Liphium: Decentralization for everyone
 
-Welcome to the repository of the app used to interact with [station](https://github.com/Liphium/station), our decentralized backend service. With this app you can share files of any size, chat with anyone who has a "town" (what we call our servers) and even go into Spaces with them where you can play card games or share Minecraft servers. This is probably the quickest introduction I've ever given about the app and if you want to know more: [Our website exists](https://liphium.com).
+Welcome to everything powering the magic experience you get in the [Liphium app](https://github.com/Liphium/chat_interface). Station powers all of Liphium's features and is it's backbone. Just as a quick note, we call all servers running station "town", because that makes explaining decentralization a lot easier. If you here "town", you can assume we mean a server running station.
 
-You can find a lot of information about this app [on our help & resources page](https://liphium.com/docs). Be sure to check it out, and if your question isn't answered, you can always contact us through Discord or Email (available on our website).
+Anyway, here's a quick overview over this repository:
+- In the **backend** folder you'll find the service handling file management, authentication, the admin panel, friend requests and general account management.
+- **Chat server** is the service handling all of the conversations and message sending.
+- **Space station** is responsible for our Spaces feature where you can share ports and also our digital table.
+- **Pipes** is Liphium's event loop abstraction for being able to handle decentralization and sending events without complicated code.
+- **Pipeshandler** is a self-built WebSocket framework that just accepts "actions" (things sent from the client), handles them like a HTTP framework and passes back events over pipes as the client's responses. It's used for all of the WebSocket connections throughout Station.
+- **Main** is the most boring folder, it's where shared types and logic between Chat server and Space station are stored and it also contains start logic to start all of these services through just one command.  
+
+You can find a lot of information about the server [in our town documentation](https://docs.liphium.com). Be sure to check it out, and if your question isn't answered, you can always contact us through Discord or Email (available on our website).
 
 ## The goal
 
