@@ -36,7 +36,7 @@ type MessageSink struct {
 // 2 - 30000 - "doing good?"
 // 3 - 40000 - "yessir" (newest message, at highest index)
 
-// Room id -> *MessageSink
+// Room id -> *sync.Map
 var messageMap *sync.Map = &sync.Map{}
 
 // Gets 10 messages before the specified time using an optimized binary search
