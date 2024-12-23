@@ -1,5 +1,23 @@
 ## Currently in dev
 
+### Notes for town administrators
+
+Because of the new chunking size, your reverse proxy may block requests to the endpoints Zap requires. Because of this we've modified our official Nginx configuration as well. You basically just need to add the following in your chat config to make sure the proxy actually handles the thing:
+
+```sh
+# Zap upload endpoint (just to make sure nothing happens)
+location /auth/liveshare/upload {
+  proxy_http_version 1.1;
+  client_max_body_size 1100k;
+  proxy_pass http://localhost:4001/auth/liveshare/upload;
+}
+```
+
+That's about it for the breaking changes tough.
+
+### Changes
+
+- Incremented protocol version to v7 (due to the Zap changes)
 - Made the registration a little bit more user friendly
   - The display name and username input now have a max length associated with them
   - The display name and username errors for requirements now include the requirements
@@ -7,7 +25,7 @@
   - Display name creation now has a better description of what it actually is
   - Username creation now has a better description of what it actually is
 - Fixed the email not changing when pressing the resend email button and with a changed email
-- Allow a new Zap chunking size for faster performance
+- Allow a new Zap chunking size for faster performance (512 KB -> 1 MB)
 - Made Zap a little faster by increasing the chunks loaded ahead (now from 10 MB max -> 20 MB max)
 - Added automatic layering to Tabletop to make playing card games with card stacking easier
 - Added new events for Warp to make port sharing a possibility (in Spaces)
