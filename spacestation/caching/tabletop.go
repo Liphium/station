@@ -188,7 +188,7 @@ func RemoveObjectFromTable(room string, object string) localization.Translations
 	table.Mutex.Lock()
 	defer table.Mutex.Unlock()
 
-	// Make sure the object is not the highest object
+	// Set the highest object to a new one in case the highest object is being deleted
 	if table.highestObject.ID == object {
 
 		// Get the second highest object
@@ -491,7 +491,7 @@ func GetMemberData(room string, connId string) (*TableMember, bool) {
 	return tObj.(*TableMember), true
 }
 
-// Returns a struct containing all the data related to the swap.
+// Mark an object on the table as the new highest (also notifies clients about it).
 //
 // Set excludeLast to true, if you don't want the client to know about the last object.
 // Set lockTable to true, if you want the table mutex to be locked (should be true by default unless
@@ -549,8 +549,10 @@ func MarkAsNewHighest(room string, objectId string, excludeLast bool, lockTable 
 		SendEventToMembers(room, pipes.Event{
 			Name: "tobj_order",
 			Data: map[string]interface{}{
-				"o":  table.highestObject.ID,
-				"or": table.highestObject.Order,
+				"o":   table.highestObject.ID,
+				"or":  table.highestObject.Order,
+				"lo":  lastObject,
+				"lor": -1, // To signal to the client that it was removed
 			},
 		})
 	} else {
