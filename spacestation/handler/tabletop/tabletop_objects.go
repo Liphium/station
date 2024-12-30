@@ -100,15 +100,11 @@ func selectObject(c *pipeshandler.Context, id string) pipes.Event {
 		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
-	util.Log.Println("moving order..")
-
 	// Move to the highest order
-	msg = caching.MarkAsNewHighest(c.Client.Session, id, false, true)
+	msg = caching.MarkAsNewHighest(c.Client.Session, id, true)
 	if msg != nil {
 		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
-
-	util.Log.Println("select success")
 
 	return pipeshandler.SuccessResponse(c)
 }

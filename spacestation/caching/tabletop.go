@@ -211,7 +211,7 @@ func RemoveObjectFromTable(room string, object string) localization.Translations
 
 		if objId != "-" {
 			// Set the object as the new highest
-			return MarkAsNewHighest(room, objId, true, false)
+			return MarkAsNewHighest(room, objId, false)
 		} else {
 			// If it's the last object on the table, set the highest object to nil
 			table.highestObject = nil
@@ -496,7 +496,7 @@ func GetMemberData(room string, connId string) (*TableMember, bool) {
 // Set excludeLast to true, if you don't want the client to know about the last object.
 // Set lockTable to true, if you want the table mutex to be locked (should be true by default unless
 // you know what you're doing)
-func MarkAsNewHighest(room string, objectId string, excludeLast bool, lockTable bool) localization.Translations {
+func MarkAsNewHighest(room string, objectId string, lockTable bool) localization.Translations {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
 		return localization.ErrorTableNotFound
@@ -536,37 +536,17 @@ func MarkAsNewHighest(room string, objectId string, excludeLast bool, lockTable 
 	defer currentHighest.Mutex.Unlock()
 
 	// Mark the object as the new highest object
-	lastOrder := object.Order
-	lastObject := currentHighest.ID
-	object.Order = currentHighest.Order
-	if !excludeLast {
-		currentHighest.Order = lastOrder
-	}
+	object.Order = currentHighest.Order + 1
 	table.highestObject = object
 
 	// Send an event notifying everyone of the swap
-	if excludeLast {
-		SendEventToMembers(room, pipes.Event{
-			Name: "tobj_order",
-			Data: map[string]interface{}{
-				"o":   table.highestObject.ID,
-				"or":  table.highestObject.Order,
-				"lo":  lastObject,
-				"lor": -1, // To signal to the client that it was removed
-			},
-		})
-	} else {
-		SendEventToMembers(room, pipes.Event{
-			Name: "tobj_order",
-			Data: map[string]interface{}{
-				"o":   table.highestObject.ID,
-				"or":  table.highestObject.Order,
-				"lo":  lastObject,
-				"lor": lastOrder,
-			},
-		})
-	}
-
+	SendEventToMembers(room, pipes.Event{
+		Name: "tobj_order",
+		Data: map[string]interface{}{
+			"o":  table.highestObject.ID,
+			"or": table.highestObject.Order,
+		},
+	})
 	return nil
 }
 
@@ -586,12 +566,9 @@ func SendEventToMembers(room string, event pipes.Event) bool {
 		member := value.(*TableMember)
 		if member.Enabled {
 			adapters = append(adapters, member.Client)
-			util.Log.Println("adding ", member.Client)
 		}
 		return true
 	})
-
-	util.Log.Println("hi hi hi")
 
 	// Send the event through pipes
 	if err := SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
