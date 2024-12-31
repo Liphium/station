@@ -10,8 +10,7 @@ import (
 
 // Action: setup
 func setup(c *pipeshandler.Context, action struct {
-	Data  string  `json:"data"`
-	Color float64 `json:"color"`
+	Data string `json:"data"`
 }) pipes.Event {
 
 	// Generate new connection
@@ -28,7 +27,7 @@ func setup(c *pipeshandler.Context, action struct {
 	}
 
 	// Have the guy join the table
-	msg := caching.JoinTable(c.Client.Session, c.Client.ID, action.Color)
+	msg := caching.JoinTable(c.Client.Session, c.Client.ID)
 	if msg != nil {
 		util.Log.Println("Couldn't join table of room", c.Client.Session, ":", msg[localization.DefaultLocale])
 		return pipeshandler.ErrorResponse(c, msg, nil)

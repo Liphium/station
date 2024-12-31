@@ -23,14 +23,13 @@ type TableData struct {
 }
 
 type TableMember struct {
-	Client         string  // Client ID
-	Color          float64 // Color of their cursor
-	SelectedObject string  // The id of the currently selected object
-	Enabled        bool    // If events should currently be sent to the member
+	Client         string // Client ID
+	SelectedObject string // The id of the currently selected object
+	Enabled        bool   // If events should currently be sent to the member
 }
 
 // * Table management
-func JoinTable(room string, client string, color float64) localization.Translations {
+func JoinTable(room string, client string) localization.Translations {
 
 	obj, valid := tablesCache.Load(room)
 	var table *TableData
@@ -58,7 +57,6 @@ func JoinTable(room string, client string, color float64) localization.Translati
 	}
 	table.Members.Store(client, &TableMember{
 		Client:  client,
-		Color:   color,
 		Enabled: false,
 	})
 	table.MemberCount++
