@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"encoding/base64"
 	"runtime/debug"
 	"strings"
 
@@ -70,4 +71,40 @@ func ReturnJSON(c *fiber.Ctx, data interface{}) error {
 	}
 
 	return c.Send(encrypted)
+}
+
+func ThroughCloudflareMiddleware() func(c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+
+		// Get the AES encryption key from the Auth-Tag header
+		aesKeyEncoded, valid := c.GetReqHeaders()["Auth-Tag"]
+		if !valid {
+			Log.Println("no header")
+			return c.SendStatus(fiber.StatusPreconditionFailed)
+		}
+		aesKeyEncrypted, err := base64.StdEncoding.DecodeString(aesKeyEncoded[0])
+		if err != nil {
+			Log.Println("no decoding")
+			return c.SendStatus(fiber.StatusPreconditionFailed)
+		}
+
+		// Decrypt the AES key using the private key of this node
+		aesKey, err := DecryptRSA(NodePrivateKey, aesKeyEncrypted)
+		if err != nil {
+			return c.SendStatus(fiber.StatusPreconditionRequired)
+		}
+
+		// Decrypt the request body using the key attached to the Auth-Tag header
+		decrypted, err := DecryptAES(aesKey, c.Body())
+		if err != nil {
+			return c.SendStatus(fiber.StatusNetworkAuthenticationRequired)
+		}
+
+		// Set some variables for use when sending back the response
+		c.Locals("body", decrypted)
+		c.Locals("key", aesKey)
+
+		// Go to the next middleware/handler
+		return c.Next()
+	}
 }

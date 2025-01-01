@@ -1,6 +1,7 @@
 package pipeshandler
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -64,4 +65,27 @@ func (instance *Instance) CheckToken(token string, local *pipes.LocalNode) (*Con
 
 	pipeshutil.Log.Println("invalid")
 	return nil, false
+}
+
+// Generate a connection token for a node
+func (instance *Instance) GenerateToken(account string, session string, extra string, node uint) (string, error) {
+
+	// Create jwt token
+	exp := time.Now().Add(time.Hour * 2)
+	tk := jwt.NewWithClaims(jwt.SigningMethodHS512, ConnectionTokenClaims{
+		Account:        account,
+		ExpiredUnixSec: exp.Unix(),
+		Session:        session,
+		Extra:          extra,
+		Node:           fmt.Sprintf("%d", node),
+	})
+
+	// Sign and get the complete encoded token as a string using the secret
+	tokenString, err := tk.SignedString([]byte(instance.Config.Secret))
+
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }

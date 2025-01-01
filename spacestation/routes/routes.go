@@ -28,7 +28,14 @@ func SetupRoutes(router fiber.Router) {
 	// These are publicly accessible yk (cause this can be public information cause encryption and stuff)
 	router.Post("/info", roomInfo)
 
+	// Encrypted routes (at /enc to prevent issues)
+	router.Route("/enc", encryptedRoutes)
+
 	setupPipesFiber(router)
+}
+
+func encryptedRoutes(router fiber.Router) {
+	router.Post("/join", joinRoom)
 }
 
 func setupPipesFiber(router fiber.Router) {

@@ -53,40 +53,7 @@ func authorizedRoutes(router fiber.Router) {
 func encryptedRoutes(router fiber.Router) {
 
 	// Add Through Cloudflare Protection middleware
-	router.Use(func(c *fiber.Ctx) error {
-
-		// Get the AES encryption key from the Auth-Tag header
-		aesKeyEncoded, valid := c.GetReqHeaders()["Auth-Tag"]
-		if !valid {
-			util.Log.Println("no header")
-			return c.SendStatus(fiber.StatusPreconditionFailed)
-		}
-		aesKeyEncrypted, err := base64.StdEncoding.DecodeString(aesKeyEncoded[0])
-		if err != nil {
-			util.Log.Println("no decoding")
-			return c.SendStatus(fiber.StatusPreconditionFailed)
-		}
-
-		// Decrypt the AES key using the private key of this node
-		aesKey, err := integration.DecryptRSA(integration.NodePrivateKey, aesKeyEncrypted)
-		if err != nil {
-			return c.SendStatus(fiber.StatusPreconditionRequired)
-		}
-
-		// Decrypt the request body using the key attached to the Auth-Tag header
-		decrypted, err := integration.DecryptAES(aesKey, c.Body())
-		if err != nil {
-			return c.SendStatus(fiber.StatusNetworkAuthenticationRequired)
-		}
-
-		// Set some variables for use when sending back the response
-		c.Locals("body", decrypted)
-		c.Locals("key", aesKey)
-		c.Locals("srv_pub", integration.NodePrivateKey)
-
-		// Go to the next middleware/handler
-		return c.Next()
-	})
+	router.Use(integration.ThroughCloudflareMiddleware())
 
 	// No authorization needed for this route
 	router.Post("/adoption/socketless", socketless)
