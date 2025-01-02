@@ -83,30 +83,6 @@ func Start(loadEnv bool) bool {
 
 	pipes.DebugLogs = true
 
-	// Create testing room
-	if integration.Testing {
-		caching.CreateRoom("id")
-
-		amount, err := strconv.Atoi(os.Getenv("TESTING_AMOUNT"))
-		if err != nil {
-			util.Log.Println("Error: Couldn't parse testing amount")
-			return false
-		}
-
-		for i := 0; i < amount; i++ {
-			connID := util.GenerateToken(5)
-			connection := caching.EmptyConnection(connID, "id")
-			valid := caching.JoinRoom("id", connection.ID)
-			if !valid {
-				util.Log.Println("Error: Couldn't join room")
-				return false
-			}
-			util.Log.Println("--- TESTING CLIENT ---")
-			util.Log.Println(connection.ID + ":" + connection.KeyBase64())
-			util.Log.Println("----------------------")
-		}
-	}
-
 	// Close caches on exit
 	defer caching.CloseCaches()
 

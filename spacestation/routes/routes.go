@@ -35,7 +35,12 @@ func SetupRoutes(router fiber.Router) {
 }
 
 func encryptedRoutes(router fiber.Router) {
-	router.Post("/join", joinRoom)
+
+	// For joining a Space (no matter from where, used for decentralization and normal to make the API consistent)
+	router.Post("/join", joinSpace)
+
+	// For creating a Space and generating a connection token for it
+	router.Post("/create", createSpace)
 }
 
 func setupPipesFiber(router fiber.Router) {
@@ -63,7 +68,6 @@ func setupPipesFiber(router fiber.Router) {
 
 			// Remove from room
 			caching.RemoveMember(client.Session, client.ID)
-			caching.DeleteConnection(client.ID)
 
 			// Send leave event
 			handler.SendRoomData(client.Session)

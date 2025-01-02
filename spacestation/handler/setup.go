@@ -10,14 +10,12 @@ import (
 
 // Action: setup
 func setup(c *pipeshandler.Context, action struct {
-	Data string `json:"data"`
+	Data      string `json:"data"`
+	Signature string `json:"signature"`
 }) pipes.Event {
 
-	// Generate new connection
-	connection := caching.EmptyConnection(c.Client.ID, c.Client.Session)
-
 	// Insert data
-	if !caching.SetMemberData(c.Client.Session, c.Client.ID, action.Data) {
+	if !caching.SetMemberData(c.Client.Session, c.Client.ID, action.Data, action.Signature) {
 		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
@@ -36,8 +34,5 @@ func setup(c *pipeshandler.Context, action struct {
 	// Send the guy all the warps
 	caching.InitializeWarps(c.Client)
 
-	return pipeshandler.NormalResponse(c, map[string]interface{}{
-		"success": true,
-		"key":     connection.KeyBase64(),
-	})
+	return pipeshandler.SuccessResponse(c)
 }

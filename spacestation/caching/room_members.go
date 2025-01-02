@@ -9,22 +9,10 @@ import (
 )
 
 type RoomConnection struct {
-	Connected bool
-	Adapter   string
-	Data      string
-}
-
-func (r *RoomConnection) ToReturnableMember() ReturnableMember {
-	return ReturnableMember{
-		ID:   r.Adapter,
-		Data: r.Data,
-	}
-}
-
-// TODO: Implement as standard
-type ReturnableMember struct {
-	ID   string `json:"id"`
-	Data string `json:"data"`
+	Connected bool   `json:"-"`
+	Adapter   string `json:"id"`   // Also the client id
+	Data      string `json:"data"` // The account id of the client (encrypted)
+	Signature string `json:"sign"` // Client id + Account id signed with private key of the client (to proof the account id is correct)
 }
 
 // Member (Connection) ID -> Connections
@@ -52,7 +40,7 @@ func setupRoomConnectionsCache() {
 }
 
 // Sets the member data
-func SetMemberData(roomID string, connectionId string, data string) bool {
+func SetMemberData(roomID string, connectionId string, data string, signature string) bool {
 
 	room, valid := GetRoom(roomID)
 	if !valid {
@@ -80,6 +68,7 @@ func SetMemberData(roomID string, connectionId string, data string) bool {
 		Connected: false,
 		Adapter:   connectionId,
 		Data:      data,
+		Signature: signature,
 	}
 
 	// Refresh room

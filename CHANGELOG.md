@@ -29,6 +29,7 @@ That's about it for the breaking changes tough.
 - Made Zap a little faster by increasing the chunks loaded ahead (now from 10 MB max -> 20 MB max)
 - Added automatic layering to Tabletop to make playing card games with card stacking easier
 - Added new events for Warp to make port sharing a possibility (in Spaces)
+- Decentralized connections to Spaces are now possible
 
 ## 0.5.1
 

@@ -21,7 +21,6 @@ SPACE_NODE_PORT = "3002"
 APP_NAME = "Liphium"
 TESTING = "true"
 LISTEN = "127.0.0.1"
-TESTING_AMOUNT = "2"
 # PROTOCOL = "http://" (You CAN do this, but https is the default)
 CLI = "true"
 SYSTEM_UUID = "your-uuid" # You can delete this and the app will give you a random one
