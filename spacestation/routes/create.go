@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"log"
 	"strings"
 
 	"github.com/Liphium/station/main/integration"
@@ -45,7 +44,6 @@ func createSpace(c *fiber.Ctx) error {
 	// Create a connection token
 	clientId, token, err := newConnectionToken(c, spaceId)
 	if err != nil {
-		log.Println("hi")
 		return err
 	}
 
