@@ -25,7 +25,9 @@ func Start(loadEnv bool) bool {
 
 	app := fiber.New()
 	app.Use(cors.New())
-	app.Use(logger.New())
+	app.Use(logger.New(logger.Config{
+		Format: "spaces | " + logger.ConfigDefault.Format,
+	}))
 
 	if !integration.Setup(integration.IdentifierSpaceNode, loadEnv) {
 		return false
