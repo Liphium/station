@@ -26,6 +26,16 @@ func sendMessage(c *pipeshandler.Context, action struct {
 		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
+	// Get the connection of the client (for the encrypted id)
+	connections, valid := caching.GetAllConnections(c.Client.Session)
+	if !valid {
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
+	}
+	member, valid := connections[c.Client.ID]
+	if !valid {
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
+	}
+
 	// Create the message and save it
 	message := caching.Message{
 		ID:           uuid.NewString(),
@@ -33,7 +43,7 @@ func sendMessage(c *pipeshandler.Context, action struct {
 		Creation:     timestamp,
 		Data:         action.Data,
 		Edited:       false,
-		Sender:       c.Client.ID,
+		Sender:       member.Data,
 	}
 
 	// Add the message to the cache
