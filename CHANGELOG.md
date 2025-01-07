@@ -2,18 +2,7 @@
 
 ### Notes for town administrators
 
-Because of the new chunking size, your reverse proxy may block requests to the endpoints Zap requires. Because of this we've modified our official Nginx configuration as well. You basically just need to add the following in your chat config to make sure the proxy actually handles the thing:
-
-```sh
-# Zap upload endpoint (just to make sure nothing happens)
-location /auth/liveshare/upload {
-  proxy_http_version 1.1;
-  client_max_body_size 1100k;
-  proxy_pass http://localhost:4001/auth/liveshare/upload;
-}
-```
-
-That's about it for the breaking changes tough.
+Zap will probably stop working after this update if you used the official Docker tutorial for installation. We have a guide on how to fix it over at https://docs.liphium.com/migration. Please follow the guides to also resolve the other breaking changes.
 
 ### Changes
 
