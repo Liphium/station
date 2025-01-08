@@ -59,6 +59,12 @@ func AddSyncToQueue(data SyncData) error {
 			return err
 		}
 
+		// Make sure to not send an empty packet
+		if len(messages) == 0 {
+			finished = true
+			break
+		}
+
 		// Send an event to the client containing the messages
 		if err := CSNode.Pipe(pipes.ProtocolWS, pipes.Message{
 			Local:   true,
