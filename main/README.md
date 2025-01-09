@@ -56,9 +56,6 @@ FILE_REPO = "/home/some_path"
 # FILE_REPO_KEY = "key"
 # FILE_REPO = "https://account.eu.r2.cloudflarestorage.com"
 # FILE_REPO_BUCKET = "your-bucket"
-MAX_UPLOAD_SIZE = "10" # in MB
-MAX_FAVORITE_STORAGE = "500" # in MB
-MAX_TOTAL_STORAGE = "1000" # in MB
 
 # SMTP (for emails)
 SMTP_SERVER = "mail.example.com"
