@@ -19,6 +19,8 @@ Zap will probably stop working after this update if you used the official Docker
 - Added automatic layering to Tabletop to make playing card games with card stacking easier
 - Added new events for Warp to make port sharing a possibility (in Spaces)
 - Decentralized connections to Spaces are now possible
+- Fixed subscriptions taking long when some servers are offline
+- Fixed the profile picture not loading in a decentralized context
 
 ## 0.5.1
 
