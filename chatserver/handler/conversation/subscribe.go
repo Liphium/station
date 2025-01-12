@@ -91,49 +91,52 @@ func subscribe(c *pipeshandler.Context, action struct {
 	}
 
 	// Subscribe to all remote tokens
-	var serversWithError []string = []string{}
 	enabled, err := integration.GetBoolSetting(caching.CSNode, integration.SettingDecentralizationEnabled)
-	if err != nil || !enabled {
-		for server := range remoteTokens {
-			serversWithError = append(serversWithError, server)
-		}
-	}
-
-	if enabled {
+	if enabled && err == nil {
 		for server, tokens := range remoteTokens {
-			res, err := action_helpers.SendRemoteActionGeneric[conversationSubscribeResponse](server, "conv_subscribe", fiber.Map{
-				"tokens": tokens,
-				"status": action.Status,
-				"data":   action.Data,
-				"node":   util.OwnPath,
-			})
 
-			// Check if there was an error, if so, tell the client
-			if err != nil || !res.Success {
-				serversWithError = append(serversWithError, server)
-				continue
-			}
-
-			// Add the conversation info from the remote server
-			// This could technically be vulnerable to an attack where a remote node could
-			// artificially increment the notification count, mess with the read dates or
-			// make the client re-fetch the conversation version (just why?). To me, this isn't
-			// of importance and because this would need a lot of code changes to fix, I'll
-			// just leave this reminder here. If anyone finds this in the future, have
-			// fun exploiting this! :D
-			// And if you find anything actually serious, well, you know who to blame this on.
-			for conv, info := range res.Answer.Info {
-				convInfo[conv] = info
-			}
-
-			// Add the missing tokens
-			// Make sure remote nodes can't delete tokens they don't have access to (important security fix)
-			res.Answer.Missing = slices.DeleteFunc(res.Answer.Missing, func(element string) bool {
-				return !slices.ContainsFunc(tokens, func(token conversations.SentConversationToken) bool {
-					return token.ID == element
+			// These subscriptions will be delivered to the client later, due to potential timeouts taking way too long
+			// and making the client feel really slow.
+			go func() {
+				res, err := action_helpers.SendRemoteActionGeneric[conversationSubscribeResponse](server, "conv_subscribe", fiber.Map{
+					"tokens": tokens,
+					"status": action.Status,
+					"data":   action.Data,
+					"node":   util.OwnPath,
 				})
-			})
-			missingTokens = append(missingTokens, res.Answer.Missing...)
+
+				// Check if there was an error, if so, tell the client
+				if err != nil || !res.Success {
+
+					// Send an error for this server
+					caching.CSInstance.SendEventToOne(c.Client, pipes.Event{
+						Name: "conv_sub:late",
+						Data: map[string]interface{}{
+							"server": server,
+							"error":  true,
+						},
+					})
+					return
+				}
+
+				// Make sure remote nodes can't delete tokens they don't have access to (important security fix)
+				res.Answer.Missing = slices.DeleteFunc(res.Answer.Missing, func(element string) bool {
+					return !slices.ContainsFunc(tokens, func(token conversations.SentConversationToken) bool {
+						return token.ID == element
+					})
+				})
+
+				// Send all the information for this server
+				caching.CSInstance.SendEventToOne(c.Client, pipes.Event{
+					Name: "conv_sub:late",
+					Data: map[string]interface{}{
+						"server":  server,
+						"error":   false,
+						"missing": res.Answer.Missing,
+						"info":    res.Answer.Info,
+					},
+				})
+			}()
 		}
 	}
 
@@ -191,7 +194,6 @@ func subscribe(c *pipeshandler.Context, action struct {
 	return pipeshandler.NormalResponse(c, map[string]interface{}{
 		"success": true,
 		"info":    convInfo,
-		"error":   serversWithError,
 		"missing": missingTokens,
 	})
 }

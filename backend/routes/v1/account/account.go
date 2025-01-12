@@ -33,6 +33,7 @@ func Unauthorized(router fiber.Router) {
 	router.Route("/rank", rank.Unauthorized)
 	router.Route("/stored_actions", stored_actions.Unauthorized)
 
+	router.Route("/profile", profile.Unauthorized)
 	router.Post("/get", getAccount)
 	router.Post("/get_node", getAccountNode)
 }
