@@ -3,6 +3,7 @@ package register_routes
 import (
 	"time"
 
+	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/backend/util/mail"
@@ -36,8 +37,15 @@ func resendEmail(c *fiber.Ctx) error {
 		return util.ReturnJSON(c, ssr.PopupResponse(c, localization.DialogTitleError, localization.AuthRegisterCodeEmailCooldown(int64(duration.Seconds()))))
 	}
 
+	// Validate the email
+	valid, normalizedEmail := standards.CheckEmail(req.Email)
+	if !valid {
+		return util.FailedRequest(c, localization.ErrorEmailInvalid, nil)
+	}
+
 	// Resend the email with a new code
 	state.Mutex.Lock()
+	state.Email = normalizedEmail
 	state.EmailCode = auth.GenerateToken(6)
 	state.LastEmail = time.Now()
 	state.Mutex.Unlock()

@@ -1,39 +1,18 @@
 package caching
 
 import (
-	"net"
+	"errors"
 
+	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/spacestation/util"
 	"github.com/dgraph-io/ristretto"
 )
 
 type RoomConnection struct {
-	Connected      bool
-	Connection     *net.UDPAddr
-	Adapter        string
-	Key            *[]byte
-	ClientID       string
-	CurrentSession string
-	Data           string
-
-	//* Client status
-	Muted    bool
-	Deafened bool
-}
-
-func (r *RoomConnection) ToReturnableMember() ReturnableMember {
-	return ReturnableMember{
-		ID:       r.Data + ":" + r.ClientID,
-		Muted:    r.Muted,
-		Deafened: r.Deafened,
-	}
-}
-
-// TODO: Implement as standard
-type ReturnableMember struct {
-	ID       string `json:"id"` // Syntax: data:clientID
-	Muted    bool   `json:"muted"`
-	Deafened bool   `json:"deafened"`
+	Connected bool   `json:"-"`
+	Adapter   string `json:"id"`   // Also the client id
+	Data      string `json:"data"` // The account id of the client (encrypted)
+	Signature string `json:"sign"` // Client id + Account id signed with private key of the client (to proof the account id is correct)
 }
 
 // Member (Connection) ID -> Connections
@@ -60,53 +39,8 @@ func setupRoomConnectionsCache() {
 
 }
 
-// JoinRoom adds a member to a room in the cache
-func EnterUDP(roomID string, connectionId string, clientId string, addr *net.UDPAddr, key *[]byte) bool {
-
-	room, valid := GetRoom(roomID)
-	if !valid {
-		return false
-	}
-	room.Mutex.Lock()
-
-	room, valid = GetRoom(roomID)
-	if !valid {
-		room.Mutex.Unlock()
-		return false
-	}
-
-	obj, valid := roomConnectionsCache.Get(roomID)
-	if !valid {
-		room.Mutex.Unlock()
-		return false
-	}
-	connections := obj.(RoomConnections)
-	conn := connections[connectionId]
-	if conn.Connected {
-		util.Log.Println("Error: Connection already exists")
-		room.Mutex.Unlock()
-		return false
-	}
-	connections[connectionId] = RoomConnection{
-		Connected:      true,
-		Connection:     addr,
-		ClientID:       clientId,
-		Data:           conn.Data,
-		CurrentSession: "",
-		Adapter:        connectionId,
-		Key:            key,
-	}
-
-	// Refresh room
-	roomConnectionsCache.Set(roomID, connections, 1)
-	roomConnectionsCache.Wait()
-	room.Mutex.Unlock()
-
-	return true
-}
-
 // Sets the member data
-func SetMemberData(roomID string, connectionId string, clientId string, data string) bool {
+func SetMemberData(roomID string, connectionId string, data string, signature string) bool {
 
 	room, valid := GetRoom(roomID)
 	if !valid {
@@ -131,12 +65,10 @@ func SetMemberData(roomID string, connectionId string, clientId string, data str
 		return false
 	}
 	connections[connectionId] = RoomConnection{
-		Connected:      false,
-		Connection:     nil,
-		Adapter:        connectionId,
-		CurrentSession: "",
-		ClientID:       clientId,
-		Data:           data,
+		Connected: false,
+		Adapter:   connectionId,
+		Data:      data,
+		Signature: signature,
 	}
 
 	// Refresh room
@@ -233,4 +165,25 @@ func SaveConnections(roomId string, connections RoomConnections) bool {
 	room.Mutex.Unlock()
 
 	return true
+}
+
+// Send an event to all members of a room.
+func SendEventToAll(room string, event pipes.Event) error {
+
+	// Get all adapters for the people in the room
+	adapters, valid := GetAllAdapters(room)
+	if !valid {
+		return errors.New("adapters couldn't be found for this room")
+	}
+
+	// Send the actual event using pipes
+	if err := SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
+		Channel: pipes.BroadcastChannel(adapters),
+		Local:   true,
+		Event:   event,
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }

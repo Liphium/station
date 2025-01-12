@@ -11,11 +11,11 @@ import (
 type Message struct {
 	ID string `json:"id"`
 
-	Conversation string `json:"conversation"` // The room id
-	Creation     int64  `json:"creation"`     // Unix timestamp (SET BY THE CLIENT, EXTREMELY IMPORTANT FOR SIGNATURES)
-	Data         string `json:"data"`         // Encrypted data
-	Edited       bool   `json:"edited"`       // Edited flag
-	Sender       string `json:"sender"`       // Sender ID (of conversation token)
+	Conversation string `json:"cv"` // The room id
+	Creation     int64  `json:"ct"` // Unix timestamp (SET BY THE CLIENT, EXTREMELY IMPORTANT FOR SIGNATURES)
+	Data         string `json:"dt"` // Encrypted data
+	Edited       bool   `json:"ed"` // Edited flag
+	Sender       string `json:"sr"` // Sender ID (of conversation token)
 }
 
 func CheckSize(message string) bool {
@@ -36,7 +36,7 @@ type MessageSink struct {
 // 2 - 30000 - "doing good?"
 // 3 - 40000 - "yessir" (newest message, at highest index)
 
-// Room id -> *MessageSink
+// Room id -> *sync.Map
 var messageMap *sync.Map = &sync.Map{}
 
 // Gets 10 messages before the specified time using an optimized binary search

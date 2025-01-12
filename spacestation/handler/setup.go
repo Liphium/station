@@ -10,15 +10,12 @@ import (
 
 // Action: setup
 func setup(c *pipeshandler.Context, action struct {
-	Data  string  `json:"data"`
-	Color float64 `json:"color"`
+	Data      string `json:"data"`
+	Signature string `json:"signature"`
 }) pipes.Event {
 
-	// Generate new connection
-	connection := caching.EmptyConnection(c.Client.ID, c.Client.Session)
-
 	// Insert data
-	if !caching.SetMemberData(c.Client.Session, c.Client.ID, connection.ClientID, action.Data) {
+	if !caching.SetMemberData(c.Client.Session, c.Client.ID, action.Data, action.Signature) {
 		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
@@ -28,15 +25,14 @@ func setup(c *pipeshandler.Context, action struct {
 	}
 
 	// Have the guy join the table
-	msg := caching.JoinTable(c.Client.Session, c.Client.ID, action.Color)
+	msg := caching.JoinTable(c.Client.Session, c.Client.ID)
 	if msg != nil {
 		util.Log.Println("Couldn't join table of room", c.Client.Session, ":", msg[localization.DefaultLocale])
 		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
-	return pipeshandler.NormalResponse(c, map[string]interface{}{
-		"success": true,
-		"id":      connection.ClientID,
-		"key":     connection.KeyBase64(),
-	})
+	// Send the guy all the warps
+	caching.InitializeWarps(c.Client)
+
+	return pipeshandler.SuccessResponse(c)
 }

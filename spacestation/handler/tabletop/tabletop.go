@@ -1,10 +1,8 @@
 package tabletop_handlers
 
 import (
-	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
-	"github.com/Liphium/station/spacestation/util"
 )
 
 func SetupHandler() {
@@ -25,25 +23,4 @@ func SetupHandler() {
 
 	// Table cursor sending
 	pipeshandler.CreateHandlerFor(caching.SSInstance, "tc_move", moveCursor)
-}
-
-// Send an event to all table members
-func SendEventToMembers(room string, event pipes.Event) bool {
-	valid := caching.RangeOverTableMembers(room, func(tm *caching.TableMember) bool {
-
-		// Only send the event when the member actually wants it
-		if !tm.Enabled {
-			return true
-		}
-
-		if err := caching.SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
-			Channel: pipes.BroadcastChannel([]string{tm.Client}),
-			Local:   true,
-			Event:   event,
-		}); err != nil {
-			util.Log.Println("error during event sending to tabletop members:", err)
-		}
-		return true
-	})
-	return valid
 }

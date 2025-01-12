@@ -2,7 +2,9 @@ package account
 
 import (
 	"github.com/Liphium/station/backend/database"
+	"github.com/Liphium/station/backend/routes/v1/account/stored_actions"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -43,11 +45,47 @@ func me(c *fiber.Ctx) error {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
+	// Get vault key
+	var vaultKey database.VaultKey
+	if database.DBConn.Where("id = ?", acc.ID).Take(&vaultKey).Error != nil {
+		return util.FailedRequest(c, localization.ErrorKeyNotFound, nil)
+	}
+
+	// Get profile key
+	var profileKey database.ProfileKey
+	if database.DBConn.Where("id = ?", acc.ID).Take(&profileKey).Error != nil {
+		return util.FailedRequest(c, localization.ErrorKeyNotFound, nil)
+	}
+
+	// Make sure all the keys are there
+	if vaultKey.Key == "" || profileKey.Key == "" {
+		return util.FailedRequest(c, localization.ErrorKeyNotFound, nil)
+	}
+
+	// Get authenticated stored action key
+	var storedActionKey database.StoredActionKey
+	if database.DBConn.Where(&database.StoredActionKey{ID: acc.ID}).Take(&storedActionKey).Error != nil {
+
+		// Generate new stored action key
+		storedActionKey = database.StoredActionKey{
+			ID:  acc.ID,
+			Key: auth.GenerateToken(stored_actions.StoredActionTokenLength),
+		}
+
+		// Save stored action key
+		if err := database.DBConn.Create(&storedActionKey).Error; err != nil {
+			return util.FailedRequest(c, localization.ErrorServer, err)
+		}
+	}
+
 	// Retrun details
 	return util.ReturnJSON(c, fiber.Map{
 		"success":     true,
 		"account":     acc,
 		"permissions": perms,
 		"ranks":       ranks,
+		"vault":       vaultKey.Key,
+		"profile":     profileKey.Key,
+		"actions":     storedActionKey.Key,
 	})
 }

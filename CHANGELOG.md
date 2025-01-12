@@ -1,3 +1,29 @@
+## Currently in dev
+
+### Notes for town administrators
+
+Zap will probably stop working after this update if you used the official Docker tutorial for installation. We have a guide on how to fix it over at https://docs.liphium.com/migration. Please follow the guides to also resolve the other breaking changes.
+
+### Changes
+
+- Incremented protocol version to v7 (due to the Zap changes)
+- Made the registration a little bit more user friendly
+  - The display name and username input now have a max length associated with them
+  - The display name and username errors for requirements now include the requirements
+  - The display name and username creation have been separated to avoid confusion between the two
+  - Display name creation now has a better description of what it actually is
+  - Username creation now has a better description of what it actually is
+- Fixed the email not changing when pressing the resend email button and with a changed email
+- Allow a new Zap chunking size for faster performance (512 KB -> 1 MB)
+- Made Zap a little faster by increasing the chunks loaded ahead (now from 10 MB max -> 20 MB max)
+- Added automatic layering to Tabletop to make playing card games with card stacking easier
+- Added new events for Warp to make port sharing a possibility (in Spaces)
+- Decentralized connections to Spaces are now possible
+
+## 0.5.1
+
+- Fixed a bug where stored actions would be completely broken (friend requests and stuff)
+
 ## 0.5.0
 
 - Incremented protocol version to v6

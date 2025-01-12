@@ -28,11 +28,11 @@ func GetRoomData(id string, eventName string) ([]string, pipes.Event, bool) {
 	}
 
 	// Get all members
+	connections := make([]caching.RoomConnection, len(members))
 	adapters := make([]string, len(members))
-	returnableMembers := make([]caching.ReturnableMember, len(members))
 	i := 0
 	for _, member := range members {
-		returnableMembers[i] = member.ToReturnableMember()
+		connections[i] = member
 		adapters[i] = member.Adapter
 		i++
 	}
@@ -42,7 +42,7 @@ func GetRoomData(id string, eventName string) ([]string, pipes.Event, bool) {
 		Name: eventName,
 		Data: map[string]interface{}{
 			"start":   room.Start,
-			"members": returnableMembers,
+			"members": connections,
 		},
 	}, true
 }

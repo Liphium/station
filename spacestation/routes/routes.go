@@ -3,6 +3,7 @@ package routes
 import (
 	"encoding/base64"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/Liphium/station/main/integration"
@@ -26,10 +27,24 @@ func SetupRoutes(router fiber.Router) {
 	})
 
 	// These are publicly accessible yk (cause this can be public information cause encryption and stuff)
-	router.Post("/leave", leaveRoom)
 	router.Post("/info", roomInfo)
 
+	// Encrypted routes (at /enc to prevent issues)
+	router.Route("/enc", encryptedRoutes)
+
 	setupPipesFiber(router)
+}
+
+func encryptedRoutes(router fiber.Router) {
+
+	// Make sure everything is properly encrypted
+	router.Use(integration.ThroughCloudflareMiddleware())
+
+	// For joining a Space (no matter from where, used for decentralization and normal to make the API consistent)
+	router.Post("/join", joinSpace)
+
+	// For creating a Space and generating a connection token for it
+	router.Post("/create", createSpace)
 }
 
 func setupPipesFiber(router fiber.Router) {
@@ -52,9 +67,11 @@ func setupPipesFiber(router fiber.Router) {
 			// Remove from the table
 			caching.LeaveTable(client.Session, client.ID)
 
+			// Delete all the Warps the guy has
+			caching.StopWarpsBy(client.Session, client.ID)
+
 			// Remove from room
 			caching.RemoveMember(client.Session, client.ID)
-			caching.DeleteConnection(client.ID)
 
 			// Send leave event
 			handler.SendRoomData(client.Session)
@@ -63,22 +80,18 @@ func setupPipesFiber(router fiber.Router) {
 		// Validate token and create room
 		TokenValidateHandler: func(claims *pipeshandler.ConnectionTokenClaims, attachments string) bool {
 
-			// Make sure it is an actual session id
-			if len(claims.Extra) != 16 {
-				util.Log.Println("Not length 16")
+			if !strings.HasPrefix(claims.Extra, "oj-") {
+				util.Log.Println("no prefix for only join")
 				return true
 			}
 
-			// Create room (if needed)
-			claims.Session = claims.Extra // Session is the room id and since that's now passed through extra we'll just set session to it
-			_, valid := caching.GetRoom(claims.Extra)
+			// Make sure the room exists
+			claims.Session = strings.TrimPrefix(claims.Extra, "oj-") // Session is the room id and since that's now passed through extra we'll just set session to it
+			_, valid := caching.GetRoom(claims.Session)
 			if !valid {
-				util.Log.Println("Creating new room for", claims.Account, "("+claims.Extra+")")
-				caching.CreateRoom(claims.Extra)
-			} else {
-				util.Log.Println("Room already exists for", claims.Account, "("+claims.Extra+")")
+				util.Log.Println("the room doesn't exist")
+				return true
 			}
-
 			return false
 		},
 

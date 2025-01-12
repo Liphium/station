@@ -12,12 +12,10 @@ var SSNode *pipes.LocalNode
 func SetupMemory() {
 	setupRoomsCache()
 	setupRoomConnectionsCache()
-	setupConnectionsCache()
 }
 
 func CloseCaches() {
 	util.Log.Println("Closing caches...")
 	roomsCache.Close()
 	roomConnectionsCache.Close()
-	connectionsCache.Close()
 }

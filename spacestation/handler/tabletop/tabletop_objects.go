@@ -21,12 +21,6 @@ func createObject(c *pipeshandler.Context, action struct {
 	Data     string  `json:"data"`
 }) pipes.Event {
 
-	// Get the connection (for the client id)
-	connection, valid := caching.GetConnection(c.Client.ID)
-	if !valid {
-		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
-	}
-
 	// Create the object here so the data is still there when we send it down below
 	object := &caching.TableObject{
 		Mutex:             &sync.Mutex{},
@@ -49,18 +43,19 @@ func createObject(c *pipeshandler.Context, action struct {
 	}
 
 	// Notify other clients about the object creation
-	valid = SendEventToMembers(c.Client.Session, pipes.Event{
+	valid := caching.SendEventToMembers(c.Client.Session, pipes.Event{
 		Name: "tobj_created",
 		Data: map[string]interface{}{
 			"id":   object.ID,
 			"x":    action.X,
 			"y":    action.Y,
+			"o":    object.Order,
 			"w":    action.Width,
 			"h":    action.Height,
 			"r":    action.Rotation,
 			"type": action.Type,
 			"data": action.Data,
-			"c":    connection.ClientID,
+			"c":    c.Client.ID,
 		},
 	})
 	if !valid {
@@ -69,7 +64,8 @@ func createObject(c *pipeshandler.Context, action struct {
 
 	return pipeshandler.NormalResponse(c, map[string]interface{}{
 		"success": true,
-		"id":      object.ID, // So the client can set the new id
+		"id":      object.ID,    // So the client can set the new id
+		"o":       object.Order, // Cause the client doesn't know order at creation
 	})
 }
 
@@ -82,7 +78,7 @@ func deleteObject(c *pipeshandler.Context, id string) pipes.Event {
 	}
 
 	// Notify other clients
-	valid := SendEventToMembers(c.Client.Session, pipes.Event{
+	valid := caching.SendEventToMembers(c.Client.Session, pipes.Event{
 		Name: "tobj_deleted",
 		Data: map[string]interface{}{
 			"id": id,
@@ -98,13 +94,14 @@ func deleteObject(c *pipeshandler.Context, id string) pipes.Event {
 // Action: tobj_select
 func selectObject(c *pipeshandler.Context, id string) pipes.Event {
 
-	connection, valid := caching.GetConnection(c.Client.ID)
-	if !valid {
-		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
+	// Grab hold of it
+	msg := caching.SelectTableObject(c.Client.Session, id, c.Client.ID)
+	if msg != nil {
+		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
-	// Grab hold of it
-	msg := caching.SelectTableObject(c.Client.Session, id, connection.ClientID)
+	// Move to the highest order
+	msg = caching.MarkAsNewHighest(c.Client.Session, id, true)
 	if msg != nil {
 		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
@@ -115,14 +112,8 @@ func selectObject(c *pipeshandler.Context, id string) pipes.Event {
 // Action: tobj_select
 func unselectObject(c *pipeshandler.Context, id string) pipes.Event {
 
-	// Get the connection (for the client id)
-	connection, valid := caching.GetConnection(c.Client.ID)
-	if !valid {
-		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
-	}
-
 	// Grab hold of it
-	msg := caching.UnselectTableObject(c.Client.Session, id, connection.ClientID)
+	msg := caching.UnselectTableObject(c.Client.Session, id, c.Client.ID)
 	if msg != nil {
 		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
@@ -138,24 +129,18 @@ func modifyObject(c *pipeshandler.Context, action struct {
 	Height float64 `json:"height"`
 }) pipes.Event {
 
-	// Get the connection (for the client id)
-	connection, valid := caching.GetConnection(c.Client.ID)
-	if !valid {
-		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
-	}
-
 	// Make sure the next client gets to modify the object regardless of errors
 	defer handleNextModification(c.Client.Session, action.ID)
 
 	// Modify the object and return the error if there is one
-	msg := caching.ModifyTableObject(c.Client.Session, connection.ClientID, action.ID, action.Data, action.Width, action.Height)
+	msg := caching.ModifyTableObject(c.Client.Session, c.Client.ID, action.ID, action.Data, action.Width, action.Height)
 	if msg != nil {
 		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Notify other clients
 	util.Log.Println("Sending tobj_modified event")
-	valid = SendEventToMembers(c.Client.Session, pipes.Event{
+	if !caching.SendEventToMembers(c.Client.Session, pipes.Event{
 		Name: "tobj_modified",
 		Data: map[string]interface{}{
 			"id":   action.ID,
@@ -163,8 +148,7 @@ func modifyObject(c *pipeshandler.Context, action struct {
 			"w":    action.Width,
 			"h":    action.Height,
 		},
-	})
-	if !valid {
+	}) {
 		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
@@ -179,28 +163,21 @@ func moveObject(c *pipeshandler.Context, action struct {
 	Y  float64 `json:"y"`
 }) pipes.Event {
 
-	// Get the connection (for the client id)
-	connection, valid := caching.GetConnection(c.Client.ID)
-	if !valid {
-		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
-	}
-
 	// Move the actual object
-	msg := caching.MoveTableObject(c.Client.Session, connection.ClientID, action.ID, action.X, action.Y)
+	msg := caching.MoveTableObject(c.Client.Session, c.Client.ID, action.ID, action.X, action.Y)
 	if msg != nil {
 		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Notify other clients
-	valid = SendEventToMembers(c.Client.Session, pipes.Event{
+	if !caching.SendEventToMembers(c.Client.Session, pipes.Event{
 		Name: "tobj_moved",
 		Data: map[string]interface{}{
 			"id": action.ID,
 			"x":  action.X,
 			"y":  action.Y,
 		},
-	})
-	if !valid {
+	}) {
 		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
@@ -213,31 +190,24 @@ func rotateObject(c *pipeshandler.Context, action struct {
 	Rotation float64 `json:"r"`
 }) pipes.Event {
 
-	// Get the connection (for the client id)
-	connection, valid := caching.GetConnection(c.Client.ID)
-	if !valid {
-		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
-	}
-
 	// Make sure the next client gets to modify the object regardless of errors
 	defer handleNextModification(c.Client.Session, action.ID)
 
 	// Rotate the object and return an error (only if one is there)
-	msg := caching.RotateTableObject(c.Client.Session, connection.ClientID, action.ID, action.Rotation)
+	msg := caching.RotateTableObject(c.Client.Session, c.Client.ID, action.ID, action.Rotation)
 	if msg != nil {
 		return pipeshandler.ErrorResponse(c, msg, nil)
 	}
 
 	// Notify other clients about the rotation
-	valid = SendEventToMembers(c.Client.Session, pipes.Event{
+	if !caching.SendEventToMembers(c.Client.Session, pipes.Event{
 		Name: "tobj_rotated",
 		Data: map[string]interface{}{
 			"id": action.ID,
-			"s":  connection.ClientID,
+			"s":  c.Client.ID,
 			"r":  action.Rotation,
 		},
-	})
-	if !valid {
+	}) {
 		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
 	}
 
@@ -247,14 +217,8 @@ func rotateObject(c *pipeshandler.Context, action struct {
 // Action: tobj_mqueue
 func queueModificationToObject(c *pipeshandler.Context, objectId string) pipes.Event {
 
-	// Get the connection (for the client id)
-	connection, valid := caching.GetConnection(c.Client.ID)
-	if !valid {
-		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
-	}
-
 	// Queue the modification
-	rightAway, msg := caching.QueueTableObjectModification(c.Client.Session, objectId, connection.ClientID)
+	rightAway, msg := caching.QueueTableObjectModification(c.Client.Session, objectId, c.Client.ID)
 	if msg != nil {
 		return pipeshandler.ErrorResponse(c, msg, nil)
 	}

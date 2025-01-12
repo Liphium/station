@@ -40,9 +40,9 @@ type SendRange struct {
 	EndIndex   int64
 }
 
-const ChunksAhead = 10
-const ChunkSize = 512 * 1024            // 512 KB
-const MaxChunkSize = ChunkSize + 4*1024 // 516 KB (actual chunk is 512KB, but there are additional headers for encryption)
+const ChunksAhead = 20
+const ChunkSize = 1024 * 1024           // 1 MB
+const MaxChunkSize = ChunkSize + 4*1024 // 1 MB + 4 KB (actual chunk is 1 MB, but there are additional headers for encryption)
 
 // SessionId -> Transaction ID
 var userTransactions sync.Map = sync.Map{}

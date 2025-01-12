@@ -222,7 +222,7 @@ func listenForCommands() {
 
 			acc := &database.Account{
 				Email:       name + "@liphium.app",
-				DisplayName: "",
+				DisplayName: name,
 				Username:    name,
 				RankID:      1, // Default
 			}
@@ -260,6 +260,42 @@ func listenForCommands() {
 
 			fmt.Println("invite:", invite.ID)
 
+		case "give-rank":
+
+			fmt.Print("Account E-Mail: ")
+			email, _ := reader.ReadString('\n')
+			email = strings.TrimSpace(email)
+
+			// Delete all data
+			var acc database.Account
+			if err := database.DBConn.Where("email = ?", email).Take(&acc).Error; err != nil {
+				fmt.Println("Failed to find account")
+				continue
+			}
+
+			fmt.Print("Rank ID: ")
+			rankStr, _ := reader.ReadString('\n')
+			rank, _ := strconv.Atoi(strings.TrimSpace(rankStr))
+
+			// Change the rank of the account
+			if err := database.DBConn.Model(&database.Account{}).Where("id = ?", acc.ID).Update("rank_id", rank).Error; err != nil {
+				fmt.Println("Couldn't change the rank of the account: ", err)
+				continue
+			}
+
+			// Get the rank
+			var rankObj database.Rank
+			if err := database.DBConn.Where("id = ?", rank).Take(&rankObj).Error; err != nil {
+				fmt.Println("Failed to find the rank.")
+				continue
+			}
+
+			// Change all the level in all the sessions of the account
+			if err := database.DBConn.Model(&database.Session{}).Where("account = ?", acc.ID).Update("permission_level", rankObj.Level).Error; err != nil {
+				fmt.Println("Couldn't change the session permission levels: ", err)
+				continue
+			}
+
 		case "help":
 			fmt.Println("exit - Exit the application")
 			fmt.Println("create-default - Create default ranks")
@@ -273,6 +309,7 @@ func listenForCommands() {
 			fmt.Println("invite-wave - Give out 100 random invites.")
 			fmt.Println("generate-invite - Generate an invite.")
 			fmt.Println("test-account - Create a test account.")
+			fmt.Println("give-rank - Give a rank to an account.")
 
 		default:
 			fmt.Println("Unknown command. Type 'help' for a list of commands.")

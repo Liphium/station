@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/Liphium/station/main/localization"
+	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/spacestation/util"
 )
 
@@ -13,23 +14,22 @@ import (
 var tablesCache *sync.Map = &sync.Map{}
 
 type TableData struct {
-	Mutex       *sync.Mutex
-	Room        string
-	MemberCount int
-	Members     *sync.Map // Client ID -> Client info
-	ObjectList  []string  // List of all object ids
-	Objects     *sync.Map // Cache for all objects on the table (Object ID -> Object)
+	Mutex         *sync.Mutex
+	Room          string
+	MemberCount   int
+	Members       *sync.Map    // Client ID -> Client info
+	Objects       *sync.Map    // Cache for all objects on the table (Object ID -> Object)
+	highestObject *TableObject // Object with the highest layer (for swapping and creating)
 }
 
 type TableMember struct {
-	Client         string  // Client ID
-	Color          float64 // Color of their cursor
-	SelectedObject string  // The id of the currently selected object
-	Enabled        bool    // If events should currently be sent to the member
+	Client         string // Client ID
+	SelectedObject string // The id of the currently selected object
+	Enabled        bool   // If events should currently be sent to the member
 }
 
 // * Table management
-func JoinTable(room string, client string, color float64) localization.Translations {
+func JoinTable(room string, client string) localization.Translations {
 
 	obj, valid := tablesCache.Load(room)
 	var table *TableData
@@ -57,7 +57,6 @@ func JoinTable(room string, client string, color float64) localization.Translati
 	}
 	table.Members.Store(client, &TableMember{
 		Client:  client,
-		Color:   color,
 		Enabled: false,
 	})
 	table.MemberCount++
@@ -98,23 +97,6 @@ func GetTable(room string) (bool, *TableData) {
 	return true, obj.(*TableData)
 }
 
-// rangeFunc returns whether or not the loop should be continued
-func RangeOverTableMembers(room string, rangeFunc func(*TableMember) bool) bool {
-	obj, valid := tablesCache.Load(room)
-	if !valid {
-		return false
-	}
-	data := obj.(*TableData)
-
-	// Range over all members
-	data.Members.Range(func(_, value any) bool {
-		member := value.(*TableMember)
-		return rangeFunc(member)
-	})
-
-	return true
-}
-
 func LeaveTable(room string, client string) localization.Translations {
 	obj, valid := tablesCache.Load(room)
 	if !valid {
@@ -139,6 +121,7 @@ func LeaveTable(room string, client string) localization.Translations {
 type TableObject struct {
 	Mutex             *sync.Mutex `json:"-"`
 	ID                string      `json:"id"`
+	Order             uint        `json:"o"` // Drawing order
 	LocationX         float64     `json:"x"`
 	LocationY         float64     `json:"y"`
 	Width             float64     `json:"w"`
@@ -162,15 +145,27 @@ func AddObjectToTable(room string, object *TableObject) localization.Translation
 	table.Mutex.Lock()
 
 	// Generate random and unique id
-	id := util.GenerateToken(5)
-	for slices.Contains(table.ObjectList, id) {
-		id = util.GenerateToken(5)
+	id := util.GenerateToken(6)
+	for {
+		_, valid := table.Objects.Load(id)
+		if !valid {
+			break
+		}
+		id = util.GenerateToken(6)
 	}
 
 	// Put object into cache and list
-	table.ObjectList = append(table.ObjectList, id)
 	object.ID = id
 	table.Objects.Store(id, object)
+
+	// Give the object the highest order
+	if table.highestObject == nil {
+		object.Order = 1
+		table.highestObject = object
+	} else {
+		object.Order = table.highestObject.Order + 1
+		table.highestObject = object
+	}
 
 	table.Mutex.Unlock()
 
@@ -184,18 +179,42 @@ func RemoveObjectFromTable(room string, object string) localization.Translations
 	}
 	table := obj.(*TableData)
 
-	table.Mutex.Lock()
-
-	// Put object into cache and list
-	for i, member := range table.ObjectList {
-		if member == object {
-			table.ObjectList = append(table.ObjectList[:i], table.ObjectList[i+1:]...)
-			break
-		}
-	}
+	// Remove object from cache and list
 	table.Objects.Delete(object)
 
-	table.Mutex.Unlock()
+	// Make sure there are no concurrent reads/writes on highestObject
+	table.Mutex.Lock()
+	defer table.Mutex.Unlock()
+
+	// Set the highest object to a new one in case the highest object is being deleted
+	if table.highestObject.ID == object {
+
+		// Get the second highest object
+		objId := "-"
+		maxOrder := uint(0)
+		table.Objects.Range(func(key, value any) bool {
+			obj := value.(*TableObject)
+
+			// Prevent object from being modified at the same time
+			obj.Mutex.Lock()
+			defer obj.Mutex.Unlock()
+
+			if obj.Order > maxOrder {
+				maxOrder = obj.Order
+				objId = obj.ID
+			}
+
+			return true
+		})
+
+		if objId != "-" {
+			// Set the object as the new highest
+			return MarkAsNewHighest(room, objId, false)
+		} else {
+			// If it's the last object on the table, set the highest object to nil
+			table.highestObject = nil
+		}
+	}
 
 	return nil
 }
@@ -296,15 +315,12 @@ func TableObjects(room string) ([]*TableObject, localization.Translations) {
 	}
 	table := obj.(*TableData)
 
-	objects := make([]*TableObject, len(table.ObjectList))
-	for i, value := range table.ObjectList {
-		object, valid := table.Objects.Load(value)
-		if !valid {
-			return nil, localization.ErrorObjectNotFound
-		}
-
-		objects[i] = object.(*TableObject)
-	}
+	// Get all the objects from the map
+	objects := []*TableObject{}
+	table.Objects.Range(func(key, value any) bool {
+		objects = append(objects, value.(*TableObject))
+		return true
+	})
 
 	return objects, nil
 }
@@ -471,4 +487,96 @@ func GetMemberData(room string, connId string) (*TableMember, bool) {
 		return nil, false
 	}
 	return tObj.(*TableMember), true
+}
+
+// Mark an object on the table as the new highest (also notifies clients about it).
+//
+// Set excludeLast to true, if you don't want the client to know about the last object.
+// Set lockTable to true, if you want the table mutex to be locked (should be true by default unless
+// you know what you're doing)
+func MarkAsNewHighest(room string, objectId string, lockTable bool) localization.Translations {
+	obj, valid := tablesCache.Load(room)
+	if !valid {
+		return localization.ErrorTableNotFound
+	}
+	table := obj.(*TableData)
+
+	// Load the object
+	tObj, valid := table.Objects.Load(objectId)
+	if !valid {
+		return localization.ErrorObjectNotFound
+	}
+	object := tObj.(*TableObject)
+
+	// Prevent object from being modified at the same time
+	object.Mutex.Lock()
+	defer object.Mutex.Unlock()
+
+	// Prevent table from being modified at the same time
+	if lockTable {
+		table.Mutex.Lock()
+		defer table.Mutex.Unlock()
+	}
+
+	// Make sure the same object isn't swapped
+	if object.ID == table.highestObject.ID {
+		return nil
+	}
+
+	// Make sure there is currently a highest object
+	if table.highestObject == nil {
+		return nil
+	}
+
+	// Prevent highest object from being modified at the same time
+	currentHighest := table.highestObject
+	currentHighest.Mutex.Lock()
+	defer currentHighest.Mutex.Unlock()
+
+	// Mark the object as the new highest object
+	object.Order = currentHighest.Order + 1
+	table.highestObject = object
+
+	// Send an event notifying everyone of the swap
+	SendEventToMembers(room, pipes.Event{
+		Name: "tobj_order",
+		Data: map[string]interface{}{
+			"o":  table.highestObject.ID,
+			"or": table.highestObject.Order,
+		},
+	})
+	return nil
+}
+
+// Send an event to all table members
+func SendEventToMembers(room string, event pipes.Event) bool {
+	obj, valid := tablesCache.Load(room)
+	if !valid {
+		return false
+	}
+	data := obj.(*TableData)
+
+	// Get a list of all the adapters of the members
+	adapters := []string{}
+	data.Members.Range(func(_, value any) bool {
+
+		// Only add the member if they are part of the table
+		member := value.(*TableMember)
+		if member.Enabled {
+			adapters = append(adapters, member.Client)
+		}
+		return true
+	})
+
+	// Send the event through pipes
+	if err := SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
+		Channel: pipes.BroadcastChannel(adapters),
+		Local:   true,
+		Event:   event,
+	}); err != nil {
+		util.Log.Println("error during event sending to tabletop members:", err)
+		return false
+	}
+
+	return true
 }

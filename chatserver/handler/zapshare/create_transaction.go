@@ -18,7 +18,7 @@ type createTransactionAction struct {
 func createTransaction(context *pipeshandler.Context, action createTransactionAction) pipes.Event {
 
 	if os.Getenv("CHAT_NODE") == "" {
-		util.Log.Println("Live share is disabled because CHAT_NODE is not set. It should be set to the URL of the chat node.")
+		util.Log.Println("Zap is disabled because CHAT_NODE is not set. It should be set to the URL of the chat node.")
 		return pipeshandler.ErrorResponse(context, localization.ErrorInvalidRequest, nil)
 	}
 

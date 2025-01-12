@@ -1,9 +1,9 @@
 package conversation
 
 import (
-	"log"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database/conversations"
@@ -27,9 +27,10 @@ type conversationSubscribeResponse struct {
 
 // Action: conv_sub
 func subscribe(c *pipeshandler.Context, action struct {
-	Tokens []conversations.SentConversationToken `json:"tokens"`
-	Status string                                `json:"status"`
-	Data   string                                `json:"data"`
+	Tokens   []conversations.SentConversationToken `json:"tokens"`
+	Status   string                                `json:"status"`
+	SyncDate int64                                 `json:"sync"` // Time of last sent message for message sync
+	Data     string                                `json:"data"`
 }) pipes.Event {
 
 	// Filter out all the remote tokens and register adapters
@@ -120,19 +121,18 @@ func subscribe(c *pipeshandler.Context, action struct {
 			// of importance and because this would need a lot of code changes to fix, I'll
 			// just leave this reminder here. If anyone finds this in the future, have
 			// fun exploiting this! :D
+			// And if you find anything actually serious, well, you know who to blame this on.
 			for conv, info := range res.Answer.Info {
 				convInfo[conv] = info
 			}
 
 			// Add the missing tokens
 			// Make sure remote nodes can't delete tokens they don't have access to (important security fix)
-			log.Println("remote tokens missing: ", res.Answer.Missing)
 			res.Answer.Missing = slices.DeleteFunc(res.Answer.Missing, func(element string) bool {
 				return !slices.ContainsFunc(tokens, func(token conversations.SentConversationToken) bool {
 					return token.ID == element
 				})
 			})
-			log.Println("after processing: ", res.Answer.Missing)
 			missingTokens = append(missingTokens, res.Answer.Missing...)
 		}
 	}
@@ -164,6 +164,27 @@ func subscribe(c *pipeshandler.Context, action struct {
 
 			// Send the status event
 			caching.SendEventToMembers([]caching.StoredMember{otherMember}, account.StatusEvent(action.Status, action.Data, token.Conversation, token.ID, ""))
+		}
+	}()
+
+	// Synchronize messages for the local tokens
+	go func() {
+		// Wait for the client to receive the response
+		time.Sleep(1 * time.Second)
+
+		// Go through local tokens to add them to the message sync queue (if desired)
+		if action.SyncDate != -1 {
+			for _, token := range conversationTokens {
+				if token.Activated {
+					if err := caching.AddSyncToQueue(caching.SyncData{
+						TokenID:      token.ID,
+						Conversation: token.Conversation,
+						Since:        action.SyncDate,
+					}); err != nil {
+						util.Log.Println("error completing message sync for ", token.ID, ":", err)
+					}
+				}
+			}
 		}
 	}()
 

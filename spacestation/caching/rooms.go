@@ -33,7 +33,7 @@ func setupRoomsCache() {
 
 type Room struct {
 	Mutex    *sync.Mutex
-	ID       string   // Account ID of the owner
+	ID       string   // ID of the room
 	Sessions []string // List of game session ids
 	Start    int64    // Timestamp of when the room was created
 }
@@ -71,10 +71,9 @@ func JoinRoom(roomID string, connectionId string) bool {
 	}
 	connections := obj.(RoomConnections)
 	connections[connectionId] = RoomConnection{
-		Connected:  false,
-		Connection: nil,
-		Adapter:    connectionId,
-		Data:       "",
+		Connected: false,
+		Adapter:   connectionId,
+		Data:      "",
 	}
 
 	// Refresh room

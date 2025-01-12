@@ -9,5 +9,5 @@ func Authorized(router fiber.Router) {
 
 	// All settings return endpoints
 	router.Post("/files", fileSettings)
-	router.Post("/decentralization", decentralizationSettings)
+	router.Post("/decentralization", chatSettings)
 }

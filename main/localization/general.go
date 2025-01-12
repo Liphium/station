@@ -19,6 +19,9 @@ var (
 	ErrorSpacesNotSetup = Translations{
 		englishUS: "Spaces is not supported in your town. Please contact the owners of this town and ask them to set up Spaces.",
 	}
+	ErrorSpaceNotFound = Translations{
+		englishUS: "This space wasn't found. Maybe it's already been deleted?",
+	}
 	ErrorMail = Translations{
 		englishUS: "There was an error with the mail server. Please try again later or contact the owners of this town.",
 	}

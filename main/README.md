@@ -21,7 +21,6 @@ SPACE_NODE_PORT = "3002"
 APP_NAME = "Liphium"
 TESTING = "true"
 LISTEN = "127.0.0.1"
-TESTING_AMOUNT = "2"
 # PROTOCOL = "http://" (You CAN do this, but https is the default)
 CLI = "true"
 SYSTEM_UUID = "your-uuid" # You can delete this and the app will give you a random one
@@ -57,9 +56,6 @@ FILE_REPO = "/home/some_path"
 # FILE_REPO_KEY = "key"
 # FILE_REPO = "https://account.eu.r2.cloudflarestorage.com"
 # FILE_REPO_BUCKET = "your-bucket"
-MAX_UPLOAD_SIZE = "10" # in MB
-MAX_FAVORITE_STORAGE = "500" # in MB
-MAX_TOTAL_STORAGE = "1000" # in MB
 
 # SMTP (for emails)
 SMTP_SERVER = "mail.example.com"

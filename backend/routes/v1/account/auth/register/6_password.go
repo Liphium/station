@@ -25,7 +25,7 @@ func checkPassword(c *fiber.Ctx) error {
 	}
 
 	// Check the token
-	state, msg := validateToken(basicReq.Token, 5)
+	state, msg := validateToken(basicReq.Token, 6)
 	if msg != nil {
 		return util.FailedRequest(c, msg, nil)
 	}
@@ -40,12 +40,6 @@ func checkPassword(c *fiber.Ctx) error {
 		}
 		if err := util.BodyParser(c, &req); err != nil {
 			return util.InvalidRequest(c)
-		}
-
-		// Check the token
-		state, msg := validateToken(req.Token, 5)
-		if msg != nil {
-			return util.FailedRequest(c, msg, nil)
 		}
 
 		// Rate limit the amount of requests

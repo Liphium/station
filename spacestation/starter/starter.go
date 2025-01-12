@@ -25,7 +25,9 @@ func Start(loadEnv bool) bool {
 
 	app := fiber.New()
 	app.Use(cors.New())
-	app.Use(logger.New())
+	app.Use(logger.New(logger.Config{
+		Format: "spaces | " + logger.ConfigDefault.Format,
+	}))
 
 	if !integration.Setup(integration.IdentifierSpaceNode, loadEnv) {
 		return false
@@ -82,30 +84,6 @@ func Start(loadEnv bool) bool {
 	util.Log.Println("Encryption is working properly!")
 
 	pipes.DebugLogs = true
-
-	// Create testing room
-	if integration.Testing {
-		caching.CreateRoom("id")
-
-		amount, err := strconv.Atoi(os.Getenv("TESTING_AMOUNT"))
-		if err != nil {
-			util.Log.Println("Error: Couldn't parse testing amount")
-			return false
-		}
-
-		for i := 0; i < amount; i++ {
-			clientId := util.GenerateToken(5)
-			connection := caching.EmptyConnection(clientId, "id")
-			valid := caching.JoinRoom("id", connection.ClientID)
-			if !valid {
-				util.Log.Println("Error: Couldn't join room")
-				return false
-			}
-			util.Log.Println("--- TESTING CLIENT ---")
-			util.Log.Println(connection.ClientID + ":" + connection.KeyBase64())
-			util.Log.Println("----------------------")
-		}
-	}
 
 	// Close caches on exit
 	defer caching.CloseCaches()
