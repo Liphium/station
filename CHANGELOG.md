@@ -1,4 +1,4 @@
-## Currently in dev
+## 0.6.0
 
 ### Notes for town administrators
 
