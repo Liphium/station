@@ -7,7 +7,7 @@ func manageConnection(room string, client string, peer *webrtc.PeerConnection) e
 	// Create a new data channel
 	ordered := false
 	maxPacketLifetime := uint16(1000)
-	channel, err := peer.CreateDataChannel("keepalive", &webrtc.DataChannelInit{
+	keepAliveChan, err := peer.CreateDataChannel("keepalive", &webrtc.DataChannelInit{
 		Ordered:           &ordered,
 		MaxPacketLifeTime: &maxPacketLifetime,
 	})
@@ -16,7 +16,7 @@ func manageConnection(room string, client string, peer *webrtc.PeerConnection) e
 	}
 
 	// Listen for keep alive messages from the client
-	channel.OnMessage(func(msg webrtc.DataChannelMessage) {
+	keepAliveChan.OnMessage(func(msg webrtc.DataChannelMessage) {
 		// TODO: Handle somehow
 	})
 

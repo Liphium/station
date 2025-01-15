@@ -7,7 +7,7 @@ import (
 )
 
 // Room id -> *sync.Map( Client id -> *sfu.Client )
-var members *sync.Map
+var roomMap *sync.Map
 
 type Client struct {
 	mutex      *sync.Mutex
@@ -55,5 +55,33 @@ func NewClientConnection(room string, client string, offer webrtc.SessionDescrip
 	gatherComplete := webrtc.GatheringCompletePromise(peer)
 	<-gatherComplete
 
+	// Remove the old connection in case there
+	clientMap := getClientMap(room)
+	if obj, valid := clientMap.Load(client); valid {
+		oldConn := obj.(*Client)
+		oldConn.mutex.Lock()
+		oldConn.connection.Close()
+		oldConn.mutex.Unlock()
+	}
+
+	// Add the new connection for the client
+	clientMap.Store(client, &Client{
+		mutex:      &sync.Mutex{},
+		connection: peer,
+	})
+
 	return *peer.LocalDescription(), nil
+}
+
+// Get the map of all client connections for a room
+func getClientMap(room string) *sync.Map {
+	var clientMap *sync.Map
+	obj, valid := roomMap.Load(room)
+	if !valid {
+		clientMap = &sync.Map{}
+		roomMap.Store(room, clientMap)
+	} else {
+		clientMap = obj.(*sync.Map)
+	}
+	return clientMap
 }
