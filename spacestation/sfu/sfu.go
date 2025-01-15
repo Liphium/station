@@ -1,7 +1,8 @@
 package sfu
 
 import (
-	"sync"
+	"log"
+	"os"
 
 	"github.com/Liphium/station/spacestation/util"
 	"github.com/pion/ice/v4"
@@ -11,7 +12,36 @@ import (
 // The base webrtc API used for all connections
 var api *webrtc.API
 
+// Custom logger for everything going on in the SFU
+var logger *log.Logger = log.New(os.Stdout, "space-sfu ", log.Flags())
+
+// Configuration
+var Enabled = false // Changed later in the setup
+var defaultStunServer = "stun.l.google.com:19302"
+
+// TODO: Add turn server support
+
 func Start(port int) {
+
+	if os.Getenv("SS_SFU_ENABLE") != "" {
+		if os.Getenv("SS_SFU_ENABLE") == "false" {
+			logger.Println("SFU disabled, as request by the SS_SFU_ENABLE environment variable.")
+			return
+		}
+
+		logger.Println("Starting SFU..")
+		Enabled = true
+	} else {
+		logger.Println("Spaces SFU not enabled. Voice and video for Spaces has been disabled.")
+		return
+	}
+
+	// Get all the environment variables
+	if os.Getenv("SS_STUN") != "" {
+		defaultStunServer = os.Getenv("SS_STUN")
+	} else {
+		logger.Println("WARNING: No STUN server provided, using Google's one instead. Read more at https://docs.liphium.com/setup/config-setup.")
+	}
 
 	// Create a new setting engine
 	engine := webrtc.SettingEngine{}
@@ -25,18 +55,6 @@ func Start(port int) {
 
 	// Create the api using the settings engine
 	api = webrtc.NewAPI(webrtc.WithSettingEngine(engine))
-}
 
-// Room id -> *sync.Map( Client id -> Member info )
-var members *sync.Map
-
-type MemberInfo struct {
-	// Whether or not the client is actually connected to the WebRTC room
-	Connected bool
-
-	// For preventing clashes between multiple goroutines
-	Mutex *sync.Mutex
-
-	// All the tracks the client is publishing
-	Tracks []webrtc.TrackRemote
+	logger.Println("SFU started. Voice and video for Spaces has been enabled.")
 }
