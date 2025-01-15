@@ -31,7 +31,7 @@ func SendEmail(email string, locale string, name string, args ...string) error {
 	msg := []byte(fmt.Sprintf("Subject: %s\r\n\r%s", subject, strings.Join(body, "\n")))
 
 	// Authenticate using the provided credentials
-	auth := smtp.PlainAuth("", os.Getenv("SMTP_USER"), os.Getenv("SMTP_PW"), os.Getenv("SMTP_SERVER"))
+	auth := smtp.PlainAuth(os.Getenv("SMTP_IDENTITY"), os.Getenv("SMTP_USER"), os.Getenv("SMTP_PW"), os.Getenv("SMTP_SERVER"))
 
 	// Send the email
 	err := smtp.SendMail(
