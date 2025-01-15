@@ -1,4 +1,8 @@
-## Currently in dev
+## 0.6.1
+
+- Fixed the mail server not using the identity specified in the environment file/config
+
+## 0.6.0
 
 ### Notes for town administrators
 
