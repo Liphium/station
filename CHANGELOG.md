@@ -1,6 +1,7 @@
 ## 0.6.1
 
 - Fixed the mail server not using the identity specified in the environment file/config
+- Added from and to headers to the email message
 
 ## 0.6.0
 
