@@ -28,7 +28,7 @@ func SendEmail(email string, locale string, name string, args ...string) error {
 		translation = emailBuilders[defaultLocale]
 	}
 	subject, body := translation[name](args)
-	msg := []byte(fmt.Sprintf("From: %s \r\n\r To: %s \r\n\r Subject: %s\r\n\r%s", os.Getenv("SMTP_FROM"), email, subject, strings.Join(body, "\n")))
+	msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", os.Getenv("SMTP_FROM"), email, subject, strings.Join(body, "\n")))
 
 	// Authenticate using the provided credentials
 	auth := smtp.PlainAuth(os.Getenv("SMTP_IDENTITY"), os.Getenv("SMTP_USER"), os.Getenv("SMTP_PW"), os.Getenv("SMTP_SERVER"))
