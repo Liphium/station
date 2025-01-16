@@ -1,17 +1,25 @@
 package sfu
 
 import (
+	"errors"
 	"sync"
+	"time"
 
 	"github.com/pion/webrtc/v4"
+)
+
+// Errors
+var (
+	clientNotFoundErr = errors.New("the specified client wasn't found")
 )
 
 // Room id -> *sync.Map( Client id -> *sfu.Client )
 var roomMap *sync.Map
 
 type Client struct {
-	mutex      *sync.Mutex
-	connection *webrtc.PeerConnection
+	mutex         *sync.Mutex
+	connection    *webrtc.PeerConnection
+	lastKeepAlive time.Time
 }
 
 // Register a new WebRTC connection for a specific client.
@@ -71,6 +79,39 @@ func NewClientConnection(room string, client string, offer webrtc.SessionDescrip
 	})
 
 	return *peer.LocalDescription(), nil
+}
+
+// Update the keep alive
+func updateKeepAlive(room string, client string) error {
+	clientMap := getClientMap(room)
+	obj, valid := clientMap.Load(client)
+	if !valid {
+		return clientNotFoundErr
+	}
+	cl := obj.(*Client)
+
+	// Update the keep alive time to now
+	cl.mutex.Lock()
+	defer cl.mutex.Unlock()
+	cl.lastKeepAlive = time.Now()
+
+	return nil
+}
+
+func Disconnect(room string, client string) error {
+	clientMap := getClientMap(room)
+	obj, valid := clientMap.Load(client)
+	if !valid {
+		return clientNotFoundErr
+	}
+	cl := obj.(*Client)
+
+	// Disconnect the client
+	cl.mutex.Lock()
+	defer cl.mutex.Unlock()
+	cl.connection.Close()
+
+	return nil
 }
 
 // Get the map of all client connections for a room

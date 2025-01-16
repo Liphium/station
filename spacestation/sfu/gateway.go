@@ -2,6 +2,9 @@ package sfu
 
 import "github.com/pion/webrtc/v4"
 
+// Configuration
+const keepAliveMessage = "liphium_spaces"
+
 func manageConnection(room string, client string, peer *webrtc.PeerConnection) error {
 
 	// Create a new data channel
@@ -17,10 +20,21 @@ func manageConnection(room string, client string, peer *webrtc.PeerConnection) e
 
 	// Listen for keep alive messages from the client
 	keepAliveChan.OnMessage(func(msg webrtc.DataChannelMessage) {
-		// TODO: Handle somehow
+
+		// Make sure the keep alive message is returning the exact same message
+		if !msg.IsString || string(msg.Data) != keepAliveMessage {
+
+		}
+		updateKeepAlive(room, client)
 	})
 
-	// TODO: Handle connection and disconnection logic
+	// Start a goroutine that sends keep alive messages every 2 seconds
+	go func() {
+		if err := keepAliveChan.SendText(keepAliveMessage); err != nil {
+			logger.Println("Couldn't send keep alive to", client, ": Ending connection.")
+		}
+
+	}()
 
 	return nil
 }
