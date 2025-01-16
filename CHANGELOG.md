@@ -1,3 +1,7 @@
+## 0.6.2
+
+- Fixed the mail headers not being set correctly
+
 ## 0.6.1
 
 - Fixed the mail server not using the identity specified in the environment file/config
