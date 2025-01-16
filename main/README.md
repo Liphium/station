@@ -60,7 +60,6 @@ FILE_REPO = "/home/some_path"
 # SMTP (for emails)
 SMTP_SERVER = "mail.example.com"
 SMTP_PORT = "port"
-SMTP_IDENTITY = "identity"
 SMTP_FROM = "no-reply@example.com"
 SMTP_USER = "username"
 SMTP_PW = "password"
