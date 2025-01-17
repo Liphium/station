@@ -1,4 +1,4 @@
-package sfu
+package studio
 
 import (
 	"log"
