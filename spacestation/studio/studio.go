@@ -4,6 +4,8 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/Liphium/station/pipes"
+	"github.com/Liphium/station/spacestation/caching"
 	"github.com/pion/webrtc/v4"
 )
 
@@ -22,9 +24,10 @@ type Studio struct {
 }
 
 type Client struct {
+	id              string
 	mutex           *sync.Mutex
 	connection      *webrtc.PeerConnection
-	publishedTracks []*Track
+	publishedTracks *sync.Map // Track id (from client) -> *Track
 	subscriptions   []*Subscription
 }
 
@@ -59,9 +62,14 @@ func (s *Studio) NewClientConnection(room string, client string, offer webrtc.Se
 
 	// Add the new connection for the client
 	c := &Client{
-		mutex:      &sync.Mutex{},
-		connection: peer,
+		id:              client,
+		mutex:           &sync.Mutex{},
+		connection:      peer,
+		publishedTracks: &sync.Map{},
+		subscriptions:   []*Subscription{},
 	}
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
 	s.clients.Store(client, c)
 
 	// Let the gateway handle the rest of the connection
@@ -97,6 +105,30 @@ func (s *Studio) Disconnect(client string) error {
 	cl.mutex.Lock()
 	defer cl.mutex.Unlock()
 	cl.connection.Close()
+
+	return nil
+}
+
+// Send an event to everyone in the studio
+func (s *Studio) SendEventToAll(event pipes.Event) error {
+
+	// Get a list of all the adapters of the clients
+	adapters := []string{}
+	s.clients.Range(func(_, value any) bool {
+		member := value.(*Client)
+		adapters = append(adapters, member.id)
+		return true
+	})
+
+	// Send the event through pipes
+	if err := caching.SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
+		Channel: pipes.BroadcastChannel(adapters),
+		Local:   true,
+		Event:   event,
+	}); err != nil {
+		logger.Println("error during event sending to studio members:", err)
+		return err
+	}
 
 	return nil
 }

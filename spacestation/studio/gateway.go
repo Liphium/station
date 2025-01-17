@@ -1,13 +1,17 @@
 package studio
 
 import (
+	"slices"
+	"sync"
+
+	"github.com/Liphium/station/spacestation/util"
 	"github.com/pion/webrtc/v4"
 )
 
 // Start the gate for a specific connection
 func (s *Studio) startGateway(c *Client, peer *webrtc.PeerConnection) error {
 
-	// Create a new data channel for fast events (events over udp)
+	// Create a new data channel for pipes (this is gonna be used in the future)
 	ordered := false
 	maxPacketLifetime := uint16(500)
 	pipesChan, err := peer.CreateDataChannel("pipes", &webrtc.DataChannelInit{
@@ -25,7 +29,54 @@ func (s *Studio) startGateway(c *Client, peer *webrtc.PeerConnection) error {
 
 	// Listen for new tracks
 	peer.OnTrack(func(tr *webrtc.TrackRemote, r *webrtc.RTPReceiver) {
-		// TODO: Add the track
+
+		// Check if the channel is valid (RID specifies channel)
+		if !slices.Contains(acceptedChannels, tr.RID()) {
+			logger.Println(c.id+"disconnected due to wrong channel (", tr.RID(), ")")
+			s.Disconnect(c.id)
+			return
+		}
+
+		// Check if the track has already been published with this id
+		var track *Track
+		if obj, valid := c.publishedTracks.Load(tr.ID()); valid {
+			track = obj.(*Track)
+			track.mutex.Lock()
+			defer track.mutex.Unlock()
+
+			// Add as a new channel
+			if !track.simulcast {
+				track.simulcast = track.channels[tr.RID()] == nil
+			}
+			track.channels[tr.RID()] = tr
+
+		} else {
+
+			// Generate a new id for the track
+			id := util.GenerateToken(12)
+			_, valid := s.tracks.Load(id)
+			for valid {
+				id = util.GenerateToken(12)
+				_, valid = s.tracks.Load(id)
+			}
+
+			// Register the track
+			track = &Track{
+				id:            id,
+				sender:        c.id,
+				senderTrack:   tr.ID(),
+				mutex:         &sync.Mutex{},
+				paused:        false,
+				simulcast:     false,
+				channels:      map[string]*webrtc.TrackRemote{},
+				subscriptions: &sync.Map{},
+			}
+			s.tracks.Store(id, track)
+
+			// Add the channel in all places
+			track.AddChannel(tr.RID(), tr)
+			c.publishedTracks.Store(tr.ID(), track)
+		}
 	})
 
 	return nil
