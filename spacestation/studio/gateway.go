@@ -40,16 +40,10 @@ func (s *Studio) startGateway(c *Client, peer *webrtc.PeerConnection) error {
 		// Check if the track has already been published with this id
 		var track *Track
 		if obj, valid := c.publishedTracks.Load(tr.ID()); valid {
+
+			// Add the channel
 			track = obj.(*Track)
-			track.mutex.Lock()
-			defer track.mutex.Unlock()
-
-			// Add as a new channel
-			if !track.simulcast {
-				track.simulcast = track.channels[tr.RID()] == nil
-			}
-			track.channels[tr.RID()] = tr
-
+			track.AddChannel(tr)
 		} else {
 
 			// Generate a new id for the track
@@ -62,19 +56,19 @@ func (s *Studio) startGateway(c *Client, peer *webrtc.PeerConnection) error {
 
 			// Register the track
 			track = &Track{
-				id:            id,
-				sender:        c.id,
-				senderTrack:   tr.ID(),
-				mutex:         &sync.Mutex{},
-				paused:        false,
-				simulcast:     false,
-				channels:      map[string]*webrtc.TrackRemote{},
-				subscriptions: &sync.Map{},
+				studio:      s,
+				id:          id,
+				sender:      c.id,
+				senderTrack: tr.ID(),
+				mutex:       &sync.Mutex{},
+				paused:      false,
+				simulcast:   false,
+				channels:    &sync.Map{},
 			}
 			s.tracks.Store(id, track)
 
 			// Add the channel in all places
-			track.AddChannel(tr.RID(), tr)
+			track.AddChannel(tr)
 			c.publishedTracks.Store(tr.ID(), track)
 		}
 	})
