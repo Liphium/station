@@ -20,21 +20,25 @@ type Channel struct {
 func (c *Channel) Init() error {
 
 	// Create a new track for sending
-	track, err := webrtc.NewTrackLocalStaticRTP()
+	track, err := webrtc.NewTrackLocalStaticRTP(c.remoteTrack.Codec().RTPCodecCapability, c.track.id, c.id)
 	if err != nil {
 		return err
 	}
 
+	// Set the track
+	c.localTrack = track
+
 	return nil
 }
 
+// Start the sender that forwards the packets
 func (c *Channel) startSender() {
-
 	for {
 		// Read RTP packets being sent on the channel
 		packet, _, readErr := c.remoteTrack.ReadRTP()
 		if readErr != nil {
-			panic(readErr) // Don't know what to do here yet
+			logger.Println("Couldn't read channel, closing it:", readErr)
+			return
 		}
 
 		// Forward to all subscriptions

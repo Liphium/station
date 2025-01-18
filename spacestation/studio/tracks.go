@@ -1,12 +1,18 @@
 package studio
 
 import (
+	"errors"
 	"slices"
 	"sync"
 
 	"github.com/Liphium/station/pipes"
 	"github.com/Liphium/station/spacestation/caching"
 	"github.com/pion/webrtc/v4"
+)
+
+// Errors
+var (
+	ErrChannelNotFound = errors.New("this channel doesn't exist")
 )
 
 // Accepted track channels
@@ -43,12 +49,18 @@ func (t *Track) AddChannel(tr *webrtc.TrackRemote) {
 		remoteTrack: tr,
 	}
 	if !t.simulcast {
-
 		// If the channel has a different id than any previous channel, turn on simulcast
 		_, valid := t.channels.Load(tr.RID())
 		t.simulcast = !valid
 	}
 	t.channels.Store(tr.RID(), channel)
+
+	// Initialize the channel (or close if it couldn't be started)
+	if err := channel.Init(); err != nil {
+		logger.Println("Couldn't start stream for channel", tr.RID(), ":", err)
+		t.CloseChannel(tr.RID())
+		return
+	}
 
 	// Start the sender
 	go channel.startSender()
@@ -57,6 +69,23 @@ func (t *Track) AddChannel(tr *webrtc.TrackRemote) {
 	if err := t.SendTrackUpdateToAll(false); err != nil {
 		logger.Println("WARNING: Couldn't send track update:", err)
 	}
+}
+
+// Close a channel in the track
+func (t *Track) CloseChannel(channel string) {
+
+	// Get the channel
+	obj, loaded := t.channels.LoadAndDelete(channel)
+	if !loaded {
+		return
+	}
+
+	// Disconnect the track
+	c := obj.(*Channel)
+	c.subscriptions.Range(func(key, value any) bool {
+		value.(*Subscription).Delete()
+		return true
+	})
 }
 
 // Send an event that updates the track to one client
@@ -124,22 +153,39 @@ func (t *Track) TrackUpdateEvent(mutex bool) pipes.Event {
 }
 
 // Create a new subscription for a specific channel
-func (t *Track) NewSubscription(c *Client, channel string) {
+func (t *Track) NewSubscription(c *Client, channelId string) error {
 
 	// Get the channel
+	obj, valid := t.channels.Load(channelId)
+	if !valid {
+		return ErrChannelNotFound
+	}
+	channel := obj.(*Channel)
 
-	// Create a new local track
-	track, err := webrtc.NewTrackLocalStaticRTP()
-
-	// Get the connection for the client
-
-	sub := &Subscription{
-		mutex:   &sync.Mutex{},
-		client:  c.id,
-		track:   t.id,
-		channel: channel,
+	// Send the track to the client
+	sender, err := c.connection.AddTrack(channel.localTrack)
+	if err != nil {
+		return err
 	}
 
+	// Add the subscription
+	sub := &Subscription{
+		mutex:   &sync.Mutex{},
+		client:  c,
+		track:   t,
+		peer:    c.connection,
+		sender:  sender,
+		channel: channelId,
+	}
+	channel.subscriptions.Store(c.id, sub)
+	c.subscriptions.Store(t.id, sub)
+
+	// Send update notifying everyone of the change
+	if err := t.SendTrackUpdateToAll(false); err != nil {
+		logger.Println("WARNING: Couldn't send track update:", err)
+	}
+
+	return nil
 }
 
 func (t *Track) IsPaused() bool {

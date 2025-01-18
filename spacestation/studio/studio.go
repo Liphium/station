@@ -11,7 +11,7 @@ import (
 
 // Errors
 var (
-	errClientNotFound = errors.New("the specified client wasn't found")
+	ErrClientNotFound = errors.New("the specified client wasn't found")
 )
 
 // Room id -> *Studio
@@ -24,11 +24,10 @@ type Studio struct {
 }
 
 type Client struct {
-	id              string
-	mutex           *sync.Mutex
-	connection      *webrtc.PeerConnection
-	publishedTracks *sync.Map // Track id (from client) -> *Track
-	subscriptions   []*Subscription
+	id              string                 // read-only
+	connection      *webrtc.PeerConnection // read-only
+	publishedTracks *sync.Map              // Track id (from client) -> *Track (read-only)
+	subscriptions   *sync.Map              // Track id (server) -> *Subscription (read-only)
 }
 
 // Register a new WebRTC connection for a specific client.
@@ -63,13 +62,10 @@ func (s *Studio) NewClientConnection(client string, offer webrtc.SessionDescript
 	// Add the new connection for the client
 	c := &Client{
 		id:              client,
-		mutex:           &sync.Mutex{},
 		connection:      peer,
 		publishedTracks: &sync.Map{},
-		subscriptions:   []*Subscription{},
+		subscriptions:   &sync.Map{},
 	}
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
 	s.clients.Store(client, c)
 
 	// Let the gateway handle the rest of the connection
@@ -94,16 +90,15 @@ func (s *Studio) NewClientConnection(client string, offer webrtc.SessionDescript
 	return *peer.LocalDescription(), nil
 }
 
+// Disconnect a client from studio
 func (s *Studio) Disconnect(client string) error {
-	obj, valid := s.clients.Load(client)
+	obj, valid := s.clients.LoadAndDelete(client)
 	if !valid {
-		return errClientNotFound
+		return ErrClientNotFound
 	}
 	cl := obj.(*Client)
 
 	// Disconnect the client
-	cl.mutex.Lock()
-	defer cl.mutex.Unlock()
 	cl.connection.Close()
 
 	return nil
