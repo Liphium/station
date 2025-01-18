@@ -8,8 +8,25 @@ import (
 	"github.com/pion/webrtc/v4"
 )
 
-// Start the gate for a specific connection
-func (s *Studio) startGateway(c *Client, peer *webrtc.PeerConnection) error {
+type Client struct {
+	id              string                 // read-only
+	studio          *Studio                // read-only
+	connection      *webrtc.PeerConnection // read-only
+	publishedTracks *sync.Map              // Track id (from client) -> *Track (read-only)
+	subscriptions   *sync.Map              // Track id (server) -> *Subscription (read-only)
+}
+
+// Get a client's subscription to a specific track
+func (c *Client) GetSubscription(track string) (*Subscription, bool) {
+	obj, valid := c.subscriptions.Load(track)
+	if !valid {
+		return nil, false
+	}
+	return obj.(*Subscription), true
+}
+
+// Initialize the handlers for the client's connection
+func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 
 	// Create a new data channel for pipes (this is gonna be used in the future)
 	ordered := false
@@ -33,7 +50,7 @@ func (s *Studio) startGateway(c *Client, peer *webrtc.PeerConnection) error {
 		// Check if the channel is valid (RID specifies channel)
 		if !slices.Contains(acceptedChannels, tr.RID()) {
 			logger.Println(c.id+"disconnected due to wrong channel (", tr.RID(), ")")
-			s.Disconnect(c.id)
+			c.studio.Disconnect(c.id)
 			return
 		}
 
@@ -48,15 +65,15 @@ func (s *Studio) startGateway(c *Client, peer *webrtc.PeerConnection) error {
 
 			// Generate a new id for the track
 			id := util.GenerateToken(12)
-			_, valid := s.tracks.Load(id)
+			_, valid := c.studio.tracks.Load(id)
 			for valid {
 				id = util.GenerateToken(12)
-				_, valid = s.tracks.Load(id)
+				_, valid = c.studio.tracks.Load(id)
 			}
 
 			// Register the track
 			track = &Track{
-				studio:      s,
+				studio:      c.studio,
 				id:          id,
 				sender:      c.id,
 				senderTrack: tr.ID(),
@@ -65,7 +82,7 @@ func (s *Studio) startGateway(c *Client, peer *webrtc.PeerConnection) error {
 				simulcast:   false,
 				channels:    &sync.Map{},
 			}
-			s.tracks.Store(id, track)
+			c.studio.tracks.Store(id, track)
 
 			// Add the channel in all places
 			track.AddChannel(tr)

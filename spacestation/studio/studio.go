@@ -23,13 +23,6 @@ type Studio struct {
 	tracks  *sync.Map // Track Id -> *Track
 }
 
-type Client struct {
-	id              string                 // read-only
-	connection      *webrtc.PeerConnection // read-only
-	publishedTracks *sync.Map              // Track id (from client) -> *Track (read-only)
-	subscriptions   *sync.Map              // Track id (server) -> *Subscription (read-only)
-}
-
 // Register a new WebRTC connection for a specific client.
 //
 // Returns an offer from the server.
@@ -62,6 +55,7 @@ func (s *Studio) NewClientConnection(client string, offer webrtc.SessionDescript
 	// Add the new connection for the client
 	c := &Client{
 		id:              client,
+		studio:          s,
 		connection:      peer,
 		publishedTracks: &sync.Map{},
 		subscriptions:   &sync.Map{},
@@ -69,7 +63,9 @@ func (s *Studio) NewClientConnection(client string, offer webrtc.SessionDescript
 	s.clients.Store(client, c)
 
 	// Let the gateway handle the rest of the connection
-	s.startGateway(c, peer)
+	if err := c.initializeConnection(peer); err != nil {
+		return webrtc.SessionDescription{}, err
+	}
 
 	// Create an answer for the client
 	answer, err := peer.CreateAnswer(nil)
@@ -126,6 +122,24 @@ func (s *Studio) SendEventToAll(event pipes.Event) error {
 	}
 
 	return nil
+}
+
+// Get a track in the studio
+func (s *Studio) GetTrack(track string) (*Track, bool) {
+	obj, valid := s.tracks.Load(track)
+	if !valid {
+		return nil, false
+	}
+	return obj.(*Track), true
+}
+
+// Get a client in the studio
+func (s *Studio) GetClient(client string) (*Client, bool) {
+	obj, valid := s.clients.Load(client)
+	if !valid {
+		return nil, false
+	}
+	return obj.(*Client), true
 }
 
 // Get the studio for a specific room

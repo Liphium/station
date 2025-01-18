@@ -7,6 +7,7 @@ import (
 )
 
 func SetupHandlers() {
+	pipeshandler.CreateHandlerFor(caching.SSInstance, "st_leave", leaveStudio)
 	pipeshandler.CreateHandlerFor(caching.SSInstance, "st_join", joinStudio)
 	pipeshandler.CreateHandlerFor(caching.SSInstance, "st_info", getStudioInfo)
 
