@@ -41,8 +41,16 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 
 	// Listen for keep alive messages from the client
 	pipesChan.OnMessage(func(msg webrtc.DataChannelMessage) {
-		// TODO: Handle fast pipe events
+		logger.Println("received message on pipes data channel")
 	})
+
+	// Allow receiving of video and audio
+	if _, err := peer.AddTransceiverFromKind(webrtc.RTPCodecTypeAudio); err != nil {
+		return err
+	}
+	if _, err := peer.AddTransceiverFromKind(webrtc.RTPCodecTypeVideo); err != nil {
+		return err
+	}
 
 	// Listen for new tracks
 	peer.OnTrack(func(tr *webrtc.TrackRemote, r *webrtc.RTPReceiver) {
@@ -87,6 +95,13 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 			// Add the channel in all places
 			track.AddChannel(tr)
 			c.publishedTracks.Store(tr.ID(), track)
+		}
+	})
+
+	// Disconnect the client when the connection closes
+	peer.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
+		if state == webrtc.PeerConnectionStateClosed {
+			c.studio.Disconnect(c.id)
 		}
 	})
 
