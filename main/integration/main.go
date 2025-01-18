@@ -33,6 +33,7 @@ const IdentifierSpaceNode = "space"
 const AppTagChatNode = "liphium_chat"
 const AppTagSpaceNode = "liphium_spaces"
 
+// Identifier -> Node data
 var Nodes map[string]NodeData = make(map[string]NodeData)
 
 func Setup(identifier string, loadEnv bool) bool {

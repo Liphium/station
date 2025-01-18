@@ -1,5 +1,14 @@
 package studio_handlers
 
-func SetupHandlers() {
+import (
+	"github.com/Liphium/station/pipeshandler"
+	"github.com/Liphium/station/spacestation/caching"
+	studio_track_handlers "github.com/Liphium/station/spacestation/handler/studio/tracks"
+)
 
+func SetupHandlers() {
+	pipeshandler.CreateHandlerFor(caching.SSInstance, "st_join", joinStudio)
+	pipeshandler.CreateHandlerFor(caching.SSInstance, "st_info", getStudioInfo)
+
+	studio_track_handlers.SetupHandlers()
 }

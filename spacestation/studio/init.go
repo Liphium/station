@@ -17,11 +17,13 @@ var logger *log.Logger = log.New(os.Stdout, "space-sfu ", log.Flags())
 
 // Configuration
 var Enabled = false // Changed later in the setup
-var defaultStunServer = "stun.l.google.com:19302"
+var DefaultStunServer = "stun.l.google.com:19302"
+var Port int = 0
 
 // TODO: Add turn server support
 
 func Start(port int) {
+	Port = port
 
 	if os.Getenv("SS_SFU_ENABLE") != "" {
 		if os.Getenv("SS_SFU_ENABLE") == "false" {
@@ -38,7 +40,7 @@ func Start(port int) {
 
 	// Get all the environment variables
 	if os.Getenv("SS_STUN") != "" {
-		defaultStunServer = os.Getenv("SS_STUN")
+		DefaultStunServer = os.Getenv("SS_STUN")
 	} else {
 		logger.Println("WARNING: No STUN server provided, using Google's one instead. Read more at https://docs.liphium.com/setup/config-setup.")
 	}

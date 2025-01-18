@@ -34,13 +34,13 @@ type Client struct {
 // Register a new WebRTC connection for a specific client.
 //
 // Returns an offer from the server.
-func (s *Studio) NewClientConnection(room string, client string, offer webrtc.SessionDescription) (webrtc.SessionDescription, error) {
+func (s *Studio) NewClientConnection(client string, offer webrtc.SessionDescription) (webrtc.SessionDescription, error) {
 
 	// Create a new peer connection for the user
 	peer, err := api.NewPeerConnection(webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			{
-				URLs: []string{"stun:" + defaultStunServer},
+				URLs: []string{"stun:" + DefaultStunServer},
 			},
 		},
 	})
