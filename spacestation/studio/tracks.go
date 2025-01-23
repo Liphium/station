@@ -27,14 +27,15 @@ const (
 var acceptedChannels = []string{channelLow, channelMedium, channelHigh, channelDefault}
 
 type Track struct {
-	id          string  // Id of the track (read-only)
-	studio      *Studio // The studio the track belongs to
-	sender      string  // Client id of the sender
-	senderTrack string  // How the client sending refers to this track
-	mutex       *sync.Mutex
-	paused      bool
-	simulcast   bool
-	channels    *sync.Map // Channel id -> *Channel
+	id            string  // Id of the track (read-only)
+	studio        *Studio // The studio the track belongs to
+	sender        string  // Client id of the sender
+	senderTrack   string  // How the client sending refers to this track
+	mutex         *sync.Mutex
+	paused        bool
+	simulcast     bool
+	channelAmount int
+	channels      *sync.Map // Channel id -> *Channel
 }
 
 // Add a new channel for a track
@@ -48,17 +49,22 @@ func (t *Track) AddChannel(tr *webrtc.TrackRemote) {
 		id:          tr.RID(),
 		remoteTrack: tr,
 	}
+	_, existedPreviously := t.channels.Load(tr.RID())
 	if !t.simulcast {
 		// If the channel has a different id than any previous channel, turn on simulcast
-		_, valid := t.channels.Load(tr.RID())
-		t.simulcast = !valid
+		t.simulcast = !existedPreviously
 	}
 	t.channels.Store(tr.RID(), channel)
+
+	// Increment the channel amount if it didn't exist previously
+	if !existedPreviously {
+		t.channelAmount++
+	}
 
 	// Initialize the channel (or close if it couldn't be started)
 	if err := channel.Init(); err != nil {
 		logger.Println("Couldn't start stream for channel", tr.RID(), ":", err)
-		t.CloseChannel(tr.RID())
+		t.CloseChannel(tr.RID(), false)
 		return
 	}
 
@@ -71,24 +77,38 @@ func (t *Track) AddChannel(tr *webrtc.TrackRemote) {
 	}
 }
 
-// Close a channel in the track
-func (t *Track) CloseChannel(channel string) {
+// Close a channel on the track.
+//
+// If mutex is true, the mutex of the track will be locked.
+func (t *Track) CloseChannel(channel string, mutex bool) {
 
-	// Get the channel
+	// Prevent concurrent modifications
+	if mutex {
+		t.mutex.Lock()
+		defer t.mutex.Unlock()
+	}
+
+	// Delete the channel
 	obj, loaded := t.channels.LoadAndDelete(channel)
 	if !loaded {
 		return
 	}
+	t.channelAmount--
 
-	// Disconnect the track
+	// Delete all subscriptions from the channel
 	c := obj.(*Channel)
 	c.subscriptions.Range(func(key, value any) bool {
 		value.(*Subscription).Delete()
 		return true
 	})
+
+	// Delete the track in case there are no channels left
+	if t.channelAmount <= 0 {
+		t.Delete(false, false)
+	}
 }
 
-// Send an event that updates the track to one client
+// Send an event that updates the track to one client.
 //
 // If mutex is true, the track's mutex will be locked.
 func (t *Track) SendTrackUpdate(client string, mutex bool) error {
@@ -105,6 +125,23 @@ func (t *Track) SendTrackUpdateToAll(mutex bool) error {
 
 	// Send the updated track to everyone
 	return t.studio.SendEventToAll(t.TrackUpdateEvent(mutex))
+}
+
+// Send an event that deletes the track on all clients in studio.
+func (t *Track) SendTrackDeletionToAll() error {
+
+	// Send the updated track to everyone
+	return t.studio.SendEventToAll(t.TrackDeletionEvent())
+}
+
+// Get the event required for deleting the track.
+func (t *Track) TrackDeletionEvent() pipes.Event {
+	return pipes.Event{
+		Name: "st_tr_deleted",
+		Data: map[string]interface{}{
+			"track": t.id,
+		},
+	}
 }
 
 // Get the event required for updating the track.
@@ -186,6 +223,39 @@ func (t *Track) NewSubscription(c *Client, channelId string) error {
 	}
 
 	return nil
+}
+
+// Delete the track in all places where it was registered.
+//
+// Closes all channels in the track, if requested.
+// Locks the mutex, if requested.
+// Returns whether or not the operation was successful.
+func (t *Track) Delete(closeChannels bool, mutex bool) bool {
+
+	// Send a deletion event to everyone in studio
+	t.SendTrackDeletionToAll()
+
+	// Close all channels if requested
+	if closeChannels {
+		t.channels.Range(func(key, value any) bool {
+			ch := value.(*Channel)
+			t.CloseChannel(ch.id, mutex)
+			return true
+		})
+	}
+
+	// Delete the track from studio
+	t.studio.tracks.Delete(t.id)
+
+	// Get the client sending the track
+	client, valid := t.studio.GetClient(t.sender)
+	if !valid {
+		return false
+	}
+
+	// Tell the client about the removal of the track
+	client.handleRemoveTrack(t)
+	return true
 }
 
 func (t *Track) IsPaused() bool {

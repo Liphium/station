@@ -81,14 +81,14 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 
 			// Register the track
 			track = &Track{
-				studio:      c.studio,
-				id:          id,
-				sender:      c.id,
-				senderTrack: tr.ID(),
-				mutex:       &sync.Mutex{},
-				paused:      false,
-				simulcast:   false,
-				channels:    &sync.Map{},
+				studio:        c.studio,
+				id:            id,
+				sender:        c.id,
+				senderTrack:   tr.ID(),
+				paused:        false,
+				simulcast:     false,
+				channelAmount: 0,
+				channels:      &sync.Map{},
 			}
 			c.studio.tracks.Store(id, track)
 
@@ -105,5 +105,33 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 		}
 	})
 
+	// Send them all the tracks currently available
+	go func() {
+		c.studio.tracks.Range(func(key, value any) bool {
+			t := value.(*Track)
+			t.SendTrackUpdate(c.id, true)
+			return true
+		})
+	}()
+
 	return nil
+}
+
+// Handle the removing of a track the client is sending to studio
+func (c *Client) handleRemoveTrack(t *Track) {
+
+	// Delete the track from the published tracks
+	_, valid := c.publishedTracks.LoadAndDelete(t.id)
+	if !valid {
+		return
+	}
+
+	// End the receiver currently receiving the track
+	for _, r := range c.connection.GetReceivers() {
+		if r.Track().ID() == t.senderTrack {
+			if err := r.Stop(); err != nil {
+				logger.Println("warning: couldn't stop receiver of ended track")
+			}
+		}
+	}
 }
