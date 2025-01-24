@@ -15,7 +15,7 @@ var (
 )
 
 // Room id -> *Studio
-var studioMap *sync.Map
+var studioMap *sync.Map = &sync.Map{}
 
 type Studio struct {
 	room    string

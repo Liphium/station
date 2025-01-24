@@ -3,6 +3,7 @@ package studio
 import (
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/Liphium/station/spacestation/util"
 	"github.com/pion/ice/v4"
@@ -13,7 +14,7 @@ import (
 var api *webrtc.API
 
 // Custom logger for everything going on in the SFU
-var logger *log.Logger = log.New(os.Stdout, "space-sfu ", log.Flags())
+var logger *log.Logger = log.New(os.Stdout, "space-studio ", log.Flags())
 
 // Configuration
 var Enabled = false // Changed later in the setup
@@ -22,8 +23,7 @@ var Port int = 0
 
 // TODO: Add turn server support
 
-func Start(port int) {
-	Port = port
+func Start() {
 
 	if os.Getenv("SS_SFU_ENABLE") != "" {
 		if os.Getenv("SS_SFU_ENABLE") == "false" {
@@ -38,6 +38,18 @@ func Start(port int) {
 		return
 	}
 
+	// Set the port if available
+	if os.Getenv("SS_PORT") != "" {
+		var err error
+		Port, err = strconv.Atoi(os.Getenv("SS_PORT"))
+		if err != nil {
+			logger.Fatal("Invalid port number in SS_PORT environment variable")
+		}
+	} else {
+		Port = 5000
+	}
+	logger.Println("Starting on port", Port, "..")
+
 	// Get all the environment variables
 	if os.Getenv("SS_STUN") != "" {
 		DefaultStunServer = os.Getenv("SS_STUN")
@@ -49,7 +61,7 @@ func Start(port int) {
 	engine := webrtc.SettingEngine{}
 
 	// Set the port
-	mux, err := ice.NewMultiUDPMuxFromPort(port)
+	mux, err := ice.NewMultiUDPMuxFromPort(Port)
 	if err != nil {
 		util.Log.Fatal("Couldn't create port multiplexer for the SFU:", err)
 	}

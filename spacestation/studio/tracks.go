@@ -39,22 +39,23 @@ type Track struct {
 }
 
 // Add a new channel for a track
-func (t *Track) AddChannel(tr *webrtc.TrackRemote) {
+func (t *Track) AddChannel(tr *webrtc.TrackRemote, id string) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
 	// Add as a new channel
 	channel := &Channel{
-		track:       t,
-		id:          tr.RID(),
-		remoteTrack: tr,
+		track:         t,
+		id:            id,
+		remoteTrack:   tr,
+		subscriptions: &sync.Map{},
 	}
-	_, existedPreviously := t.channels.Load(tr.RID())
+	_, existedPreviously := t.channels.Load(id)
 	if !t.simulcast {
 		// If the channel has a different id than any previous channel, turn on simulcast
 		t.simulcast = !existedPreviously
 	}
-	t.channels.Store(tr.RID(), channel)
+	t.channels.Store(id, channel)
 
 	// Increment the channel amount if it didn't exist previously
 	if !existedPreviously {
@@ -63,8 +64,8 @@ func (t *Track) AddChannel(tr *webrtc.TrackRemote) {
 
 	// Initialize the channel (or close if it couldn't be started)
 	if err := channel.Init(); err != nil {
-		logger.Println("Couldn't start stream for channel", tr.RID(), ":", err)
-		t.CloseChannel(tr.RID(), false)
+		logger.Println("Couldn't start stream for channel", id, ":", err)
+		t.CloseChannel(id, false)
 		return
 	}
 

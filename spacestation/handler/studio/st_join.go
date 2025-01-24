@@ -9,11 +9,17 @@ import (
 )
 
 // Action: st_join
-func joinStudio(c *pipeshandler.Context, offer webrtc.SessionDescription) pipes.Event {
+func joinStudio(c *pipeshandler.Context, offer struct {
+	Type string `json:"type"`
+	SDP  string `json:"sdp"`
+}) pipes.Event {
 
 	// Create a new client connection for the studio
 	s := studio.GetStudio(c.Client.Session)
-	answer, err := s.NewClientConnection(c.Client.ID, offer)
+	answer, err := s.NewClientConnection(c.Client.ID, webrtc.SessionDescription{
+		Type: webrtc.NewSDPType(offer.Type),
+		SDP:  offer.SDP,
+	})
 	if err != nil {
 		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 	}

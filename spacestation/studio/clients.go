@@ -28,20 +28,9 @@ func (c *Client) GetSubscription(track string) (*Subscription, bool) {
 // Initialize the handlers for the client's connection
 func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 
-	// Create a new data channel for pipes (this is gonna be used in the future)
-	ordered := false
-	maxPacketLifetime := uint16(500)
-	pipesChan, err := peer.CreateDataChannel("pipes", &webrtc.DataChannelInit{
-		Ordered:           &ordered,
-		MaxPacketLifeTime: &maxPacketLifetime,
-	})
-	if err != nil {
-		return err
-	}
-
-	// Listen for keep alive messages from the client
-	pipesChan.OnMessage(func(msg webrtc.DataChannelMessage) {
-		logger.Println("received message on pipes data channel")
+	// Listen for any data channels
+	peer.OnDataChannel(func(dc *webrtc.DataChannel) {
+		logger.Println("new data channel", dc.Label())
 	})
 
 	// Allow receiving of video and audio
@@ -56,10 +45,17 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 	peer.OnTrack(func(tr *webrtc.TrackRemote, r *webrtc.RTPReceiver) {
 
 		// Check if the channel is valid (RID specifies channel)
-		if !slices.Contains(acceptedChannels, tr.RID()) {
-			logger.Println(c.id+"disconnected due to wrong channel (", tr.RID(), ")")
-			c.studio.Disconnect(c.id)
-			return
+		channelId := ""
+		if tr.RID() != "" {
+			if !slices.Contains(acceptedChannels, tr.RID()) {
+				logger.Println(c.id, "disconnected due to wrong channel (", tr.RID(), ")")
+				c.studio.Disconnect(c.id)
+				return
+			}
+
+			channelId = tr.RID()
+		} else {
+			channelId = channelDefault
 		}
 
 		// Check if the track has already been published with this id
@@ -68,7 +64,7 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 
 			// Add the channel
 			track = obj.(*Track)
-			track.AddChannel(tr)
+			track.AddChannel(tr, channelId)
 		} else {
 
 			// Generate a new id for the track
@@ -83,6 +79,7 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 			track = &Track{
 				studio:        c.studio,
 				id:            id,
+				mutex:         &sync.Mutex{},
 				sender:        c.id,
 				senderTrack:   tr.ID(),
 				paused:        false,
@@ -93,7 +90,7 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 			c.studio.tracks.Store(id, track)
 
 			// Add the channel in all places
-			track.AddChannel(tr)
+			track.AddChannel(tr, channelId)
 			c.publishedTracks.Store(tr.ID(), track)
 		}
 	})
