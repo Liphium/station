@@ -33,14 +33,6 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 		logger.Println("new data channel", dc.Label())
 	})
 
-	// Allow receiving of video and audio
-	if _, err := peer.AddTransceiverFromKind(webrtc.RTPCodecTypeAudio); err != nil {
-		return err
-	}
-	if _, err := peer.AddTransceiverFromKind(webrtc.RTPCodecTypeVideo); err != nil {
-		return err
-	}
-
 	// Listen for new tracks
 	peer.OnTrack(func(tr *webrtc.TrackRemote, r *webrtc.RTPReceiver) {
 
