@@ -52,6 +52,11 @@ func (s *Studio) NewClientConnection(client string, offer webrtc.SessionDescript
 		}
 	}
 
+	// Add the required transceivers
+	if _, err := peer.AddTransceiverFromKind(webrtc.RTPCodecTypeVideo); err != nil {
+		return webrtc.SessionDescription{}, err
+	}
+
 	// Add the new connection for the client
 	c := &Client{
 		id:              client,
