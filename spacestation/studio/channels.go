@@ -2,6 +2,7 @@ package studio
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"sync"
 
@@ -10,7 +11,7 @@ import (
 
 type Channel struct {
 	track         *Track                      // Track the channel is attached to (read-only)
-	id            string                      // Id of the channel (read-only)
+	bitrate       int                         // Bitrate of the channel (read-only)
 	remoteTrack   *webrtc.TrackRemote         // read-only
 	localTrack    *webrtc.TrackLocalStaticRTP // read-only
 	subscriptions *sync.Map                   // Client id -> *Subscription (read-only)
@@ -20,7 +21,7 @@ type Channel struct {
 func (c *Channel) Init() error {
 
 	// Create a new track for sending
-	track, err := webrtc.NewTrackLocalStaticRTP(c.remoteTrack.Codec().RTPCodecCapability, c.track.id, c.id)
+	track, err := webrtc.NewTrackLocalStaticRTP(c.remoteTrack.Codec().RTPCodecCapability, c.track.id, fmt.Sprintf("%d", c.bitrate))
 	if err != nil {
 		return err
 	}
@@ -43,7 +44,7 @@ func (c *Channel) startSender() {
 
 		// Forward to all subscriptions
 		if err := c.localTrack.WriteRTP(packet); err != nil && !errors.Is(err, io.ErrClosedPipe) {
-			logger.Println("Something went wrong in channel", c.id, "of", c.track.id)
+			logger.Println("Something went wrong in channel", c.bitrate, "of", c.track.id)
 		}
 	}
 }

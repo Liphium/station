@@ -15,17 +15,6 @@ var (
 	ErrChannelNotFound = errors.New("this channel doesn't exist")
 )
 
-// Accepted track channels
-const (
-	channelLow     = "l"
-	channelMedium  = "m"
-	channelHigh    = "h"
-	channelDefault = "d"
-)
-
-// A list for filtering
-var acceptedChannels = []string{channelLow, channelMedium, channelHigh, channelDefault}
-
 type Track struct {
 	id            string  // Id of the track (read-only)
 	studio        *Studio // The studio the track belongs to
@@ -35,27 +24,27 @@ type Track struct {
 	paused        bool
 	simulcast     bool
 	channelAmount int
-	channels      *sync.Map // Channel id -> *Channel
+	channels      *sync.Map // Channel bitrate -> *Channel
 }
 
 // Add a new channel for a track
-func (t *Track) AddChannel(tr *webrtc.TrackRemote, id string) {
+func (t *Track) AddChannel(tr *webrtc.TrackRemote, bitrate int) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
 
 	// Add as a new channel
 	channel := &Channel{
 		track:         t,
-		id:            id,
+		bitrate:       bitrate,
 		remoteTrack:   tr,
 		subscriptions: &sync.Map{},
 	}
-	_, existedPreviously := t.channels.Load(id)
+	_, existedPreviously := t.channels.Load(bitrate)
 	if !t.simulcast {
 		// If the channel has a different id than any previous channel, turn on simulcast
 		t.simulcast = !existedPreviously
 	}
-	t.channels.Store(id, channel)
+	t.channels.Store(bitrate, channel)
 
 	// Increment the channel amount if it didn't exist previously
 	if !existedPreviously {
@@ -64,8 +53,8 @@ func (t *Track) AddChannel(tr *webrtc.TrackRemote, id string) {
 
 	// Initialize the channel (or close if it couldn't be started)
 	if err := channel.Init(); err != nil {
-		logger.Println("Couldn't start stream for channel", id, ":", err)
-		t.CloseChannel(id, false)
+		logger.Println("Couldn't start stream for channel with bitrate", bitrate, ":", err)
+		t.CloseChannel(bitrate, false)
 		return
 	}
 
@@ -81,7 +70,7 @@ func (t *Track) AddChannel(tr *webrtc.TrackRemote, id string) {
 // Close a channel on the track.
 //
 // If mutex is true, the mutex of the track will be locked.
-func (t *Track) CloseChannel(channel string, mutex bool) {
+func (t *Track) CloseChannel(bitrate int, mutex bool) {
 
 	// Prevent concurrent modifications
 	if mutex {
@@ -90,7 +79,7 @@ func (t *Track) CloseChannel(channel string, mutex bool) {
 	}
 
 	// Delete the channel
-	obj, loaded := t.channels.LoadAndDelete(channel)
+	obj, loaded := t.channels.LoadAndDelete(bitrate)
 	if !loaded {
 		return
 	}
@@ -151,7 +140,7 @@ func (t *Track) TrackDeletionEvent() pipes.Event {
 func (t *Track) TrackUpdateEvent(mutex bool) pipes.Event {
 
 	// Get all the subscribers of the track
-	var channels []string
+	var channels []int
 	var subscribers []string
 	t.channels.Range(func(key, value any) bool {
 		c := value.(*Channel)
@@ -166,7 +155,7 @@ func (t *Track) TrackUpdateEvent(mutex bool) pipes.Event {
 		})
 
 		// Add the channel itself
-		channels = append(channels, c.id)
+		channels = append(channels, c.bitrate)
 
 		return true
 	})
@@ -240,7 +229,7 @@ func (t *Track) Delete(closeChannels bool, mutex bool) bool {
 	if closeChannels {
 		t.channels.Range(func(key, value any) bool {
 			ch := value.(*Channel)
-			t.CloseChannel(ch.id, mutex)
+			t.CloseChannel(ch.bitrate, mutex)
 			return true
 		})
 	}
