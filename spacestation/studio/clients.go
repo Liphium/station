@@ -33,14 +33,21 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 		logger.Println("new data channel", dc.Label())
 	})
 
+	// Check if negotiation is needed
+	peer.OnNegotiationNeeded(func() {
+		logger.Println("renegotiation is needed")
+	})
+
 	// Listen for new tracks
 	peer.OnTrack(func(tr *webrtc.TrackRemote, r *webrtc.RTPReceiver) {
+
+		logger.Println("received new track", tr.RID(), tr.ID())
 
 		// Parse the channel rid to the bitrate of the channel (that's what our client sets it as)
 		bitrate, err := strconv.Atoi(tr.RID())
 		if err != nil {
 			logger.Println(c.id, "disconnected due to wrong channel (", tr.RID(), "):", err)
-			c.studio.Disconnect(c.id)
+			//c.studio.Disconnect(c.id)
 			return
 		}
 

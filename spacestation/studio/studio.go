@@ -78,7 +78,7 @@ func (s *Studio) NewClientConnection(client string, offer webrtc.SessionDescript
 		return webrtc.SessionDescription{}, err
 	}
 
-	// Sets the LocalDescription, and starts our UDP listeners
+	// Set the local description
 	if err := peer.SetLocalDescription(answer); err != nil {
 		return webrtc.SessionDescription{}, err
 	}
@@ -89,6 +89,41 @@ func (s *Studio) NewClientConnection(client string, offer webrtc.SessionDescript
 	<-gatherComplete
 
 	return *peer.LocalDescription(), nil
+}
+
+// Renegotiate with a client.
+//
+// Returns the new answer for the client.
+func (s *Studio) HandleClientRenegotiation(client string, offer webrtc.SessionDescription) (webrtc.SessionDescription, error) {
+
+	// Get the client
+	c, valid := s.GetClient(client)
+	if !valid {
+		return webrtc.SessionDescription{}, ErrClientNotFound
+	}
+
+	// Set the remote description
+	if err := c.connection.SetRemoteDescription(offer); err != nil {
+		return webrtc.SessionDescription{}, err
+	}
+
+	// Create an answer for the client
+	answer, err := c.connection.CreateAnswer(nil)
+	if err != nil {
+		return webrtc.SessionDescription{}, err
+	}
+
+	// Set the local description
+	if err := c.connection.SetLocalDescription(answer); err != nil {
+		return webrtc.SessionDescription{}, err
+	}
+
+	// Wait for the ICE gathering to be completed
+	// TODO: Consider implementing trickle ice instead of this garbage
+	gatherComplete := webrtc.GatheringCompletePromise(c.connection)
+	<-gatherComplete
+
+	return *c.connection.LocalDescription(), nil
 }
 
 // Disconnect a client from studio
