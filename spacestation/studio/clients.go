@@ -1,7 +1,7 @@
 package studio
 
 import (
-	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/Liphium/station/spacestation/util"
@@ -41,13 +41,18 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 	// Listen for new tracks
 	peer.OnTrack(func(tr *webrtc.TrackRemote, r *webrtc.RTPReceiver) {
 
-		logger.Println("received new track", tr.RID(), tr.ID())
+		logger.Println("received new track", tr.ID(), tr.RID())
 
-		// Parse the channel rid to the bitrate of the channel (that's what our client sets it as)
-		bitrate, err := strconv.Atoi(tr.RID())
-		if err != nil {
-			logger.Println(c.id, "disconnected due to wrong channel (", tr.RID(), "):", err)
-			//c.studio.Disconnect(c.id)
+		// Parse the track rid for the channel
+		channel := tr.RID()
+		if channel == "" {
+			channel = "f"
+		}
+
+		// Make sure the channel is valid
+		if !strings.Contains("fhq", channel) {
+			logger.Println(c.id, "disconnected due to wrong channel:", channel)
+			c.studio.Disconnect(c.id)
 			return
 		}
 
@@ -57,7 +62,7 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 
 			// Add the channel
 			track = obj.(*Track)
-			track.AddChannel(tr, bitrate)
+			track.AddChannel(channel, tr)
 		} else {
 
 			// Generate a new id for the track
@@ -83,7 +88,7 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 			c.studio.tracks.Store(id, track)
 
 			// Add the channel in all places
-			track.AddChannel(tr, bitrate)
+			track.AddChannel(channel, tr)
 			c.publishedTracks.Store(tr.ID(), track)
 		}
 	})
