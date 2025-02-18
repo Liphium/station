@@ -40,36 +40,37 @@ func Connect() {
 	}
 
 	// Migrate the schema
+	db.AutoMigrate(
+		// Account related tables
+		&Account{},
+		&Authentication{},
+		&Session{},
+		&Rank{},
+		&PublicKey{},
+		&ProfileKey{},
+		&VaultKey{},
+		&SignatureKey{},
+		&StoredActionKey{},
+		&CloudFile{},
+		&Invite{},
+		&InviteCount{},
 
-	// Migrate account related tables
-	db.AutoMigrate(&Account{})
-	db.AutoMigrate(&Authentication{})
-	db.AutoMigrate(&Session{})
-	db.AutoMigrate(&Rank{})
-	db.AutoMigrate(&PublicKey{})
-	db.AutoMigrate(&ProfileKey{})
-	db.AutoMigrate(&VaultKey{})
-	db.AutoMigrate(&SignatureKey{})
-	db.AutoMigrate(&StoredActionKey{})
-	db.AutoMigrate(&CloudFile{})
-	db.AutoMigrate(&Invite{})
-	db.AutoMigrate(&InviteCount{})
+		// Properties related tables
+		&Friendship{},
+		&Profile{},
+		&StoredAction{},
+		&AStoredAction{},
+		&VaultEntry{},
+		&KeyRequest{},
 
-	// Migrate account properties related tables
-	db.AutoMigrate(&Friendship{})
-	db.AutoMigrate(&Profile{})
-	db.AutoMigrate(&StoredAction{})
-	db.AutoMigrate(&AStoredAction{})
-	db.AutoMigrate(&VaultEntry{})
-	db.AutoMigrate(&KeyRequest{})
+		// Node related tables
+		&Node{},
+		&NodeCreation{},
 
-	// Migrate node related tables
-	db.AutoMigrate(&Node{})
-	db.AutoMigrate(&NodeCreation{})
-
-	// Migrate server related tables
-	db.AutoMigrate(&App{})
-	db.AutoMigrate(&Setting{})
+		// Server related tables
+		&App{},
+		&Setting{},
+	)
 
 	// Assign the database to the global variable
 	DBConn = db

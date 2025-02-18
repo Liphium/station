@@ -37,12 +37,19 @@ func addEntry(c *fiber.Ctx) error {
 		return util.FailedRequest(c, localization.ErrorVaultLimitReached(MaximumEntries), nil)
 	}
 
+	// Get the best version
+	var version int64
+	if err := database.DBConn.Model(&database.VaultEntry{}).Select("max(version)").Where("account = ? AND tag = ?", accId, req.Tag).Scan(&version).Error; err != nil {
+		return util.FailedRequest(c, localization.ErrorServer, err)
+	}
+
 	// Create vault entry
 	vaultEntry := database.VaultEntry{
 		ID:      auth.GenerateToken(12),
 		Account: accId,
 		Tag:     req.Tag,
 		Payload: req.Payload,
+		Version: version + 1,
 	}
 	if err := database.DBConn.Create(&vaultEntry).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
@@ -51,5 +58,6 @@ func addEntry(c *fiber.Ctx) error {
 	return util.ReturnJSON(c, fiber.Map{
 		"success": true,
 		"id":      vaultEntry.ID,
+		"version": version + 1,
 	})
 }
