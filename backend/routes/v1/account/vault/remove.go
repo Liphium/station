@@ -43,18 +43,10 @@ func removeEntry(c *fiber.Ctx) error {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	// Add a deletion
-	if err := database.DBConn.Create(&database.VaultDeletion{
-		Account: accId,
-		Tag:     entry.Tag,
-		Version: version + 1,
-		Entry:   entry.ID,
-	}).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
-	}
-
-	// Delete entry
-	if err := database.DBConn.Delete(&entry).Error; err != nil {
+	// Mark the vault entry as deleted and remove all of its values
+	entry.Payload = "-"
+	entry.Deleted = true
+	if err := database.DBConn.Save(&entry).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
