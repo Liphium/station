@@ -37,26 +37,11 @@ func HandleTokenActivation(c *fiber.Ctx, token conversations.ConversationToken, 
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	// Return all data
-	var tokens []conversations.ConversationToken
-	if err := database.DBConn.Where(&conversations.ConversationToken{Conversation: token.Conversation}).Find(&tokens).Error; err != nil {
-		return integration.FailedRequest(c, localization.ErrorServer, err)
-	}
-
-	var members []ReturnableMember
-	for _, token := range tokens {
-		members = append(members, ReturnableMember{
-			ID:   token.ID,
-			Rank: token.Rank,
-			Data: token.Data,
-		})
-	}
-
+	// Send a system message in case of a group
 	var conversation conversations.Conversation
 	if err := database.DBConn.Where("id = ?", token.Conversation).Take(&conversation).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
-
 	if conversation.Type == conversations.TypeGroup {
 
 		// Increment the version by one to save the modification
@@ -73,9 +58,6 @@ func HandleTokenActivation(c *fiber.Ctx, token conversations.ConversationToken, 
 
 	return integration.ReturnJSON(c, fiber.Map{
 		"success": true,
-		"type":    conversation.Type,
-		"data":    conversation.Data,
 		"token":   token.Token,
-		"members": members,
 	})
 }

@@ -10,4 +10,5 @@ func Authorized(router fiber.Router) {
 	router.Post("/update", updateVaultEntry)
 	router.Post("/remove", removeEntry)
 	router.Post("/sync", syncVault)
+	router.Post("/list", listEntries)
 }
