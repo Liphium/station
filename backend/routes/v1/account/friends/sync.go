@@ -9,28 +9,29 @@ import (
 )
 
 type listFriendsRequest struct {
-	After uint64 `json:"after"`
+	Version int64 `json:"version"`
 }
 
-// Route: /account/friends/list
+// Route: /account/friends/sync
 func listFriends(c *fiber.Ctx) error {
 
+	// Parse to request
 	var req listFriendsRequest
 	if err := util.BodyParser(c, &req); err != nil {
 		return util.InvalidRequest(c)
 	}
 
-	// Get friends list
+	// Get all of the friends that have been updated
 	accId, err := verify.InfoLocals(c).GetAccountUUID()
 	if err != nil {
 		return util.InvalidRequest(c)
 	}
 	var friends []database.Friendship
-	if err := database.DBConn.Model(&database.Friendship{}).Where("account = ? AND updated_at > ?", accId, req.After).Find(&friends).Error; err != nil {
+	if err := database.DBConn.Model(&database.Friendship{}).Where("account = ? AND version > ?", accId, req.Version).Find(&friends).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	// Return friends list
+	// Return new friends
 	return util.ReturnJSON(c, fiber.Map{
 		"success": true,
 		"friends": friends,

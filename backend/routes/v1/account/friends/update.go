@@ -6,51 +6,49 @@ import (
 	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
-type removeRequest struct {
-	ID string `json:"id"`
+type updateRequest struct {
+	Entry   string `json:"entry"`
+	Payload string `json:"payload"`
 }
 
-// Route: /account/friends/remove
-func removeFriend(c *fiber.Ctx) error {
+// Route: /account/friend/update
+func updateFriend(c *fiber.Ctx) error {
 
-	// Parse request
-	var req removeRequest
+	// Parse the request
+	var req updateRequest
 	if err := util.BodyParser(c, &req); err != nil {
 		return util.InvalidRequest(c)
 	}
 
-	// Check if friendship exists
+	// Get the current account id
 	accId, err := verify.InfoLocals(c).GetAccountUUID()
 	if err != nil {
 		return util.InvalidRequest(c)
 	}
-	var friendship database.Friendship
-	if err := database.DBConn.Where("id = ? AND account = ?", req.ID, accId).Take(&friendship).Error; err != nil {
 
-		if err == gorm.ErrRecordNotFound {
-			return util.FailedRequest(c, localization.ErrorFriendNotFound, nil)
-		}
-
+	// Get the friendship
+	var entry database.Friendship
+	if err := database.DBConn.Model(&database.VaultEntry{}).Where("id = ? AND account = ?", req.Entry, accId).Take(&entry).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	// Get the latest version
+	// Get the latest version in the friendship
 	var version int64
 	if err := database.DBConn.Model(&database.VaultEntry{}).Select("max(version)").Where("account = ?", accId).Scan(&version).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	// Delete the friendship
-	friendship.Payload = ""
-	friendship.LastPacket = ""
-	friendship.Deleted = true
-	friendship.Version = version + 1
-	if err := database.DBConn.Save(&friendship).Error; err != nil {
+	// Update the entry to the newest version
+	entry.Payload = req.Payload
+	entry.Version = version + 1
+	if err := database.DBConn.Save(&entry).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	return util.SuccessfulRequest(c)
+	return util.ReturnJSON(c, fiber.Map{
+		"success": true,
+		"version": version + 1,
+	})
 }
