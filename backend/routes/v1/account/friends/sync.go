@@ -13,7 +13,7 @@ type listFriendsRequest struct {
 }
 
 // Route: /account/friends/sync
-func listFriends(c *fiber.Ctx) error {
+func syncFriends(c *fiber.Ctx) error {
 
 	// Parse to request
 	var req listFriendsRequest

@@ -55,10 +55,10 @@ func syncVault(c *fiber.Ctx) error {
 	wg.Wait()
 
 	// Collect all the results together
-	entryMapJS := map[string][]database.VaultEntry{}
+	allEntries := []database.VaultEntry{}
 	for tag := range req.Tags {
 		if entries, ok := entryMap.Load(tag); ok {
-			entryMapJS[tag] = entries.([]database.VaultEntry)
+			allEntries = append(allEntries, entries.([]database.VaultEntry)...)
 		} else {
 			return util.FailedRequest(c, localization.ErrorServer, nil)
 		}
@@ -66,6 +66,6 @@ func syncVault(c *fiber.Ctx) error {
 
 	return util.ReturnJSON(c, fiber.Map{
 		"success": true,
-		"entries": entryMapJS,
+		"entries": allEntries,
 	})
 }

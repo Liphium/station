@@ -52,5 +52,8 @@ func removeFriend(c *fiber.Ctx) error {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	return util.SuccessfulRequest(c)
+	return util.ReturnJSON(c, fiber.Map{
+		"success": true,
+		"version": version + 1,
+	})
 }

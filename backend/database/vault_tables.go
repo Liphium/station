@@ -40,7 +40,7 @@ type Friendship struct {
 	Account    uuid.UUID `json:"account" gorm:"not null"`
 	Payload    string    `json:"friend" gorm:"not null"` // Encrypted (with account's public key) friend key + data
 	LastPacket string    `json:"-"`                      // When the last packet was received (to prevent replay attacks, encrypted)
-	Version    int64     `json:"version" gorm:"index;default:0"`
+	Version    int64     `json:"version" gorm:"index;default:1"`
 	Deleted    bool      `json:"deleted" gorm:"index;default:false"`
 	UpdatedAt  int64     `json:"updated_at" gorm:"autoUpdateTime:milli"`
 }
@@ -53,6 +53,6 @@ type VaultEntry struct {
 	Account   uuid.UUID `json:"account" gorm:"not null;index"`
 	Payload   string    `json:"payload" gorm:"not null"` // Encrypted (with account's public key) data
 	Deleted   bool      `json:"deleted" gorm:"index;default:false"`
-	Version   int64     `json:"-" gorm:"default:0;index"`
+	Version   int64     `json:"version" gorm:"default:1;index"`
 	UpdatedAt int64     `json:"updated_at" gorm:"autoUpdateTime:milli"`
 }
