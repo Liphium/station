@@ -28,7 +28,7 @@ func listEntries(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 	var entries []database.VaultEntry
-	if err := database.DBConn.Where("account = ? AND tag = ? AND updated_at > ?", accId, req.Tag, req.After).Find(&entries).Error; err != nil {
+	if err := database.DBConn.Where("account = ? AND tag = ? AND deleted = ? AND updated_at > ?", accId, req.Tag, false, req.After).Find(&entries).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 

@@ -22,7 +22,7 @@ type Account struct {
 
 type Session struct {
 	ID    uuid.UUID `json:"id" gorm:"primaryKey,type:uuid;default:uuid_generate_v4()"`
-	Token string    `json:"token" gorm:"unique"`
+	Token string    `json:"token" gorm:"unique;index"`
 
 	Verified        bool      `json:"sync"`
 	Account         uuid.UUID `json:"account"`
@@ -80,7 +80,7 @@ type InviteCount struct {
 // Invites generated
 type Invite struct {
 	ID        uuid.UUID `gorm:"primaryKey,type:uuid;default:uuid_generate_v4()"` // Invite token itself
-	Creator   uuid.UUID // Account id of creator
+	Creator   uuid.UUID `gorm:"index"`                                           // Account id of creator
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 }
 
