@@ -46,9 +46,14 @@ func removeEntry(c *fiber.Ctx) error {
 	// Mark the vault entry as deleted and remove all of its values
 	entry.Payload = "-"
 	entry.Deleted = true
+	entry.Version = version + 1
 	if err := database.DBConn.Save(&entry).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	return util.SuccessfulRequest(c)
+	return util.ReturnJSON(c, fiber.Map{
+		"success": true,
+		"tag":     entry.Tag,
+		"version": version + 1,
+	})
 }

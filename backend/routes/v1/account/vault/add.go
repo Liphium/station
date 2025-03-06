@@ -39,8 +39,8 @@ func addEntry(c *fiber.Ctx) error {
 
 	// Get the best version
 	var version int64
-	if err := database.DBConn.Model(&database.VaultEntry{}).Select("max(version)").Where("account = ? AND tag = ?", accId, req.Tag).Scan(&version).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+	if err := database.DBConn.Model(&database.VaultEntry{}).Select("max(version)").Where("account = ? AND tag = ?", accId, req.Tag).Scan(&version); err != nil {
+		version = 0
 	}
 
 	// Create vault entry

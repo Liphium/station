@@ -36,7 +36,7 @@ func addFriend(c *fiber.Ctx) error {
 	// Get the latest version
 	var version int64
 	if err := database.DBConn.Model(&database.VaultEntry{}).Select("max(version)").Where("account = ?", accId).Scan(&version).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		version = 0
 	}
 
 	// Check if the account has too many friends
