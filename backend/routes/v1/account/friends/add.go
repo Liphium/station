@@ -9,16 +9,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type addFriendRequest struct {
-	Payload     string `json:"payload"` // Encrypted payload
-	ReceiveDate string `json:"receive_date"`
-}
-
 // Route: /account/friends/add
 func addFriend(c *fiber.Ctx) error {
 
 	// Parse request
-	var req addFriendRequest
+	var req struct {
+		Payload     string `json:"payload"` // Encrypted payload
+		ReceiveDate string `json:"receive_date"`
+	}
 	if err := util.BodyParser(c, &req); err != nil {
 		return util.InvalidRequest(c)
 	}
