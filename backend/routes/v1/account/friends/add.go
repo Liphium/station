@@ -9,17 +9,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type addFriendRequest struct {
-	Hash        string `json:"hash"`    // Payload hash
-	Payload     string `json:"payload"` // Encrypted payload
-	ReceiveDate string `json:"receive_date"`
-}
-
 // Route: /account/friends/add
 func addFriend(c *fiber.Ctx) error {
 
 	// Parse request
-	var req addFriendRequest
+	var req struct {
+		Payload     string `json:"payload"` // Encrypted payload
+		ReceiveDate string `json:"receive_date"`
+	}
 	if err := util.BodyParser(c, &req); err != nil {
 		return util.InvalidRequest(c)
 	}
@@ -34,14 +31,10 @@ func addFriend(c *fiber.Ctx) error {
 		return util.InvalidRequest(c)
 	}
 
-	// Check if the friend already exists (and return id and stuff if he does)
-	var friendship database.Friendship
-	if database.DBConn.Where("account = ? AND hash = ?", accId, req.Hash).Take(&friendship).Error == nil {
-		return util.ReturnJSON(c, fiber.Map{
-			"success": true,
-			"id":      friendship.ID,
-			"hash":    friendship.Hash,
-		})
+	// Get the latest version
+	var version int64
+	if err := database.DBConn.Model(&database.VaultEntry{}).Select("max(version)").Where("account = ?", accId).Scan(&version).Error; err != nil {
+		version = 0
 	}
 
 	// Check if the account has too many friends
@@ -55,12 +48,12 @@ func addFriend(c *fiber.Ctx) error {
 	}
 
 	// Create friendship
-	friendship = database.Friendship{
+	friendship := database.Friendship{
 		ID:         auth.GenerateToken(12),
 		Account:    accId,
-		Hash:       req.Hash,
 		Payload:    req.Payload,
 		LastPacket: req.ReceiveDate,
+		Version:    version + 1,
 	}
 	if err := database.DBConn.Create(&friendship).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
@@ -69,6 +62,6 @@ func addFriend(c *fiber.Ctx) error {
 	return util.ReturnJSON(c, fiber.Map{
 		"success": true,
 		"id":      friendship.ID,
-		"hash":    friendship.Hash,
+		"version": version + 1,
 	})
 }
