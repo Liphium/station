@@ -14,9 +14,13 @@ import (
 func HandleRead(c *fiber.Ctx, token conversations.ConversationToken, _ interface{}) error {
 
 	// Update read state
-	if err := database.DBConn.Model(&conversations.ConversationToken{}).Where("id = ?", token.ID).Update("last_read", time.Now().UnixMilli()).Error; err != nil {
+	newStamp := time.Now().UnixMilli()
+	if err := database.DBConn.Model(&conversations.ConversationToken{}).Where("id = ?", token.ID).Update("last_read", newStamp).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	return integration.SuccessfulRequest(c)
+	return integration.ReturnJSON(c, fiber.Map{
+		"success": true,
+		"time":    newStamp,
+	})
 }
