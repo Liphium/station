@@ -1,3 +1,7 @@
+## Currently in dev
+
+- Added a SFU to Space Station: A new way for audio and video calling (experimental) 
+
 ## 0.6.2
 
 - Fixed the mail headers not being set correctly

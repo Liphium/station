@@ -12,6 +12,7 @@ import (
 	"github.com/Liphium/station/spacestation/caching"
 	"github.com/Liphium/station/spacestation/handler"
 	"github.com/Liphium/station/spacestation/routes"
+	"github.com/Liphium/station/spacestation/studio"
 	"github.com/Liphium/station/spacestation/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -98,6 +99,9 @@ func Start(loadEnv bool) bool {
 		}
 		return true
 	})
+
+	// Start studio
+	studio.Start()
 
 	// Start on localhost
 	err = app.Listen(fmt.Sprintf("%s:%d", os.Getenv("LISTEN"), util.Port))

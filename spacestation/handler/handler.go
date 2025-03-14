@@ -4,6 +4,7 @@ import (
 	"github.com/Liphium/station/pipeshandler"
 	"github.com/Liphium/station/spacestation/caching"
 	message_handlers "github.com/Liphium/station/spacestation/handler/messages"
+	studio_handlers "github.com/Liphium/station/spacestation/handler/studio"
 	tabletop_handlers "github.com/Liphium/station/spacestation/handler/tabletop"
 	warp_handlers "github.com/Liphium/station/spacestation/handler/warp"
 )
@@ -14,4 +15,5 @@ func Initialize() {
 	message_handlers.SetupHandler()
 	tabletop_handlers.SetupHandler()
 	warp_handlers.SetupHandlers()
+	studio_handlers.SetupHandlers()
 }

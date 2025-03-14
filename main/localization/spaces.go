@@ -28,4 +28,9 @@ var (
 	ErrorRoomNotFound = Translations{
 		englishUS: "This room wasn't found, maybe it's already been deleted?",
 	}
+
+	// Studio errors
+	ErrorDidntJoinStudio = Translations{
+		englishUS: "You haven't joined studio yet.",
+	}
 )
