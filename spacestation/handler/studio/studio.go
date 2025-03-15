@@ -11,6 +11,7 @@ func SetupHandlers() {
 	pipeshandler.CreateHandlerFor(caching.SSInstance, "st_join", joinStudio)
 	pipeshandler.CreateHandlerFor(caching.SSInstance, "st_info", getStudioInfo)
 	pipeshandler.CreateHandlerFor(caching.SSInstance, "st_reneg", renegotiate)
+	pipeshandler.CreateHandlerFor(caching.SSInstance, "st_ice", handleIceCandidate)
 
 	studio_track_handlers.SetupHandlers()
 }

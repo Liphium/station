@@ -4,6 +4,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Liphium/station/pipes"
+	"github.com/Liphium/station/spacestation/caching"
 	"github.com/Liphium/station/spacestation/util"
 	"github.com/pion/webrtc/v4"
 )
@@ -28,9 +30,29 @@ func (c *Client) GetSubscription(track string) (*Subscription, bool) {
 // Initialize the handlers for the client's connection
 func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 
+	// Listen to ice candidates for trickle-ice
+	peer.OnICECandidate(func(candidate *webrtc.ICECandidate) {
+		if candidate == nil {
+			return
+		}
+
+		// Send it to the client through pipes
+		if err := c.SendEvent(pipes.Event{
+			Name: "st_ice",
+			Data: map[string]interface{}{
+				"candidate": candidate.ToJSON(),
+			},
+		}); err != nil {
+			logger.Println("couldn't send ice candidate to", c.id+":", err)
+		}
+	})
+
 	// Listen for any data channels
 	peer.OnDataChannel(func(dc *webrtc.DataChannel) {
 		logger.Println("new data channel", dc.Label())
+		if dc.Label() == "lightwire" {
+			logger.Println("lightwire channel received")
+		}
 	})
 
 	// Check if negotiation is needed
@@ -95,6 +117,7 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 
 	// Disconnect the client when the connection closes
 	peer.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
+		logger.Println(c.id+" connection state:", state)
 		if state == webrtc.PeerConnectionStateClosed {
 			c.studio.Disconnect(c.id)
 		}
@@ -110,6 +133,17 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 	}()
 
 	return nil
+}
+
+// Send an event to the client through pipes (websocket)
+func (c *Client) SendEvent(event pipes.Event) error {
+
+	// Send the event through pipes
+	return caching.SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
+		Channel: pipes.BroadcastChannel([]string{c.id}),
+		Local:   true,
+		Event:   event,
+	})
 }
 
 // Handle the removing of a track the client is sending to studio
@@ -129,4 +163,9 @@ func (c *Client) handleRemoveTrack(t *Track) {
 			}
 		}
 	}
+}
+
+// Handle a new ice candidate from the client
+func (c *Client) HandleIceCandidate(candidate webrtc.ICECandidateInit) error {
+	return c.connection.AddICECandidate(candidate)
 }
