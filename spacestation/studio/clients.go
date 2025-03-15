@@ -14,8 +14,9 @@ type Client struct {
 	id              string                 // read-only
 	studio          *Studio                // read-only
 	connection      *webrtc.PeerConnection // read-only
-	publishedTracks *sync.Map              // Track id (from client) -> *Track (read-only)
-	subscriptions   *sync.Map              // Track id (server) -> *Subscription (read-only)
+	lightwire       *Lightwire
+	publishedTracks *sync.Map // Track id (from client) -> *Track (read-only)
+	subscriptions   *sync.Map // Track id (server) -> *Subscription (read-only)
 }
 
 // Get a client's subscription to a specific track
@@ -49,9 +50,24 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 
 	// Listen for any data channels
 	peer.OnDataChannel(func(dc *webrtc.DataChannel) {
-		logger.Println("new data channel", dc.Label())
 		if dc.Label() == "lightwire" {
-			logger.Println("lightwire channel received")
+
+			// Make sure there isn't another lightwire connection already
+			if c.lightwire != nil {
+				logger.Println("error: lightwire already initialized")
+				return
+			}
+
+			// Create a new lightwire connection
+			c.lightwire = &Lightwire{
+				client:  c,
+				mutex:   &sync.Mutex{},
+				channel: dc,
+			}
+			c.lightwire.Init()
+		} else {
+			logger.Println("new data channel", dc.Label())
+			// TODO: Maybe close the connection in prod?
 		}
 	})
 
@@ -163,6 +179,11 @@ func (c *Client) handleRemoveTrack(t *Track) {
 			}
 		}
 	}
+}
+
+// Handle the close of the lightwire connection
+func (c *Client) handleLightwireClose() {
+	c.lightwire = nil
 }
 
 // Handle a new ice candidate from the client

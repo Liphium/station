@@ -156,6 +156,19 @@ func (s *Studio) SendEventToAll(event pipes.Event) error {
 	return nil
 }
 
+// Forward a lightwire packet to all clients using it
+func (s *Studio) ForwardLightwirePacket(packet []byte) {
+
+	// Send it to all clients with Lightwire
+	s.clients.Range(func(_, value any) bool {
+		client := value.(*Client)
+		if client.lightwire != nil {
+			client.lightwire.SendPacket(packet)
+		}
+		return true
+	})
+}
+
 // Get a track in the studio
 func (s *Studio) GetTrack(track string) (*Track, bool) {
 	obj, valid := s.tracks.Load(track)
