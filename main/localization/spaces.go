@@ -28,6 +28,9 @@ var (
 	ErrorRoomNotFound = Translations{
 		englishUS: "This room wasn't found, maybe it's already been deleted?",
 	}
+	ErrorStudioNotSupported = Translations{
+		englishUS: "Voice and video features (Studio) are not supported in your town. If you are an administrator of this Town, guides are available in the Town Documentation.",
+	}
 
 	// Studio errors
 	ErrorDidntJoinStudio = Translations{

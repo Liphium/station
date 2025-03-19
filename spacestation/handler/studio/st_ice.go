@@ -11,6 +11,11 @@ import (
 // Action: st_ice
 func handleIceCandidate(c *pipeshandler.Context, candidate webrtc.ICECandidateInit) pipes.Event {
 
+	// Only return something in case Studio is enabled
+	if !studio.Enabled {
+		return pipeshandler.ErrorResponse(c, localization.ErrorStudioNotSupported, nil)
+	}
+
 	// Create a new client connection for the studio
 	s := studio.GetStudio(c.Client.Session)
 	client, valid := s.GetClient(c.Client.ID)

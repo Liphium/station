@@ -10,6 +10,11 @@ import (
 // Action: st_leave
 func leaveStudio(c *pipeshandler.Context, _ interface{}) pipes.Event {
 
+	// Only return something in case Studio is enabled
+	if !studio.Enabled {
+		return pipeshandler.ErrorResponse(c, localization.ErrorStudioNotSupported, nil)
+	}
+
 	// Disconnect the client
 	s := studio.GetStudio(c.Client.Session)
 	if err := s.Disconnect(c.Client.ID); err != nil {

@@ -14,6 +14,11 @@ func joinStudio(c *pipeshandler.Context, offer struct {
 	SDP  string `json:"sdp"`
 }) pipes.Event {
 
+	// Only return something in case Studio is enabled
+	if !studio.Enabled {
+		return pipeshandler.ErrorResponse(c, localization.ErrorStudioNotSupported, nil)
+	}
+
 	// Create a new client connection for the studio
 	s := studio.GetStudio(c.Client.Session)
 	answer, err := s.NewClientConnection(c.Client.ID, webrtc.SessionDescription{
