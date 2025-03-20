@@ -134,8 +134,18 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 	// Disconnect the client when the connection closes
 	peer.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		logger.Println(c.id+" connection state:", state)
+
+		// Update the studio connection status when connected
+		if state == webrtc.PeerConnectionStateConnected {
+			caching.UpdateMemberData(c.studio.room, c.id, caching.Ptr(true), nil, nil)
+		}
+
+		// Disconnect the client when the connection was closed
 		if state == webrtc.PeerConnectionStateClosed {
 			c.studio.Disconnect(c.id)
+
+			// Update the status of their studio connection accordingly (with default values)
+			caching.UpdateMemberData(c.studio.room, c.id, caching.Ptr(false), nil, nil)
 		}
 	})
 

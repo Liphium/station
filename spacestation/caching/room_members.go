@@ -13,6 +13,10 @@ type RoomConnection struct {
 	Adapter   string `json:"id"`   // Also the client id
 	Data      string `json:"data"` // The account id of the client (encrypted)
 	Signature string `json:"sign"` // Client id + Account id signed with private key of the client (to proof the account id is correct)
+
+	StudioConnection bool `json:"st"`   // Whether or not the client is connected to Studio
+	Muted            bool `json:"mute"` // If the client is muted
+	Deafened         bool `json:"deaf"` // If the client is deafened or not
 }
 
 // Member (Connection) ID -> Connections
@@ -22,7 +26,6 @@ type RoomConnections map[string]RoomConnection
 var roomConnectionsCache *ristretto.Cache
 
 func setupRoomConnectionsCache() {
-
 	var err error
 	roomConnectionsCache, err = ristretto.NewCache(&ristretto.Config{
 		NumCounters: 1e4,     // expecting to store 1k room connections
@@ -36,82 +39,116 @@ func setupRoomConnectionsCache() {
 	if err != nil {
 		panic(err)
 	}
-
 }
 
 // Sets the member data
 func SetMemberData(roomID string, connectionId string, data string, signature string) bool {
 
+	// Get the room the member is a part of
 	room, valid := GetRoom(roomID)
 	if !valid {
 		return false
 	}
-	room.Mutex.Lock()
+	room.Mutex.Lock() // Make sure the map is not modified at the same time
+	defer room.Mutex.Unlock()
 
-	room, valid = GetRoom(roomID)
-	if !valid {
-		room.Mutex.Unlock()
-		return false
-	}
-
+	// Update the connection
 	obj, valid := roomConnectionsCache.Get(roomID)
 	if !valid {
-		room.Mutex.Unlock()
 		return false
 	}
 	connections := obj.(RoomConnections)
 	if connections[connectionId].Connected {
-		room.Mutex.Unlock()
 		return false
 	}
 	connections[connectionId] = RoomConnection{
-		Connected: false,
-		Adapter:   connectionId,
-		Data:      data,
-		Signature: signature,
+		Connected:        true,
+		Adapter:          connectionId,
+		Data:             data,
+		Signature:        signature,
+		StudioConnection: false,
+		Muted:            true,
+		Deafened:         false,
 	}
 
-	// Refresh room
+	// Update the connections accordingly
 	roomConnectionsCache.Set(roomID, connections, 1)
 	roomConnectionsCache.Wait()
-	room.Mutex.Unlock()
 
-	return true
+	// Send a room data update to everyone
+	return SendRoomUpdateToAll(room, connections)
 }
 
+// UpdateMemberData updates the member data, specifically for studio-related states (only set the values you want to update, rest can be nil)
+func UpdateMemberData(roomID string, connectionId string, studioConnection *bool, muted *bool, deafened *bool) bool {
+	// Get the room the member is a part of
+	room, valid := GetRoom(roomID)
+	if !valid {
+		return false
+	}
+	room.Mutex.Lock() // Make sure the map is not modified at the same time
+	defer room.Mutex.Unlock()
+
+	// Update the connection
+	obj, valid := roomConnectionsCache.Get(roomID)
+	if !valid {
+		return false
+	}
+	connections := obj.(RoomConnections)
+	connection, exists := connections[connectionId]
+	if !exists {
+		return false
+	}
+
+	// Update the studio-related states
+	if studioConnection != nil {
+		connection.StudioConnection = *studioConnection
+	}
+	if muted != nil {
+		connection.Muted = *muted
+	}
+	if deafened != nil {
+		connection.Deafened = *deafened
+	}
+	connections[connectionId] = connection
+
+	// Update the connections accordingly
+	roomConnectionsCache.Set(roomID, connections, 1)
+	roomConnectionsCache.Wait()
+
+	// Send a room data update to everyone
+	return SendRoomUpdateToAll(room, connections)
+}
+
+// Remove a member from a room
 func RemoveMember(roomID string, connectionId string) bool {
 
+	// Get the room where the member should be removed
 	room, valid := GetRoom(roomID)
 	if !valid {
 		return false
 	}
 	room.Mutex.Lock()
+	defer room.Mutex.Unlock()
 
-	room, valid = GetRoom(roomID)
-	if !valid {
-		room.Mutex.Unlock()
-		return false
-	}
-
+	// Delete the member
 	obj, valid := roomConnectionsCache.Get(roomID)
 	if !valid {
-		room.Mutex.Unlock()
 		return false
 	}
 	connections := obj.(RoomConnections)
 	delete(connections, connectionId)
-
 	if len(connections) == 0 {
 		DeleteRoom(roomID)
 		return true
 	}
 
-	// Refresh room
+	// Update the connections map
 	roomConnectionsCache.Set(roomID, connections, 1)
 	roomConnectionsCache.Wait()
-	room.Mutex.Unlock()
 
-	return true
+	// Send a room update event to everyone
+	return SendRoomUpdateToAll(room, connections)
 }
 
 // Get all connections from a room
@@ -167,6 +204,47 @@ func SaveConnections(roomId string, connections RoomConnections) bool {
 	return true
 }
 
+// Get the event for a room data update (returns adapter, event and if there was an error)
+func GetRoomDataEvent(room Room, members RoomConnections) ([]string, pipes.Event, bool) {
+
+	// Get all the adapters and members
+	connections := make([]RoomConnection, len(members))
+	adapters := make([]string, len(members))
+	i := 0
+	for _, member := range members {
+		connections[i] = member
+		adapters[i] = member.Adapter
+		i++
+	}
+
+	// Return the event
+	return adapters, pipes.Event{
+		Name: "room_data",
+		Data: map[string]interface{}{
+			"start":   room.Start,
+			"members": connections,
+		},
+	}, true
+}
+
+// Send a room update event to all clients in a room
+func SendRoomUpdateToAll(room Room, connections RoomConnections) bool {
+
+	// Get the actual event and adapters
+	adapters, event, valid := GetRoomDataEvent(room, connections)
+	if !valid {
+		return false
+	}
+
+	// Send the room update event using pipes
+	err := SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
+		Channel: pipes.BroadcastChannel(adapters),
+		Local:   true,
+		Event:   event,
+	})
+	return err == nil
+}
+
 // Send an event to all members of a room.
 func SendEventToAll(room string, event pipes.Event) error {
 
@@ -186,4 +264,9 @@ func SendEventToAll(room string, event pipes.Event) error {
 	}
 
 	return nil
+}
+
+// Make a value a pointer (helper function)
+func Ptr[T any](val T) *T {
+	return &val
 }

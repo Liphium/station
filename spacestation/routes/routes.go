@@ -11,7 +11,6 @@ import (
 	"github.com/Liphium/station/pipeshandler"
 	pipeshroutes "github.com/Liphium/station/pipeshandler/routes"
 	"github.com/Liphium/station/spacestation/caching"
-	"github.com/Liphium/station/spacestation/handler"
 	"github.com/Liphium/station/spacestation/util"
 	"github.com/gofiber/fiber/v2"
 )
@@ -72,9 +71,6 @@ func setupPipesFiber(router fiber.Router) {
 
 			// Remove from room
 			caching.RemoveMember(client.Session, client.ID)
-
-			// Send leave event
-			handler.SendRoomData(client.Session)
 		},
 
 		// Validate token and create room

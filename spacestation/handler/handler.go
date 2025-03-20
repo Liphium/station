@@ -11,6 +11,8 @@ import (
 
 func Initialize() {
 	pipeshandler.CreateHandlerFor(caching.SSInstance, "setup", setup)
+	pipeshandler.CreateHandlerFor(caching.SSInstance, "set_muted", setMuted)
+	pipeshandler.CreateHandlerFor(caching.SSInstance, "set_deafened", setDeafened)
 
 	message_handlers.SetupHandler()
 	tabletop_handlers.SetupHandler()
