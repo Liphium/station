@@ -1,6 +1,7 @@
 package studio
 
 import (
+	"log"
 	"sync"
 
 	"github.com/pion/webrtc/v4"
@@ -17,25 +18,31 @@ func (lw *Lightwire) Init() {
 	lw.mutex.Lock()
 	defer lw.mutex.Unlock()
 
-	// Add a listener to make sure lightwire stops working when
+	// Set a higher buffer threshold (default is typically 0)
+	lw.channel.SetBufferedAmountLowThreshold(262144) // 256KB as an example
+
+	// Add a listener to monitor buffer status
 	lw.channel.OnBufferedAmountLow(func() {
 		logger.Println(lw.client.id, "lightwire buffer amount low")
 	})
 
 	// Send all packets from lightwire to everyone in Studio
 	lw.channel.OnMessage(func(msg webrtc.DataChannelMessage) {
-
 		// Close the connection in case a string was sent
 		if msg.IsString {
+			log.Println("string message, closing")
 			lw.Close()
 			return
 		}
 
-		// TODO: Create proper packet containing client id
+		// Add the client id to the packet
 		// Format: | id_length (8 bytes) | client_id (length of id_length) | voice_data (rest) |
+		clientIdAsBytes := []byte(lw.client.id)
+		newPacket := append([]uint8{uint8(len(clientIdAsBytes))}, clientIdAsBytes...)
+		newPacket = append(newPacket, msg.Data...)
 
 		// Forward the packet to all lightwire clients
-		lw.client.studio.ForwardLightwirePacket(msg.Data)
+		lw.client.studio.ForwardLightwirePacket(newPacket)
 	})
 }
 
