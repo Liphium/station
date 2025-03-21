@@ -31,6 +31,9 @@ func (lw *Lightwire) Init() {
 			return
 		}
 
+		// TODO: Create proper packet containing client id
+		// Format: | id_length (8 bytes) | client_id (length of id_length) | voice_data (rest) |
+
 		// Forward the packet to all lightwire clients
 		lw.client.studio.ForwardLightwirePacket(msg.Data)
 	})
