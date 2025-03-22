@@ -19,7 +19,7 @@ func (lw *Lightwire) Init() {
 	defer lw.mutex.Unlock()
 
 	// Set a higher buffer threshold (default is typically 0)
-	lw.channel.SetBufferedAmountLowThreshold(262144) // 256KB as an example
+	lw.channel.SetBufferedAmountLowThreshold(256 * 1024) // 256KB
 
 	// Add a listener to monitor buffer status
 	lw.channel.OnBufferedAmountLow(func() {
