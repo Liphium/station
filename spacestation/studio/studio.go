@@ -157,12 +157,12 @@ func (s *Studio) SendEventToAll(event pipes.Event) error {
 }
 
 // Forward a lightwire packet to all clients using it
-func (s *Studio) ForwardLightwirePacket(packet []byte) {
+func (s *Studio) ForwardLightwirePacket(sender string, packet []byte) {
 
 	// Send it to all clients with Lightwire
 	s.clients.Range(func(_, value any) bool {
 		client := value.(*Client)
-		if client.lightwire != nil {
+		if client.lightwire != nil && client.id != sender {
 			client.lightwire.SendPacket(packet)
 		}
 		return true

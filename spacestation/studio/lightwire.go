@@ -42,7 +42,7 @@ func (lw *Lightwire) Init() {
 		newPacket = append(newPacket, msg.Data...)
 
 		// Forward the packet to all lightwire clients
-		lw.client.studio.ForwardLightwirePacket(newPacket)
+		lw.client.studio.ForwardLightwirePacket(lw.client.id, newPacket)
 	})
 }
 
