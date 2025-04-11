@@ -39,9 +39,9 @@ func Start() {
 	}
 
 	// Set the port if available
-	if os.Getenv("SS_PORT") != "" {
+	if os.Getenv("SS_SFU_PORT") != "" {
 		var err error
-		Port, err = strconv.Atoi(os.Getenv("SS_PORT"))
+		Port, err = strconv.Atoi(os.Getenv("SS_SFU_PORT"))
 		if err != nil {
 			logger.Fatal("Invalid port number in SS_PORT environment variable")
 		}
