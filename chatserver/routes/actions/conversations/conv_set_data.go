@@ -21,7 +21,7 @@ func HandleSetData(c *fiber.Ctx, token conversations.ConversationToken, action c
 	// The version here makes sure that no other person is editing the conversation at the same time.
 	// The query will fail on updates at the same time, but since this is only a protection for the worst
 	// case scenario, we should be fine without a specific error here. It's gonna be fine.. hopefully :)
-	if err := database.DBConn.Where("id = ? AND version = ?", token.Conversation, action.Version).Updates(&conversations.Conversation{
+	if err := database.DBConn.Where("id = ? AND type != ? AND version = ?", token.Conversation, conversations.TypePrivateMessage, action.Version).Updates(&conversations.Conversation{
 		Version: action.Version + 1,
 		Data:    action.Data,
 	}).Error; err != nil {
