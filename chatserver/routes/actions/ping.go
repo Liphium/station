@@ -5,10 +5,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type pingAction struct {
-	Echo string `json:"echo"`
-}
-
 // Route: /actions/ping
 func pingTest(c *fiber.Ctx, action struct {
 	Echo string `json:"echo"`

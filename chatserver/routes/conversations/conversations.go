@@ -17,6 +17,7 @@ func Authorized(router fiber.Router) {
 	router.Post("/promote_token", action_helpers.CreateConversationEndpoint(conversation_actions.HandlePromoteToken, "conv_promote"))
 	router.Post("/demote_token", action_helpers.CreateConversationEndpoint(conversation_actions.HandleDemoteToken, "conv_demote"))
 	router.Post("/data", action_helpers.CreateConversationEndpoint(conversation_actions.HandleGetData, "conv_data"))
+	router.Post("/set_data", action_helpers.CreateConversationEndpoint(conversation_actions.HandleSetData, "conv_set_data"))
 	router.Post("/generate_token", action_helpers.CreateConversationEndpoint(conversation_actions.HandleGenerateToken, "conv_gen_token"))
 	router.Post("/kick_member", action_helpers.CreateConversationEndpoint(conversation_actions.HandleKick, "conv_kick"))
 	router.Post("/leave", action_helpers.CreateConversationEndpoint(conversation_actions.HandleLeave, "conv_leave"))

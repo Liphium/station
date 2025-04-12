@@ -57,6 +57,7 @@ func SetupConversationActions(router fiber.Router) {
 	router.Post("/conv_demote", conversationHandler(conversation_actions.HandleDemoteToken))
 	router.Post("/conv_read", conversationHandler(conversation_actions.HandleRead))
 	router.Post("/conv_data", conversationHandler(conversation_actions.HandleGetData))
+	router.Post("/conv_set_data", conversationHandler(conversation_actions.HandleSetData))
 	router.Post("/conv_gen_token", conversationHandler(conversation_actions.HandleGenerateToken))
 	router.Post("/conv_kick", conversationHandler(conversation_actions.HandleKick))
 	router.Post("/conv_leave", conversationHandler(conversation_actions.HandleLeave))

@@ -9,3 +9,4 @@ type Conversation struct {
 
 const TypePrivateMessage = 0
 const TypeGroup = 1
+const TypeSquare = 2 // :)
