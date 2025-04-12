@@ -8,11 +8,8 @@ import (
 	"github.com/pion/webrtc/v4"
 )
 
-// Action: st_join
-func joinStudio(c *pipeshandler.Context, offer struct {
-	Type string `json:"type"`
-	SDP  string `json:"sdp"`
-}) pipes.Event {
+// Action: st_ice
+func handleIceCandidate(c *pipeshandler.Context, candidate webrtc.ICECandidateInit) pipes.Event {
 
 	// Only return something in case Studio is enabled
 	if !studio.Enabled {
@@ -21,16 +18,15 @@ func joinStudio(c *pipeshandler.Context, offer struct {
 
 	// Create a new client connection for the studio
 	s := studio.GetStudio(c.Client.Session)
-	answer, err := s.NewClientConnection(c.Client.ID, webrtc.SessionDescription{
-		Type: webrtc.NewSDPType(offer.Type),
-		SDP:  offer.SDP,
-	})
-	if err != nil {
+	client, valid := s.GetClient(c.Client.ID)
+	if !valid {
+		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
+	}
+
+	// Send the ice candidate to the client
+	if err := client.HandleIceCandidate(candidate); err != nil {
 		return pipeshandler.ErrorResponse(c, localization.ErrorServer, err)
 	}
 
-	return pipeshandler.NormalResponse(c, map[string]interface{}{
-		"success": true,
-		"answer":  answer,
-	})
+	return pipeshandler.SuccessResponse(c)
 }

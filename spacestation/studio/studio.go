@@ -32,7 +32,7 @@ func (s *Studio) NewClientConnection(client string, offer webrtc.SessionDescript
 	peer, err := api.NewPeerConnection(webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			{
-				URLs: []string{"stun:" + DefaultStunServer},
+				URLs: []string{"stun:" + StunServer},
 			},
 		},
 	})
@@ -52,10 +52,12 @@ func (s *Studio) NewClientConnection(client string, offer webrtc.SessionDescript
 		}
 	}
 
-	// Add the required transceivers
-	if _, err := peer.AddTransceiverFromKind(webrtc.RTPCodecTypeVideo); err != nil {
-		return webrtc.SessionDescription{}, err
-	}
+	/*
+		// Add the required transceivers
+		if _, err := peer.AddTransceiverFromKind(webrtc.RTPCodecTypeVideo); err != nil {
+			return webrtc.SessionDescription{}, err
+		}
+	*/
 
 	// Add the new connection for the client
 	c := &Client{
@@ -82,11 +84,6 @@ func (s *Studio) NewClientConnection(client string, offer webrtc.SessionDescript
 	if err := peer.SetLocalDescription(answer); err != nil {
 		return webrtc.SessionDescription{}, err
 	}
-
-	// Wait for the ICE gathering to be completed
-	// TODO: Consider implementing trickle ice instead of this garbage
-	gatherComplete := webrtc.GatheringCompletePromise(peer)
-	<-gatherComplete
 
 	return *peer.LocalDescription(), nil
 }
@@ -118,11 +115,6 @@ func (s *Studio) HandleClientRenegotiation(client string, offer webrtc.SessionDe
 		return webrtc.SessionDescription{}, err
 	}
 
-	// Wait for the ICE gathering to be completed
-	// TODO: Consider implementing trickle ice instead of this garbage
-	gatherComplete := webrtc.GatheringCompletePromise(c.connection)
-	<-gatherComplete
-
 	return *c.connection.LocalDescription(), nil
 }
 
@@ -146,8 +138,8 @@ func (s *Studio) SendEventToAll(event pipes.Event) error {
 	// Get a list of all the adapters of the clients
 	adapters := []string{}
 	s.clients.Range(func(_, value any) bool {
-		member := value.(*Client)
-		adapters = append(adapters, member.id)
+		client := value.(*Client)
+		adapters = append(adapters, client.id)
 		return true
 	})
 
@@ -162,6 +154,19 @@ func (s *Studio) SendEventToAll(event pipes.Event) error {
 	}
 
 	return nil
+}
+
+// Forward a lightwire packet to all clients using it
+func (s *Studio) ForwardLightwirePacket(sender string, packet []byte) {
+
+	// Send it to all clients with Lightwire
+	s.clients.Range(func(_, value any) bool {
+		client := value.(*Client)
+		if client.lightwire != nil && client.id != sender {
+			client.lightwire.SendPacket(packet)
+		}
+		return true
+	})
 }
 
 // Get a track in the studio

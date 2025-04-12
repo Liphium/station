@@ -11,6 +11,11 @@ import (
 func unsubscribeToTrack(c *pipeshandler.Context, action struct {
 	Track string `json:"track"`
 }) pipes.Event {
+
+	// Only return something in case Studio is enabled
+	if !studio.Enabled {
+		return pipeshandler.ErrorResponse(c, localization.ErrorStudioNotSupported, nil)
+	}
 	s := studio.GetStudio(c.Client.Session)
 
 	// Get the client

@@ -19,11 +19,6 @@ func setup(c *pipeshandler.Context, action struct {
 		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequest, nil)
 	}
 
-	// Send the update to all members in the room
-	if !SendRoomData(c.Client.Session) {
-		return pipeshandler.ErrorResponse(c, localization.ErrorServer, nil)
-	}
-
 	// Have the guy join the table
 	msg := caching.JoinTable(c.Client.Session, c.Client.ID)
 	if msg != nil {

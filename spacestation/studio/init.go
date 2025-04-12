@@ -18,10 +18,11 @@ var logger *log.Logger = log.New(os.Stdout, "space-studio ", log.Flags())
 
 // Configuration
 var Enabled = false // Changed later in the setup
-var DefaultStunServer = "stun.l.google.com:19302"
+var StunServer = ""
+var TurnServer = ""
+var TurnUsername = ""
+var TurnPassword = ""
 var Port int = 0
-
-// TODO: Add turn server support
 
 func Start() {
 
@@ -39,9 +40,9 @@ func Start() {
 	}
 
 	// Set the port if available
-	if os.Getenv("SS_PORT") != "" {
+	if os.Getenv("SS_SFU_PORT") != "" {
 		var err error
-		Port, err = strconv.Atoi(os.Getenv("SS_PORT"))
+		Port, err = strconv.Atoi(os.Getenv("SS_SFU_PORT"))
 		if err != nil {
 			logger.Fatal("Invalid port number in SS_PORT environment variable")
 		}
@@ -52,9 +53,18 @@ func Start() {
 
 	// Get all the environment variables
 	if os.Getenv("SS_STUN") != "" {
-		DefaultStunServer = os.Getenv("SS_STUN")
+		StunServer = os.Getenv("SS_STUN")
 	} else {
-		logger.Println("WARNING: No STUN server provided, using Google's one instead. Read more at https://docs.liphium.com/setup/config-setup.")
+		logger.Println("ERROR: No STUN server provided, can't start Liphium like this. Read more at https://docs.liphium.com/setup/config-setup.")
+		Enabled = false
+		return
+	}
+	if os.Getenv("SS_TURN") != "" {
+		TurnServer = os.Getenv("SS_TURN")
+		TurnUsername = os.Getenv("SS_TURN_USERNAME")
+		TurnPassword = os.Getenv("SS_TURN_PASSWORD")
+	} else {
+		logger.Println("WARNING: No TURN server provided, this can cause connectivity issues for some people. Read more at https://docs.liphium.com/setup/config-setup.")
 	}
 
 	// Create a new setting engine

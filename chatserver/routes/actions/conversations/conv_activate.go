@@ -23,7 +23,7 @@ type ReturnableMember struct {
 }
 
 // Action: conv_activate
-func HandleTokenActivation(c *fiber.Ctx, token conversations.ConversationToken, data interface{}) error {
+func HandleTokenActivation(c *fiber.Ctx, token conversations.ConversationToken, _ interface{}) error {
 
 	if token.Activated {
 		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
@@ -58,6 +58,8 @@ func HandleTokenActivation(c *fiber.Ctx, token conversations.ConversationToken, 
 
 	return integration.ReturnJSON(c, fiber.Map{
 		"success": true,
+		"type":    conversation.Type,
+		"data":    conversation.Data,
 		"token":   token.Token,
 	})
 }

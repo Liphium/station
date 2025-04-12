@@ -4,6 +4,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Liphium/station/pipes"
+	"github.com/Liphium/station/spacestation/caching"
 	"github.com/Liphium/station/spacestation/util"
 	"github.com/pion/webrtc/v4"
 )
@@ -12,8 +14,9 @@ type Client struct {
 	id              string                 // read-only
 	studio          *Studio                // read-only
 	connection      *webrtc.PeerConnection // read-only
-	publishedTracks *sync.Map              // Track id (from client) -> *Track (read-only)
-	subscriptions   *sync.Map              // Track id (server) -> *Subscription (read-only)
+	lightwire       *Lightwire
+	publishedTracks *sync.Map // Track id (from client) -> *Track (read-only)
+	subscriptions   *sync.Map // Track id (server) -> *Subscription (read-only)
 }
 
 // Get a client's subscription to a specific track
@@ -28,9 +31,44 @@ func (c *Client) GetSubscription(track string) (*Subscription, bool) {
 // Initialize the handlers for the client's connection
 func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 
+	// Listen to ice candidates for trickle-ice
+	peer.OnICECandidate(func(candidate *webrtc.ICECandidate) {
+		if candidate == nil {
+			return
+		}
+
+		// Send it to the client through pipes
+		if err := c.SendEvent(pipes.Event{
+			Name: "st_ice",
+			Data: map[string]interface{}{
+				"candidate": candidate.ToJSON(),
+			},
+		}); err != nil {
+			logger.Println("couldn't send ice candidate to", c.id+":", err)
+		}
+	})
+
 	// Listen for any data channels
 	peer.OnDataChannel(func(dc *webrtc.DataChannel) {
-		logger.Println("new data channel", dc.Label())
+		if dc.Label() == "lightwire" {
+
+			// Make sure there isn't another lightwire connection already
+			if c.lightwire != nil {
+				logger.Println("error: lightwire already initialized")
+				return
+			}
+
+			// Create a new lightwire connection
+			c.lightwire = &Lightwire{
+				client:  c,
+				mutex:   &sync.Mutex{},
+				channel: dc,
+			}
+			c.lightwire.Init()
+		} else {
+			logger.Println("new data channel", dc.Label())
+			// TODO: Maybe close the connection in prod?
+		}
 	})
 
 	// Check if negotiation is needed
@@ -95,8 +133,19 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 
 	// Disconnect the client when the connection closes
 	peer.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
+		logger.Println(c.id+" connection state:", state)
+
+		// Update the studio connection status when connected
+		if state == webrtc.PeerConnectionStateConnected {
+			caching.UpdateMemberData(c.studio.room, c.id, caching.Ptr(true), nil, nil)
+		}
+
+		// Disconnect the client when the connection was closed
 		if state == webrtc.PeerConnectionStateClosed {
 			c.studio.Disconnect(c.id)
+
+			// Update the status of their studio connection accordingly (with default values)
+			caching.UpdateMemberData(c.studio.room, c.id, caching.Ptr(false), nil, nil)
 		}
 	})
 
@@ -110,6 +159,17 @@ func (c *Client) initializeConnection(peer *webrtc.PeerConnection) error {
 	}()
 
 	return nil
+}
+
+// Send an event to the client through pipes (websocket)
+func (c *Client) SendEvent(event pipes.Event) error {
+
+	// Send the event through pipes
+	return caching.SSNode.Pipe(pipes.ProtocolWS, pipes.Message{
+		Channel: pipes.BroadcastChannel([]string{c.id}),
+		Local:   true,
+		Event:   event,
+	})
 }
 
 // Handle the removing of a track the client is sending to studio
@@ -129,4 +189,14 @@ func (c *Client) handleRemoveTrack(t *Track) {
 			}
 		}
 	}
+}
+
+// Handle the close of the lightwire connection
+func (c *Client) handleLightwireClose() {
+	c.lightwire = nil
+}
+
+// Handle a new ice candidate from the client
+func (c *Client) HandleIceCandidate(candidate webrtc.ICECandidateInit) error {
+	return c.connection.AddICECandidate(candidate)
 }

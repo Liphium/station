@@ -11,6 +11,11 @@ import (
 // Action: st_reneg
 func renegotiate(c *pipeshandler.Context, offer webrtc.SessionDescription) pipes.Event {
 
+	// Only return something in case Studio is enabled
+	if !studio.Enabled {
+		return pipeshandler.ErrorResponse(c, localization.ErrorStudioNotSupported, nil)
+	}
+
 	// Create a new client connection for the studio
 	s := studio.GetStudio(c.Client.Session)
 	answer, err := s.HandleClientRenegotiation(c.Client.ID, offer)
