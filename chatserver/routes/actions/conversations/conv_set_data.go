@@ -3,6 +3,7 @@ package conversation_actions
 import (
 	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/database/conversations"
+	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -24,6 +25,13 @@ func HandleSetData(c *fiber.Ctx, token conversations.ConversationToken, action c
 		Version: action.Version + 1,
 		Data:    action.Data,
 	}).Error; err != nil {
+		return integration.FailedRequest(c, localization.ErrorServer, err)
+	}
+
+	// Send a system to everyone to tell them about the change of the data
+	if err := message_actions.SendSystemMessage(token.Conversation, message_actions.ConversationEdited, []string{
+		message_actions.AttachAccount(token.Data),
+	}); err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
