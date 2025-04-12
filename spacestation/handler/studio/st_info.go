@@ -16,9 +16,15 @@ func getStudioInfo(c *pipeshandler.Context, _ interface{}) pipes.Event {
 	}
 
 	// Return all important info regarding studio
-	return pipeshandler.NormalResponse(c, map[string]interface{}{
+	body := map[string]interface{}{
 		"success": true,
-		"stun":    studio.DefaultStunServer,
+		"stun":    studio.StunServer,
 		"port":    studio.Port,
-	})
+	}
+	if studio.TurnServer != "" {
+		body["turn"] = studio.TurnServer
+		body["turn_user"] = studio.TurnUsername
+		body["turn_pass"] = studio.TurnPassword
+	}
+	return pipeshandler.NormalResponse(c, body)
 }

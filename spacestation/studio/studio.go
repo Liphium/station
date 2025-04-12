@@ -32,7 +32,7 @@ func (s *Studio) NewClientConnection(client string, offer webrtc.SessionDescript
 	peer, err := api.NewPeerConnection(webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			{
-				URLs: []string{"stun:" + DefaultStunServer},
+				URLs: []string{"stun:" + StunServer},
 			},
 		},
 	})
