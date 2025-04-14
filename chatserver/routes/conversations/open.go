@@ -13,6 +13,7 @@ import (
 type OpenConversationRequest struct {
 	AccountData string   `json:"accountData"` // Account data of the user opening the conversation (encrypted)
 	Members     []string `json:"members"`
+	Type        uint     `json:"type"`
 	Data        string   `json:"data"` // Encrypted data
 }
 
@@ -52,10 +53,18 @@ func openConversation(c *fiber.Ctx) error {
 		}
 	}
 
-	// Determine the conversation type
-	convType := conversations.TypePrivateMessage
-	if len(req.Members) > 1 {
+	// Check if the conversation type is valid
+	if len(req.Members) > 1 && req.Type == conversations.TypePrivateMessage {
+		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
+	}
+	convType := conversations.TypeGroup
+	switch req.Type {
+	case conversations.TypePrivateMessage:
+		convType = conversations.TypePrivateMessage
+	case conversations.TypeGroup:
 		convType = conversations.TypeGroup
+	case conversations.TypeSquare:
+		convType = conversations.TypeSquare
 	}
 
 	// Generate the address for the conversation
