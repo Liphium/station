@@ -18,7 +18,7 @@ type OpenConversationRequest struct {
 }
 
 func (r *OpenConversationRequest) Validate() bool {
-	return len(r.Members) > 0 && len(r.Data) > 0 && len(r.Data) <= util.MaxConversationDataLength
+	return len(r.Data) > 0 && len(r.Data) <= util.MaxConversationDataLength
 }
 
 type returnableToken struct {
