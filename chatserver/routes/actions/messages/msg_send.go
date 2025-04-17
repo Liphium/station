@@ -16,7 +16,7 @@ import (
 func HandleSend(c *fiber.Ctx, token database.ConversationToken, action struct {
 	Token string `json:"token"` // Timestamp token
 	Data  string `json:"data"`
-	Extra string `json:"topic"` // Appended to the conversation id, for topics in Squares
+	Extra string `json:"extra"` // Appended to the conversation id, for topics in Squares
 }) error {
 
 	// Validate request
