@@ -2,18 +2,20 @@ package message_actions
 
 import (
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
 // Action: msg_list_after
-func HandleListAfter(c *fiber.Ctx, token conversations.ConversationToken, after uint64) error {
+func HandleListAfter(c *fiber.Ctx, token database.ConversationToken, action struct {
+	After int64  `json:"after"`
+	Extra string `json:"extra"` // Extra identifier for squares
+}) error {
 
 	// Get the messages
-	var messages []conversations.Message
-	if err := database.DBConn.Order("creation ASC").Where("conversation = ? AND creation > ?", token.Conversation, after).Limit(12).Find(&messages).Error; err != nil {
+	var messages []database.Message
+	if err := database.DBConn.Order("creation ASC").Where("conversation = ? AND creation > ?", database.WithExtra(token.Conversation, action.Extra), action.After).Limit(12).Find(&messages).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 

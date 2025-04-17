@@ -5,39 +5,38 @@ import (
 	"slices"
 
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 )
 
 // This does database requests and stuff
-func ValidateToken(id string, token string) (conversations.ConversationToken, error) {
+func ValidateToken(id string, token string) (database.ConversationToken, error) {
 
-	var conversationToken conversations.ConversationToken
+	var conversationToken database.ConversationToken
 	if err := database.DBConn.Where("id = ?", id).Take(&conversationToken).Error; err != nil {
-		return conversations.ConversationToken{}, err
+		return database.ConversationToken{}, err
 	}
 
 	if conversationToken.Token != token {
-		return conversations.ConversationToken{}, errors.New("token is invalid")
+		return database.ConversationToken{}, errors.New("token is invalid")
 	}
 
 	return conversationToken, nil
 }
 
 // Returns: conversationTokens, missingTokens, conversationIds, err
-func ValidateTokens(tokens *[]conversations.SentConversationToken) ([]conversations.ConversationToken, []string, []string, error) {
-	foundTokens := []conversations.ConversationToken{}
+func ValidateTokens(tokens *[]database.SentConversationToken) ([]database.ConversationToken, []string, []string, error) {
+	foundTokens := []database.ConversationToken{}
 
 	// Convert all tokens to data types they can be used with
 	tokenIds := make([]string, len(*tokens))
-	tokensMap := map[string]conversations.SentConversationToken{}
+	tokensMap := map[string]database.SentConversationToken{}
 	for i, token := range *tokens {
 		tokensMap[token.ID] = token
 		tokenIds[i] = token.ID
 	}
 
 	// Get tokens from database
-	var conversationTokens []conversations.ConversationToken
-	if err := database.DBConn.Model(&conversations.ConversationToken{}).Where("id IN ?", tokenIds).Find(&conversationTokens).Error; err != nil {
+	var conversationTokens []database.ConversationToken
+	if err := database.DBConn.Model(&database.ConversationToken{}).Where("id IN ?", tokenIds).Find(&conversationTokens).Error; err != nil {
 		return nil, nil, nil, err
 	}
 
@@ -48,7 +47,7 @@ func ValidateTokens(tokens *[]conversations.SentConversationToken) ([]conversati
 		if token.Token == tokensMap[token.ID].Token {
 
 			// Add the token to the found tokens list
-			tokensMap[token.ID] = conversations.SentConversationToken{
+			tokensMap[token.ID] = database.SentConversationToken{
 				ID:    "-",
 				Token: "-",
 			}
@@ -66,11 +65,11 @@ func ValidateTokens(tokens *[]conversations.SentConversationToken) ([]conversati
 }
 
 // Get a conversation token
-func GetToken(id string) (conversations.ConversationToken, error) {
+func GetToken(id string) (database.ConversationToken, error) {
 
-	var conversationToken conversations.ConversationToken
+	var conversationToken database.ConversationToken
 	if err := database.DBConn.Where("id = ?", id).Take(&conversationToken).Error; err != nil {
-		return conversations.ConversationToken{}, err
+		return database.ConversationToken{}, err
 	}
 
 	return conversationToken, nil

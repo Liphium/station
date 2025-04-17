@@ -5,8 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/Liphium/station/chatserver/database/conversations"
-	"github.com/Liphium/station/chatserver/database/fetching"
 	"github.com/Liphium/station/chatserver/util"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -42,10 +40,10 @@ func Connect() {
 	}
 
 	// Migrate the schema
-	db.AutoMigrate(&conversations.Conversation{})
-	db.AutoMigrate(&conversations.ConversationToken{})
-	db.AutoMigrate(&conversations.Message{})
-	db.AutoMigrate(&fetching.Status{})
+	db.AutoMigrate(&Conversation{})
+	db.AutoMigrate(&ConversationToken{})
+	db.AutoMigrate(&Message{})
+	db.AutoMigrate(&Status{})
 
 	// Assign the database to the global variable
 	DBConn = db

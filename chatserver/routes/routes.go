@@ -7,7 +7,6 @@ import (
 
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/fetching"
 	remote_action_routes "github.com/Liphium/station/chatserver/routes/actions"
 	conversation_routes "github.com/Liphium/station/chatserver/routes/conversations"
 	"github.com/Liphium/station/chatserver/routes/ping"
@@ -237,11 +236,11 @@ func initializeUser(client *pipeshandler.Client) bool {
 	account := client.ID
 
 	// Check if the account is already in the database
-	var status fetching.Status
-	if database.DBConn.Where(&fetching.Status{ID: account}).Take(&status).Error != nil {
+	var status database.Status
+	if database.DBConn.Where(&database.Status{ID: account}).Take(&status).Error != nil {
 
 		// Create a new status
-		if database.DBConn.Create(&fetching.Status{
+		if database.DBConn.Create(&database.Status{
 			ID:   account,
 			Data: "", // Status is disabled
 			Node: integration.Nodes[integration.IdentifierChatNode].NodeId,
@@ -251,7 +250,7 @@ func initializeUser(client *pipeshandler.Client) bool {
 	} else {
 
 		// Update the status
-		database.DBConn.Model(&fetching.Status{}).Where("id = ?", account).Update("node", util.NodeTo64(caching.CSNode.ID))
+		database.DBConn.Model(&database.Status{}).Where("id = ?", account).Update("node", util.NodeTo64(caching.CSNode.ID))
 	}
 
 	// Send current status

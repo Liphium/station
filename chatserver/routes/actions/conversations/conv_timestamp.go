@@ -3,7 +3,7 @@ package conversation_actions
 import (
 	"time"
 
-	"github.com/Liphium/station/chatserver/database/conversations"
+	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
@@ -11,7 +11,7 @@ import (
 )
 
 // Action: conv_timestamp
-func HandleTimestamp(c *fiber.Ctx, token conversations.ConversationToken, data interface{}) error {
+func HandleTimestamp(c *fiber.Ctx, token database.ConversationToken, data interface{}) error {
 
 	// Okay, I will put an explanation here, so we all understand why this is here.
 	// Time is hard and every single fucking time I boot into my Windows after coming from my

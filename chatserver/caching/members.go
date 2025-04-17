@@ -2,7 +2,6 @@ package caching
 
 import (
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/pipes"
 )
 
@@ -16,8 +15,8 @@ type StoredMember struct {
 // Does database requests and stuff
 func LoadMembers(id string) ([]StoredMember, error) {
 
-	var members []conversations.ConversationToken
-	if err := database.DBConn.Model(&conversations.ConversationToken{}).Where("conversation = ?", id).Find(&members).Error; err != nil {
+	var members []database.ConversationToken
+	if err := database.DBConn.Model(&database.ConversationToken{}).Where("conversation = ?", id).Find(&members).Error; err != nil {
 		return []StoredMember{}, err
 	}
 
@@ -44,8 +43,8 @@ func LoadMembersArray(ids []string) (map[string][]StoredMember, error) {
 	// Check cache
 	returnMap := make(map[string][]StoredMember, len(ids)) // Conversation ID -> Members
 
-	var tokens []conversations.ConversationToken
-	if err := database.DBConn.Model(&conversations.ConversationToken{}).Where("conversation IN ?", ids).Find(&tokens).Error; err != nil {
+	var tokens []database.ConversationToken
+	if err := database.DBConn.Model(&database.ConversationToken{}).Where("conversation IN ?", ids).Find(&tokens).Error; err != nil {
 		return nil, err
 	}
 	for _, token := range tokens {

@@ -2,7 +2,7 @@ package conversation_actions
 
 import (
 	"github.com/Liphium/station/chatserver/caching"
-	"github.com/Liphium/station/chatserver/database/conversations"
+	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/handler/account"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
@@ -10,7 +10,7 @@ import (
 )
 
 // Action: conv_st_res
-func HandleStatusResponse(c *fiber.Ctx, token conversations.ConversationToken, action struct {
+func HandleStatusResponse(c *fiber.Ctx, token database.ConversationToken, action struct {
 	Status string `json:"status"`
 	Data   string `json:"data"`
 }) error {

@@ -2,17 +2,16 @@ package message_actions
 
 import (
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
 // Action: msg_delete
-func HandleDelete(c *fiber.Ctx, token conversations.ConversationToken, messageId string) error {
+func HandleDelete(c *fiber.Ctx, token database.ConversationToken, messageId string) error {
 
 	// Get the message
-	var message conversations.Message
+	var message database.Message
 	if err := database.DBConn.Where("id = ?", messageId).Take(&message).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorMessageAlreadyDeleted, err)
 	}
@@ -23,7 +22,7 @@ func HandleDelete(c *fiber.Ctx, token conversations.ConversationToken, messageId
 	}
 
 	// Delete the message in the database
-	if err := database.DBConn.Where("id = ?", messageId).Delete(&conversations.Message{}).Error; err != nil {
+	if err := database.DBConn.Where("id = ?", messageId).Delete(&database.Message{}).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 

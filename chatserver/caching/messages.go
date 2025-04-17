@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
 )
@@ -41,12 +40,11 @@ func AddSyncToQueue(data SyncData) error {
 	mutexLock.Unlock()
 
 	// Add something to the channel (will block until space is available / threads are available)
-	currentChan := bufferedChannel
-	currentChan <- struct{}{}
+	bufferedChannel <- struct{}{}
 
 	// Make space for a new thread after work is finished
 	defer func() {
-		<-currentChan
+		<-bufferedChannel
 	}()
 
 	// Sync all messages until there are none left
@@ -54,8 +52,8 @@ func AddSyncToQueue(data SyncData) error {
 	for !finished {
 
 		// Get the messages
-		var messages []conversations.Message
-		if err := database.DBConn.Where("creation > ? AND conversation = ?", data.Since, data.Conversation).Order("creation ASC").Limit(30).Find(&messages).Error; err != nil {
+		var messages []database.Message
+		if err := database.DBConn.Where("creation > ? AND conversation like ?", data.Since, data.Conversation+"%").Order("creation ASC").Limit(30).Find(&messages).Error; err != nil {
 			return err
 		}
 

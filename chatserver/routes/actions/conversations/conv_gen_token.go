@@ -5,7 +5,6 @@ import (
 
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
 	"github.com/Liphium/station/chatserver/util"
@@ -15,15 +14,15 @@ import (
 )
 
 // Action: conv_gen_token
-func HandleGenerateToken(c *fiber.Ctx, token conversations.ConversationToken, data string) error {
+func HandleGenerateToken(c *fiber.Ctx, token database.ConversationToken, data string) error {
 
 	// Check if conversation is group
-	var conversation conversations.Conversation
+	var conversation database.Conversation
 	if err := database.DBConn.Where("id = ?", token.Conversation).Find(&conversation).Error; err != nil {
 		return integration.InvalidRequest(c, fmt.Sprintf("couldn't find conversation in database: %s", err.Error()))
 	}
 
-	if conversation.Type != conversations.TypeGroup {
+	if conversation.Type == database.ConvTypePrivateMessage {
 		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
@@ -43,12 +42,12 @@ func HandleGenerateToken(c *fiber.Ctx, token conversations.ConversationToken, da
 	}
 
 	// Generate a new token
-	generated := conversations.ConversationToken{
+	generated := database.ConversationToken{
 		ID:           util.GenerateToken(util.ConversationTokenIDLength) + "@" + integration.BasePath,
 		Token:        util.GenerateToken(util.ConversationTokenLength),
 		Activated:    false,
 		Conversation: token.Conversation,
-		Rank:         conversations.RankUser,
+		Rank:         database.RankUser,
 		Data:         data,
 	}
 

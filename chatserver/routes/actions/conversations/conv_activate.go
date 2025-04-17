@@ -2,7 +2,6 @@ package conversation_actions
 
 import (
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
 	"github.com/Liphium/station/chatserver/util"
@@ -23,7 +22,7 @@ type ReturnableMember struct {
 }
 
 // Action: conv_activate
-func HandleTokenActivation(c *fiber.Ctx, token conversations.ConversationToken, _ interface{}) error {
+func HandleTokenActivation(c *fiber.Ctx, token database.ConversationToken, _ interface{}) error {
 
 	if token.Activated {
 		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
@@ -38,11 +37,11 @@ func HandleTokenActivation(c *fiber.Ctx, token conversations.ConversationToken, 
 	}
 
 	// Send a system message in case of a group
-	var conversation conversations.Conversation
+	var conversation database.Conversation
 	if err := database.DBConn.Where("id = ?", token.Conversation).Take(&conversation).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
-	if conversation.Type == conversations.TypeGroup {
+	if conversation.Type != database.ConvTypePrivateMessage {
 
 		// Increment the version by one to save the modification
 		if err := action_helpers.IncrementConversationVersion(conversation); err != nil {

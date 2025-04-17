@@ -7,7 +7,6 @@ import (
 
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
@@ -17,12 +16,12 @@ import (
 
 // A generic type for a request to any conversation remote action
 type ConversationActionRequest[T any] struct {
-	Token conversations.SentConversationToken `json:"token"`
-	Data  T                                   `json:"data"`
+	Token database.SentConversationToken `json:"token"`
+	Data  T                              `json:"data"`
 }
 
 // A generic type for any action handler function
-type ConversationActionHandlerFunc[T any] func(*fiber.Ctx, conversations.ConversationToken, T) error
+type ConversationActionHandlerFunc[T any] func(*fiber.Ctx, database.ConversationToken, T) error
 
 // A generic type for any action handler function
 type ActionHandlerFunc[T any] func(*fiber.Ctx, T) error
@@ -37,13 +36,13 @@ type RemoteActionRequest[T any] struct {
 
 // This deletes all data related to a conversation
 func DeleteConversation(id string) error {
-	if err := database.DBConn.Where("conversation = ?", id).Delete(&conversations.Message{}).Error; err != nil {
+	if err := database.DBConn.Where("conversation like ?", id+"%").Delete(&database.Message{}).Error; err != nil {
 		return err
 	}
-	if err := database.DBConn.Where("conversation = ?", id).Delete(&conversations.ConversationToken{}).Error; err != nil {
+	if err := database.DBConn.Where("conversation = ?", id).Delete(&database.ConversationToken{}).Error; err != nil {
 		return err
 	}
-	if err := database.DBConn.Where("id = ?", id).Delete(&conversations.Conversation{}).Error; err != nil {
+	if err := database.DBConn.Where("id = ?", id).Delete(&database.Conversation{}).Error; err != nil {
 		return err
 	}
 	return nil
@@ -51,14 +50,14 @@ func DeleteConversation(id string) error {
 
 // This increments the version of the conversation by one in a transaction.
 // Will also save the conversation.
-func IncrementConversationVersion(conversation conversations.Conversation) error {
+func IncrementConversationVersion(conversation database.Conversation) error {
 
 	// Increment the version in a transaction
 	err := database.DBConn.Transaction(func(tx *gorm.DB) error {
 
 		// Get the current version (in case it has changed)
 		var currentVersion int64
-		if err := tx.Model(&conversations.Conversation{}).Select("version").Where("id = ?", conversation.ID).Take(&currentVersion).Error; err != nil {
+		if err := tx.Model(&database.Conversation{}).Select("version").Where("id = ?", conversation.ID).Take(&currentVersion).Error; err != nil {
 			database.DBConn.Rollback()
 			return err
 		}
@@ -134,7 +133,7 @@ func CreateConversationEndpoint[T any](handler ConversationActionHandlerFunc[T],
 }
 
 // Send a conversation action using a conversation token
-func SendConversationAction(action string, token conversations.SentConversationToken, data interface{}) (map[string]interface{}, error) {
+func SendConversationAction(action string, token database.SentConversationToken, data interface{}) (map[string]interface{}, error) {
 
 	// Get the address of the chat node
 	obj, valid := TokenMap.Load(token.ID)
@@ -220,13 +219,13 @@ func negotiate(server string, id string, token string) error {
 	}
 
 	// Store the data from the request in the token map
-	StoreToken(conversations.SentConversationToken{ID: id, Token: token}, answer["node"].(string))
+	StoreToken(database.SentConversationToken{ID: id, Token: token}, answer["node"].(string))
 
 	return nil
 }
 
 // Store any conversation token in the token map (make sure it can be reached from outside)
-func StoreToken(token conversations.SentConversationToken, node string) {
+func StoreToken(token database.SentConversationToken, node string) {
 	TokenMap.Store(token.ID, &TokenData{
 		Token: token.Token,
 		Node:  node,

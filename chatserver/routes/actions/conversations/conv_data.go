@@ -5,7 +5,6 @@ import (
 
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -19,10 +18,10 @@ type returnableMemberToken struct {
 }
 
 // Action: conv_data
-func HandleGetData(c *fiber.Ctx, token conversations.ConversationToken, _ interface{}) error {
+func HandleGetData(c *fiber.Ctx, token database.ConversationToken, _ interface{}) error {
 
 	// Get the conversation from the database
-	var conversation conversations.Conversation
+	var conversation database.Conversation
 	if err := database.DBConn.Where("id = ?", token.Conversation).Take(&conversation).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}

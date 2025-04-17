@@ -5,7 +5,6 @@ import (
 
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
@@ -13,16 +12,15 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type MessageSendAction struct {
+// Action: msg_send
+func HandleSend(c *fiber.Ctx, token database.ConversationToken, action struct {
 	Token string `json:"token"` // Timestamp token
 	Data  string `json:"data"`
-}
-
-// Action: msg_send
-func HandleSend(c *fiber.Ctx, token conversations.ConversationToken, action MessageSendAction) error {
+	Extra string `json:"topic"` // Appended to the conversation id, for topics in Squares
+}) error {
 
 	// Validate request
-	if len(action.Data) == 0 {
+	if len(action.Data) == 0 || !database.ValidateExtra(action.Extra) {
 		return integration.InvalidRequest(c, "request is invalid")
 	}
 
@@ -38,13 +36,13 @@ func HandleSend(c *fiber.Ctx, token conversations.ConversationToken, action Mess
 	}
 
 	// Check if message is too big
-	if conversations.CheckSize(action.Data) {
+	if database.CheckSize(action.Data) {
 		return integration.FailedRequest(c, localization.ErrorMessageTooLong, nil)
 	}
 
 	// Create the message and save to db
-	message := conversations.Message{
-		Conversation: token.Conversation,
+	message := database.Message{
+		Conversation: token.Conversation + "_" + action.Extra,
 		Data:         action.Data,
 		Sender:       token.ID,
 		Creation:     timestamp,
@@ -55,7 +53,7 @@ func HandleSend(c *fiber.Ctx, token conversations.ConversationToken, action Mess
 	}
 
 	// Update the read state to prevent the message sender from being notified about the message
-	if err := database.DBConn.Model(&conversations.ConversationToken{}).Where("conversation = ? AND id = ?", token.Conversation, token.ID).Update("last_read", time.Now().UnixMilli()+1).Error; err != nil {
+	if err := database.DBConn.Model(&database.ConversationToken{}).Where("conversation = ? AND id = ?", token.Conversation, token.ID).Update("last_read", time.Now().UnixMilli()+1).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
@@ -77,7 +75,7 @@ func HandleSend(c *fiber.Ctx, token conversations.ConversationToken, action Mess
 	})
 }
 
-func MessageEvent(message conversations.Message) pipes.Event {
+func MessageEvent(message database.Message) pipes.Event {
 	return pipes.Event{
 		Name: "conv_msg",
 		Data: map[string]interface{}{

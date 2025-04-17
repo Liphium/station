@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Liphium/station/chatserver/caching"
-	"github.com/Liphium/station/chatserver/database/conversations"
+	"github.com/Liphium/station/chatserver/database"
 	"github.com/Liphium/station/chatserver/handler/account"
 	conversation_actions "github.com/Liphium/station/chatserver/routes/actions/conversations"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
@@ -27,15 +27,15 @@ type conversationSubscribeResponse struct {
 
 // Action: conv_sub
 func subscribe(c *pipeshandler.Context, action struct {
-	Tokens   []conversations.SentConversationToken `json:"tokens"`
-	Status   string                                `json:"status"`
-	SyncDate int64                                 `json:"sync"` // Time of last sent message for message sync
-	Data     string                                `json:"data"`
+	Tokens   []database.SentConversationToken `json:"tokens"`
+	Status   string                           `json:"status"`
+	SyncDate int64                            `json:"sync"` // Time of last sent message for message sync
+	Data     string                           `json:"data"`
 }) pipes.Event {
 
 	// Filter out all the remote tokens and register adapters
-	localTokens := []conversations.SentConversationToken{}
-	remoteTokens := map[string][]conversations.SentConversationToken{}
+	localTokens := []database.SentConversationToken{}
+	remoteTokens := map[string][]database.SentConversationToken{}
 	for _, token := range action.Tokens {
 
 		// Register adapter for the subscription
@@ -69,7 +69,7 @@ func subscribe(c *pipeshandler.Context, action struct {
 
 			// Add the token to the remote tokens for that instance
 			if remoteTokens[args[1]] == nil {
-				remoteTokens[args[1]] = []conversations.SentConversationToken{token}
+				remoteTokens[args[1]] = []database.SentConversationToken{token}
 			} else {
 				remoteTokens[args[1]] = append(remoteTokens[args[1]], token)
 			}
@@ -121,7 +121,7 @@ func subscribe(c *pipeshandler.Context, action struct {
 
 				// Make sure remote nodes can't delete tokens they don't have access to (important security fix)
 				res.Answer.Missing = slices.DeleteFunc(res.Answer.Missing, func(element string) bool {
-					return !slices.ContainsFunc(tokens, func(token conversations.SentConversationToken) bool {
+					return !slices.ContainsFunc(tokens, func(token database.SentConversationToken) bool {
 						return token.ID == element
 					})
 				})

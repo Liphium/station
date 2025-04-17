@@ -5,7 +5,6 @@ import (
 
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
 	"github.com/Liphium/station/main/integration"
@@ -14,19 +13,18 @@ import (
 )
 
 // Action: conv_promote
-func HandlePromoteToken(c *fiber.Ctx, token conversations.ConversationToken, user string) error {
+func HandlePromoteToken(c *fiber.Ctx, token database.ConversationToken, user string) error {
 
-	// Check if conversation is group
-	var conversation conversations.Conversation
+	// Make sure the conversation is not a private message
+	var conversation database.Conversation
 	if err := database.DBConn.Where("id = ?", token.Conversation).Find(&conversation).Error; err != nil {
 		return integration.InvalidRequest(c, fmt.Sprintf("couldn't find conversation in db: %s", err.Error()))
 	}
-
-	if conversation.Type != conversations.TypeGroup {
+	if conversation.Type == database.ConvTypePrivateMessage {
 		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
-	if token.Rank == conversations.RankUser {
+	if token.Rank == database.RankUser {
 		return integration.InvalidRequest(c, "no permission")
 	}
 
@@ -52,7 +50,7 @@ func HandlePromoteToken(c *fiber.Ctx, token conversations.ConversationToken, use
 	}
 
 	// Update the rank in the database
-	if err := database.DBConn.Model(&conversations.ConversationToken{}).Where("id = ? AND conversation = ?", userToken.ID, userToken.Conversation).Update("rank", rankToPromote).Error; err != nil {
+	if err := database.DBConn.Model(&database.ConversationToken{}).Where("id = ? AND conversation = ?", userToken.ID, userToken.Conversation).Update("rank", rankToPromote).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 

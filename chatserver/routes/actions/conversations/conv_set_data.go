@@ -2,7 +2,6 @@ package conversation_actions
 
 import (
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
@@ -15,13 +14,13 @@ type changeDataRequest struct {
 }
 
 // Action: conv_set_data
-func HandleSetData(c *fiber.Ctx, token conversations.ConversationToken, action changeDataRequest) error {
+func HandleSetData(c *fiber.Ctx, token database.ConversationToken, action changeDataRequest) error {
 
 	// Edit the conversation
 	// The version here makes sure that no other person is editing the conversation at the same time.
 	// The query will fail on updates at the same time, but since this is only a protection for the worst
 	// case scenario, we should be fine without a specific error here. It's gonna be fine.. hopefully :)
-	if err := database.DBConn.Where("id = ? AND type != ? AND version = ?", token.Conversation, conversations.TypePrivateMessage, action.Version).Updates(&conversations.Conversation{
+	if err := database.DBConn.Where("id = ? AND type != ? AND version = ?", token.Conversation, database.ConvTypePrivateMessage, action.Version).Updates(&database.Conversation{
 		Version: action.Version + 1,
 		Data:    action.Data,
 	}).Error; err != nil {

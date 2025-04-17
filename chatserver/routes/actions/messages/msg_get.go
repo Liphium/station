@@ -2,17 +2,16 @@ package message_actions
 
 import (
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
 
 // Action: msg_get
-func HandleGet(c *fiber.Ctx, token conversations.ConversationToken, messageId string) error {
+func HandleGet(c *fiber.Ctx, token database.ConversationToken, messageId string) error {
 
 	// Get message
-	var message conversations.Message
+	var message database.Message
 	if err := database.DBConn.Where("id = ? AND conversation = ?", messageId, token.Conversation).Take(&message).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}

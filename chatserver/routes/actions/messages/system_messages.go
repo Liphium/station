@@ -5,7 +5,6 @@ import (
 
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/bytedance/sonic"
 )
 
@@ -36,7 +35,7 @@ func SendSystemMessage(conversation string, content string, attachments []string
 		return err
 	}
 
-	message := conversations.Message{
+	message := database.Message{
 		Conversation: conversation,
 		Data:         contentJson,
 		Sender:       systemSender,
@@ -73,7 +72,7 @@ func SendNotStoredSystemMessage(conversation string, content string, attachments
 	}
 
 	// Create the message
-	message := conversations.Message{
+	message := database.Message{
 		Conversation: conversation,
 		Data:         contentJson,
 		Sender:       systemSender,

@@ -6,7 +6,6 @@ import (
 
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/handler/account"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	"github.com/Liphium/station/chatserver/util"
@@ -17,11 +16,11 @@ import (
 )
 
 type RemoteSubscribeAction struct {
-	Tokens   []conversations.SentConversationToken `json:"tokens"`
-	Status   string                                `json:"status"`
-	Data     string                                `json:"data"`
-	SyncDate int64                                 `json:"sync"` // Time of last sent message for message sync
-	Node     string                                `json:"node"`
+	Tokens   []database.SentConversationToken `json:"tokens"`
+	Status   string                           `json:"status"`
+	Data     string                           `json:"data"`
+	SyncDate int64                            `json:"sync"` // Time of last sent message for message sync
+	Node     string                           `json:"node"`
 }
 
 // Action: conv_sub
@@ -143,20 +142,20 @@ type ConversationInfo struct {
 }
 
 // Returns an array of conversation info
-func GetConversationInfo(tokens []conversations.ConversationToken) (map[string]ConversationInfo, error) {
+func GetConversationInfo(tokens []database.ConversationToken) (map[string]ConversationInfo, error) {
 	convInfo := make(map[string]ConversationInfo, len(tokens))
 	for _, token := range tokens {
 
 		// Get the notification count of the current conversation
 		var notificationCount int64
-		if err := database.DBConn.Model(&conversations.Message{}).Where("conversation = ? AND creation > ?", token.Conversation, token.LastRead).
+		if err := database.DBConn.Model(&database.Message{}).Where("conversation = ? AND creation > ?", token.Conversation, token.LastRead).
 			Count(&notificationCount).Error; err != nil {
 			return nil, err
 		}
 
 		// Get the version of the conversation
 		var version int64
-		if err := database.DBConn.Model(&conversations.Conversation{}).Select("version").Where("id = ?", token.Conversation).Take(&version).Error; err != nil {
+		if err := database.DBConn.Model(&database.Conversation{}).Select("version").Where("id = ?", token.Conversation).Take(&version).Error; err != nil {
 			return nil, err
 		}
 

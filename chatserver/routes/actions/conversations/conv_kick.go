@@ -5,7 +5,6 @@ import (
 
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
 	"github.com/Liphium/station/main/integration"
@@ -20,7 +19,7 @@ type KickMemberAction struct {
 }
 
 // Action: conv_kick
-func HandleKick(c *fiber.Ctx, token conversations.ConversationToken, target string) error {
+func HandleKick(c *fiber.Ctx, token database.ConversationToken, target string) error {
 
 	// Make sure you can't kick yourself
 	if token.ID == target {
@@ -33,13 +32,13 @@ func HandleKick(c *fiber.Ctx, token conversations.ConversationToken, target stri
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	// Check if conversation is group
-	var conversation conversations.Conversation
+	// Make sure the conversation isn't a private message
+	var conversation database.Conversation
 	if err := database.DBConn.Where("id = ?", token.Conversation).Find(&conversation).Error; err != nil {
 		return integration.InvalidRequest(c, fmt.Sprintf("couldn't find conversation in database: %s", err.Error()))
 	}
 
-	if conversation.Type != conversations.TypeGroup {
+	if conversation.Type == database.ConvTypePrivateMessage {
 		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 

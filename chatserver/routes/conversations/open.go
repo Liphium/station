@@ -2,7 +2,6 @@ package conversation_routes
 
 import (
 	"github.com/Liphium/station/chatserver/database"
-	"github.com/Liphium/station/chatserver/database/conversations"
 	"github.com/Liphium/station/chatserver/util"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
@@ -54,21 +53,21 @@ func openConversation(c *fiber.Ctx) error {
 	}
 
 	// Check if the conversation type is valid
-	if len(req.Members) > 1 && req.Type == conversations.TypePrivateMessage {
+	if len(req.Members) > 1 && req.Type == database.ConvTypePrivateMessage {
 		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
-	convType := conversations.TypeGroup
+	convType := database.ConvTypeGroup
 	switch req.Type {
-	case conversations.TypePrivateMessage:
-		convType = conversations.TypePrivateMessage
-	case conversations.TypeGroup:
-		convType = conversations.TypeGroup
-	case conversations.TypeSquare:
-		convType = conversations.TypeSquare
+	case database.ConvTypePrivateMessage:
+		convType = database.ConvTypePrivateMessage
+	case database.ConvTypeGroup:
+		convType = database.ConvTypeGroup
+	case database.ConvTypeSquare:
+		convType = database.ConvTypeSquare
 	}
 
 	// Generate the address for the conversation
-	conv := conversations.Conversation{
+	conv := database.Conversation{
 		ID:      util.GenerateToken(util.ConversationIDLength) + "@" + integration.Domain,
 		Type:    uint(convType),
 		Version: 1,
@@ -85,12 +84,12 @@ func openConversation(c *fiber.Ctx) error {
 
 		convToken := util.GenerateToken(util.ConversationTokenLength)
 
-		tk := conversations.ConversationToken{
+		tk := database.ConversationToken{
 			ID:           util.GenerateToken(util.ConversationTokenIDLength) + "@" + integration.Domain,
 			Conversation: conv.ID,
 			Activated:    false,
 			Token:        convToken,
-			Rank:         conversations.RankUser,
+			Rank:         database.RankUser,
 			Data:         memberData,
 			LastRead:     0,
 		}
@@ -105,12 +104,12 @@ func openConversation(c *fiber.Ctx) error {
 		}
 	}
 
-	adminToken := conversations.ConversationToken{
+	adminToken := database.ConversationToken{
 		ID:           util.GenerateToken(util.ConversationTokenIDLength) + "@" + integration.Domain,
 		Token:        util.GenerateToken(util.ConversationTokenLength),
 		Activated:    true,
 		Conversation: conv.ID,
-		Rank:         conversations.RankAdmin,
+		Rank:         database.RankAdmin,
 		Data:         req.AccountData,
 	}
 
