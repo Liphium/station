@@ -49,7 +49,7 @@ func HandleTokenActivation(c *fiber.Ctx, token database.ConversationToken, _ int
 		}
 
 		// Send a system message to tell the group members about the new member
-		err := message_actions.SendSystemMessage(token.Conversation, message_actions.GroupMemberJoin, []string{message_actions.AttachAccount(token.Data)})
+		err := message_actions.SendSystemMessage(token.Conversation, "", message_actions.GroupMemberJoin, []string{message_actions.AttachAccount(token.Data)})
 		if err != nil {
 			return integration.FailedRequest(c, localization.ErrorServer, err)
 		}

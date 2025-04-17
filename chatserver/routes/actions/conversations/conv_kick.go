@@ -57,12 +57,12 @@ func HandleKick(c *fiber.Ctx, token database.ConversationToken, target string) e
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	err = message_actions.SendSystemMessage(token.Conversation, message_actions.GroupMemberKick, []string{message_actions.AttachAccount(token.Data), message_actions.AttachAccount(targetToken.Data)})
+	err = message_actions.SendSystemMessage(token.Conversation, "", message_actions.GroupMemberKick, []string{message_actions.AttachAccount(token.Data), message_actions.AttachAccount(targetToken.Data)})
 	if err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	err = message_actions.SendNotStoredSystemMessage(token.Conversation, message_actions.ConversationKick, []string{message_actions.AttachAccount(targetToken.Data)})
+	err = message_actions.SendNotStoredSystemMessage(token.Conversation, "", message_actions.ConversationKick, []string{message_actions.AttachAccount(targetToken.Data)})
 	if err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}

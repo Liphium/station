@@ -42,7 +42,7 @@ func HandleSend(c *fiber.Ctx, token database.ConversationToken, action struct {
 
 	// Create the message and save to db
 	message := database.Message{
-		Conversation: token.Conversation + "_" + action.Extra,
+		Conversation: database.WithExtra(token.Conversation, action.Extra),
 		Data:         action.Data,
 		Sender:       token.ID,
 		Creation:     timestamp,

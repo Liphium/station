@@ -59,7 +59,7 @@ func HandlePromoteToken(c *fiber.Ctx, token database.ConversationToken, user str
 	userToken.Rank = rankToPromote
 
 	// Send a system message to let all members know about the rank change
-	err = message_actions.SendSystemMessage(token.Conversation, message_actions.GroupRankChange, []string{fmt.Sprintf("%d", prevRank), fmt.Sprintf("%d", userToken.Rank),
+	err = message_actions.SendSystemMessage(token.Conversation, "", message_actions.GroupRankChange, []string{fmt.Sprintf("%d", prevRank), fmt.Sprintf("%d", userToken.Rank),
 		message_actions.AttachAccount(userToken.Data), message_actions.AttachAccount(token.Data)})
 	if err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)

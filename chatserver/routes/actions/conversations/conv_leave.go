@@ -78,7 +78,7 @@ func HandleLeave(c *fiber.Ctx, token database.ConversationToken, _ interface{}) 
 					return integration.FailedRequest(c, localization.ErrorServer, nil)
 				}
 
-				err = message_actions.SendSystemMessage(token.Conversation, message_actions.GroupNewAdmin, []string{message_actions.AttachAccount(bestCase.Data)})
+				err = message_actions.SendSystemMessage(token.Conversation, "", message_actions.GroupNewAdmin, []string{message_actions.AttachAccount(bestCase.Data)})
 				if err != nil {
 					return integration.FailedRequest(c, localization.ErrorServer, nil)
 				}
@@ -86,7 +86,7 @@ func HandleLeave(c *fiber.Ctx, token database.ConversationToken, _ interface{}) 
 		}
 	}
 
-	message_actions.SendSystemMessage(token.Conversation, message_actions.GroupMemberLeave, []string{
+	message_actions.SendSystemMessage(token.Conversation, "", message_actions.GroupMemberLeave, []string{
 		message_actions.AttachAccount(token.Data),
 	})
 

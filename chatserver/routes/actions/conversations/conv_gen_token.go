@@ -56,7 +56,7 @@ func HandleGenerateToken(c *fiber.Ctx, token database.ConversationToken, data st
 	}
 
 	// Send a system message to let everyone know
-	err = message_actions.SendSystemMessage(token.Conversation, message_actions.GroupMemberInvite, []string{message_actions.AttachAccount(token.Data), message_actions.AttachAccount(generated.Data)})
+	err = message_actions.SendSystemMessage(token.Conversation, "", message_actions.GroupMemberInvite, []string{message_actions.AttachAccount(token.Data), message_actions.AttachAccount(generated.Data)})
 	if err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}

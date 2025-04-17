@@ -25,7 +25,7 @@ const DeletedMessage = "msg.deleted"
 const ConversationKick = "conv.kicked"
 
 // Send a system message that is stored in the database
-func SendSystemMessage(conversation string, content string, attachments []string) error {
+func SendSystemMessage(conversation string, extra string, content string, attachments []string) error {
 
 	contentJson, err := sonic.MarshalString(map[string]interface{}{
 		"c": content,
@@ -36,7 +36,7 @@ func SendSystemMessage(conversation string, content string, attachments []string
 	}
 
 	message := database.Message{
-		Conversation: conversation,
+		Conversation: database.WithExtra(conversation, extra),
 		Data:         contentJson,
 		Sender:       systemSender,
 		Creation:     time.Now().UnixMilli(),
@@ -60,7 +60,7 @@ func SendSystemMessage(conversation string, content string, attachments []string
 }
 
 // Send a system message that isn't stored in the database
-func SendNotStoredSystemMessage(conversation string, content string, attachments []string) error {
+func SendNotStoredSystemMessage(conversation string, extra string, content string, attachments []string) error {
 
 	// Generate the content for the message
 	contentJson, err := sonic.MarshalString(map[string]interface{}{
@@ -73,7 +73,7 @@ func SendNotStoredSystemMessage(conversation string, content string, attachments
 
 	// Create the message
 	message := database.Message{
-		Conversation: conversation,
+		Conversation: database.WithExtra(conversation, extra),
 		Data:         contentJson,
 		Sender:       systemSender,
 		Creation:     time.Now().UnixMilli(),

@@ -28,7 +28,7 @@ func HandleSetData(c *fiber.Ctx, token database.ConversationToken, action change
 	}
 
 	// Send a system to everyone to tell them about the change of the data
-	if err := message_actions.SendSystemMessage(token.Conversation, message_actions.ConversationEdited, []string{
+	if err := message_actions.SendSystemMessage(token.Conversation, "", message_actions.ConversationEdited, []string{
 		message_actions.AttachAccount(token.Data),
 	}); err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
