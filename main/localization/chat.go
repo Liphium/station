@@ -24,6 +24,9 @@ var (
 	ErrorDecentralizationDisabled = Translations{
 		englishUS: "Decentralization is currently disabled. Please contact the admin of your town if this bothers you.",
 	}
+	ErrorMemberNoPermission = Translations{
+		englishUS: "You don't have any permission to perform this action.",
+	}
 )
 
 func ErrorGroupMemberLimit(limit int) Translations {

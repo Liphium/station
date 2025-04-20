@@ -30,12 +30,6 @@ type SentConversationToken struct {
 	Token string `json:"token"`
 }
 
-// * Permissions
-const MinRankManageMembers = RankModerator
-const MinRankChangeConversationDetails = RankModerator
-const MinRankManageModerators = RankAdmin
-const MinRankDeleteConversation = RankAdmin
-
 // * Ranks
 const RankUser = 0
 const RankModerator = 1 // Can remove/add users

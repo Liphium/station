@@ -16,6 +16,11 @@ type changeDataRequest struct {
 // Action: conv_set_data
 func HandleSetData(c *fiber.Ctx, token database.ConversationToken, action changeDataRequest) error {
 
+	// Make sure the person has at least the admin rank
+	if token.Rank >= database.RankAdmin {
+		return integration.FailedRequest(c, localization.ErrorMemberNoPermission, nil)
+	}
+
 	// Edit the conversation
 	// The version here makes sure that no other person is editing the conversation at the same time.
 	// The query will fail on updates at the same time, but since this is only a protection for the worst
