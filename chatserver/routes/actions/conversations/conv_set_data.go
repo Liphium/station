@@ -17,7 +17,7 @@ type changeDataRequest struct {
 func HandleSetData(c *fiber.Ctx, token database.ConversationToken, action changeDataRequest) error {
 
 	// Make sure the person has at least the admin rank
-	if token.Rank >= database.RankAdmin {
+	if token.Rank < database.RankAdmin {
 		return integration.FailedRequest(c, localization.ErrorMemberNoPermission, nil)
 	}
 
