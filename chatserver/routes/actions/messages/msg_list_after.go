@@ -15,7 +15,7 @@ func HandleListAfter(c *fiber.Ctx, token database.ConversationToken, action stru
 
 	// Get the messages
 	var messages []database.Message
-	if err := database.DBConn.Order("creation ASC").Where("conversation = ? AND creation > ?", database.WithExtra(token.Conversation, action.Extra), action.After).Limit(12).Find(&messages).Error; err != nil {
+	if err := database.DBConn.Order("creation ASC, id").Where("conversation = ? AND creation > ?", database.WithExtra(token.Conversation, action.Extra), action.After).Limit(30).Find(&messages).Error; err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 

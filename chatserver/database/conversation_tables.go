@@ -20,14 +20,17 @@ type ConversationToken struct {
 
 func (t *ConversationToken) ToSent() SentConversationToken {
 	return SentConversationToken{
-		ID:    t.ID,
-		Token: t.Token,
+		ID:           t.ID,
+		Token:        t.Token,
+		Conversation: t.Conversation,
 	}
 }
 
 type SentConversationToken struct {
-	ID    string `json:"id"`
-	Token string `json:"token"`
+	ID           string `json:"id"`
+	Token        string `json:"token"`
+	Conversation string `json:"conv"`
+	LastMessage  int64  `json:"time,omitempty"`
 }
 
 // * Ranks

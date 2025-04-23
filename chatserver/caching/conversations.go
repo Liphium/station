@@ -48,8 +48,9 @@ func ValidateTokens(tokens *[]database.SentConversationToken) ([]database.Conver
 
 			// Add the token to the found tokens list
 			tokensMap[token.ID] = database.SentConversationToken{
-				ID:    "-",
-				Token: "-",
+				ID:           "-",
+				Token:        "-",
+				Conversation: "-",
 			}
 			foundTokens = append(foundTokens, token)
 
