@@ -52,6 +52,7 @@ func ValidateTokens(tokens *[]database.SentConversationToken) ([]database.Conver
 				Token:        "-",
 				Conversation: "-",
 			}
+			token.LastSync = tokensMap[token.ID].LastMessage
 			foundTokens = append(foundTokens, token)
 
 			// Delete the token from the missing tokens slice to make sure it isn't deleted

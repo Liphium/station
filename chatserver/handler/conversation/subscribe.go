@@ -176,11 +176,11 @@ func subscribe(c *pipeshandler.Context, action struct {
 
 		// Go through local tokens to add them to the message sync queue
 		for _, token := range conversationTokens {
-			if token.Activated && token.LastRead != -1 {
+			if token.Activated && token.LastSync != -1 {
 				if err := caching.AddSyncToQueue(caching.SyncData{
 					TokenID:      token.ID,
 					Conversation: token.Conversation,
-					Since:        token.LastRead,
+					Since:        token.LastSync,
 				}); err != nil {
 					util.Log.Println("error completing message sync for ", token.ID, ":", err)
 				}

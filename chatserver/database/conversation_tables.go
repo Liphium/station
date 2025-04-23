@@ -15,7 +15,10 @@ type ConversationToken struct {
 	Token        string `json:"token" gorm:"not null,unique,index"` // Long token required to subscribe to the conversation
 	Data         string `json:"data" gorm:"not null"`               // Encrypted data about the user (account id, username, etc.)
 	Rank         uint   `json:"rank" gorm:"not null"`
-	LastRead     int64  `json:"-" gorm:"not null"` // Last time the user read the conversation
+	Reads        string `json:"reads"`
+
+	// For synchronization data (unrelated to database model)
+	LastSync int64 `json:"-" gorm:"-"`
 }
 
 func (t *ConversationToken) ToSent() SentConversationToken {

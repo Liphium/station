@@ -91,7 +91,7 @@ func openConversation(c *fiber.Ctx) error {
 			Token:        convToken,
 			Rank:         database.RankUser,
 			Data:         memberData,
-			LastRead:     0,
+			Reads:        "",
 		}
 
 		if err := database.DBConn.Create(&tk).Error; err != nil {
