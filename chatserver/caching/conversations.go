@@ -2,6 +2,7 @@ package caching
 
 import (
 	"errors"
+	"fmt"
 	"slices"
 
 	"github.com/Liphium/station/chatserver/database"
@@ -31,6 +32,7 @@ func ValidateTokens(tokens *[]database.SentConversationToken) ([]database.Conver
 	tokensMap := map[string]database.SentConversationToken{}
 	for i, token := range *tokens {
 		tokensMap[token.ID] = token
+		fmt.Println(token.LastMessage)
 		tokenIds[i] = token.ID
 	}
 
@@ -47,12 +49,12 @@ func ValidateTokens(tokens *[]database.SentConversationToken) ([]database.Conver
 		if token.Token == tokensMap[token.ID].Token {
 
 			// Add the token to the found tokens list
+			token.LastSync = tokensMap[token.ID].LastMessage
 			tokensMap[token.ID] = database.SentConversationToken{
 				ID:           "-",
 				Token:        "-",
 				Conversation: "-",
 			}
-			token.LastSync = tokensMap[token.ID].LastMessage
 			foundTokens = append(foundTokens, token)
 
 			// Delete the token from the missing tokens slice to make sure it isn't deleted

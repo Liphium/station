@@ -133,22 +133,14 @@ func HandleRemoteSubscription(c *fiber.Ctx, action RemoteSubscribeAction) error 
 
 // Returned to give all the information about a conversation the client needs
 type ConversationInfo struct {
-	Version           int64  `json:"v"`
-	Reads             string `json:"r"`
-	NotificationCount int64  `json:"n"`
+	Version int64  `json:"v"`
+	Reads   string `json:"r"`
 }
 
 // Returns an array of conversation info
 func GetConversationInfo(tokens []database.ConversationToken) (map[string]ConversationInfo, error) {
 	convInfo := make(map[string]ConversationInfo, len(tokens))
 	for _, token := range tokens {
-
-		// Get the notification count of the current conversation
-		var notificationCount int64
-		if err := database.DBConn.Model(&database.Message{}).Where("conversation = ? AND creation > ?", token.Conversation, token.Reads).
-			Count(&notificationCount).Error; err != nil {
-			return nil, err
-		}
 
 		// Get the version of the conversation
 		var version int64
@@ -158,9 +150,8 @@ func GetConversationInfo(tokens []database.ConversationToken) (map[string]Conver
 
 		// Set conversation info
 		convInfo[token.Conversation] = ConversationInfo{
-			Version:           version,
-			Reads:             token.Reads,
-			NotificationCount: notificationCount,
+			Version: version,
+			Reads:   token.Reads,
 		}
 	}
 
