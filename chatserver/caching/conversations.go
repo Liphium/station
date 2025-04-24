@@ -2,7 +2,6 @@ package caching
 
 import (
 	"errors"
-	"fmt"
 	"slices"
 
 	"github.com/Liphium/station/chatserver/database"
@@ -32,7 +31,6 @@ func ValidateTokens(tokens *[]database.SentConversationToken) ([]database.Conver
 	tokensMap := map[string]database.SentConversationToken{}
 	for i, token := range *tokens {
 		tokensMap[token.ID] = token
-		fmt.Println(token.LastMessage)
 		tokenIds[i] = token.ID
 	}
 
