@@ -9,7 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// Route: /create
+// Route: /enc/create
 func createSpace(c *fiber.Ctx) error {
 
 	// Parse the request

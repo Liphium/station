@@ -10,7 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// Route: /join
+// Route: /enc/join
 func joinSpace(c *fiber.Ctx) error {
 
 	// Parse the request
