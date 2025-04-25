@@ -4,6 +4,7 @@ import (
 	conversation_actions "github.com/Liphium/station/chatserver/routes/actions/conversations"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
+	space_actions "github.com/Liphium/station/chatserver/routes/actions/spaces"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -22,6 +23,10 @@ func Authorized(router fiber.Router) {
 	router.Post("/kick_member", action_helpers.CreateConversationEndpoint(conversation_actions.HandleKick, "conv_kick"))
 	router.Post("/leave", action_helpers.CreateConversationEndpoint(conversation_actions.HandleLeave, "conv_leave"))
 	router.Post("/answer_status", action_helpers.CreateConversationEndpoint(conversation_actions.HandleStatusResponse, "conv_st_res"))
+
+	// Setup all shared space routes
+	router.Post("/shared_spaces/add", action_helpers.CreateConversationEndpoint(space_actions.HandleSpaceAddition, "space_add"))
+	router.Post("/shared_spaces/rename", action_helpers.CreateConversationEndpoint(space_actions.HandleSpaceRename, "space_rename"))
 
 	// Setup all message routes
 	router.Post("/message/send", action_helpers.CreateConversationEndpoint(message_actions.HandleSend, "msg_send"))

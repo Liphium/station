@@ -6,6 +6,7 @@ import (
 	remote_event_channel "github.com/Liphium/station/chatserver/routes/actions/event_channel"
 	action_helpers "github.com/Liphium/station/chatserver/routes/actions/helpers"
 	message_actions "github.com/Liphium/station/chatserver/routes/actions/messages"
+	space_actions "github.com/Liphium/station/chatserver/routes/actions/spaces"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -62,6 +63,10 @@ func SetupConversationActions(router fiber.Router) {
 	router.Post("/conv_kick", conversationHandler(conversation_actions.HandleKick))
 	router.Post("/conv_leave", conversationHandler(conversation_actions.HandleLeave))
 	router.Post("/conv_st_res", conversationHandler(conversation_actions.HandleStatusResponse))
+
+	// Actions for shared spaces
+	router.Post("/space_add", conversationHandler(space_actions.HandleSpaceAddition))
+	router.Post("/space_rename", conversationHandler(space_actions.HandleSpaceRename))
 
 	// Actions for message management
 	router.Post("/msg_delete", conversationHandler(message_actions.HandleDelete))

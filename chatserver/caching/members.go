@@ -83,3 +83,16 @@ func SendEventToMembers(members []StoredMember, event pipes.Event) error {
 		Event:   event,
 	})
 }
+
+// Send an event to all members in a conversation (does a database request as well)
+func SendEventToConversation(id string, event pipes.Event) error {
+
+	// Load all the members
+	members, err := LoadMembers(id)
+	if err != nil {
+		return err
+	}
+
+	// Send the event
+	return SendEventToMembers(members, event)
+}
