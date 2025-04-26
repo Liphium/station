@@ -37,7 +37,8 @@ func HandleRemoteEvent(c *fiber.Ctx) error {
 
 	// Make sure the event is actually valid
 	if req.Event.Name != "conv_msg" && req.Event.Name != "conv_msg_mp" &&
-		req.Event.Name != "acc_st" && req.Event.Name != "acc_st:a" {
+		req.Event.Name != "acc_st" && req.Event.Name != "acc_st:a" &&
+		req.Event.Name != "shared_space" && req.Event.Name != "shared_space_delete" {
 		return integration.InvalidRequest(c, "this event can't be send over the remote event channel")
 	}
 

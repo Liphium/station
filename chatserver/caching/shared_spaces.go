@@ -1,6 +1,7 @@
 package caching
 
 import (
+	"log"
 	"slices"
 	"strings"
 	"sync"
@@ -37,7 +38,9 @@ func (s *SharedSpace) ToSendable(mutex bool) SendableSharedSpace {
 	}
 
 	return SendableSharedSpace{
+		Id:           s.Id,
 		UnderlyingId: s.UnderlyingId,
+		Conversation: s.Conversation,
 		Name:         s.Name,
 		Members:      s.Members,
 		Container:    s.Container,
@@ -45,7 +48,9 @@ func (s *SharedSpace) ToSendable(mutex bool) SendableSharedSpace {
 }
 
 type SendableSharedSpace struct {
-	UnderlyingId string   `json:"id"`
+	Id           string   `json:"id"`
+	UnderlyingId string   `json:"underlying"`
+	Conversation string   `json:"conv"`
 	Name         string   `json:"name"`
 	Members      []string `json:"members"`
 	Container    string   `json:"container"`
@@ -124,12 +129,15 @@ func StoreSharedSpace(
 func startSharedSpaceInfoPuller(space *SharedSpace) {
 	go func() {
 		for {
+			log.Println("pulling space info")
+
 			// Pull new info from space station
 			resp, err := integration.PostRequestNoTC(space.Server+"/info", map[string]interface{}{
 				"room": space.Id,
 			})
 			if err != nil {
-				continue
+				deleteSharedSpace(space, true)
+				break
 			}
 
 			// Delete the shared space in case it is not there anymore
@@ -140,7 +148,11 @@ func startSharedSpaceInfoPuller(space *SharedSpace) {
 
 			// Update in the actual shared space
 			space.Mutex.Lock()
-			members := resp["members"].([]string)
+			membersUnparsed := resp["members"].([]interface{})
+			members := make([]string, len(membersUnparsed))
+			for i, unparsed := range membersUnparsed {
+				members[i] = unparsed.(string)
+			}
 			if !slices.Equal(space.Members, members) {
 				space.Members = members
 			}
@@ -169,6 +181,8 @@ func deleteSharedSpace(space *SharedSpace, mutex bool) {
 		defer space.Mutex.Unlock()
 	}
 
+	log.Println("deleting shared space..")
+
 	// Delete the thing
 	if obj, ok := sharedSpacesMap.Load(space.Conversation); ok {
 		spaceMap := obj.(*sync.Map)
@@ -179,7 +193,8 @@ func deleteSharedSpace(space *SharedSpace, mutex bool) {
 	event := pipes.Event{
 		Name: "shared_spaces_delete",
 		Data: map[string]interface{}{
-			"id": space.Id,
+			"id":         space.Id,
+			"underlying": space.UnderlyingId,
 		},
 	}
 	if err := SendEventToConversation(space.Conversation, event); err != nil {
