@@ -1,7 +1,7 @@
 package caching
 
 import (
-	"log"
+	"errors"
 	"slices"
 	"strings"
 	"sync"
@@ -129,7 +129,6 @@ func StoreSharedSpace(
 func startSharedSpaceInfoPuller(space *SharedSpace) {
 	go func() {
 		for {
-			log.Println("pulling space info")
 
 			// Pull new info from space station
 			resp, err := integration.PostRequestNoTC(space.Server+"/info", map[string]interface{}{
@@ -181,8 +180,6 @@ func deleteSharedSpace(space *SharedSpace, mutex bool) {
 		defer space.Mutex.Unlock()
 	}
 
-	log.Println("deleting shared space..")
-
 	// Delete the thing
 	if obj, ok := sharedSpacesMap.Load(space.Conversation); ok {
 		spaceMap := obj.(*sync.Map)
@@ -190,15 +187,21 @@ func deleteSharedSpace(space *SharedSpace, mutex bool) {
 	}
 
 	// Build the deletion event
-	event := pipes.Event{
-		Name: "shared_spaces_delete",
-		Data: map[string]interface{}{
-			"id":         space.Id,
-			"underlying": space.UnderlyingId,
-		},
-	}
+	event := SharedSpacesDeleteEvent(space.Conversation, space.Id, space.UnderlyingId)
 	if err := SendEventToConversation(space.Conversation, event); err != nil {
 		util.Log.Println("ERROR: couldn't send shared space delete event:", err)
+	}
+}
+
+// The event sent when a shared space is deleted
+func SharedSpacesDeleteEvent(conversation string, id string, underlying string) pipes.Event {
+	return pipes.Event{
+		Name: "shared_space_delete",
+		Data: map[string]interface{}{
+			"conv":       conversation,
+			"id":         id,
+			"underlying": underlying,
+		},
 	}
 }
 
@@ -223,4 +226,56 @@ func RenameSharedSpace(conversation string, id string, name string) {
 	space.Mutex.Lock()
 	defer space.Mutex.Unlock()
 	space.Name = name
+}
+
+// Add an underlying id to a shared space
+func AddUnderlyingToSharedSpace(conversation string, id string, underlying string) error {
+
+	// Get the space map for the conversation (or return if not there)
+	obj, ok := sharedSpacesMap.Load(conversation)
+	if !ok {
+		return errors.New("not found (conv)")
+	}
+	spaceMap := obj.(*sync.Map)
+
+	// Try getting the shared Space (or return if not there)
+	spaceObj, ok := spaceMap.Load(id)
+	if !ok {
+		return errors.New("not found")
+	}
+	space := spaceObj.(*SharedSpace)
+
+	// Make sure the underlying id isn't already in use
+	found := false
+	spaceMap.Range(func(_, value any) bool {
+		space := value.(*SharedSpace)
+		space.Mutex.Lock()
+		defer space.Mutex.Unlock()
+		if space.UnderlyingId == underlying {
+			found = true
+			return false
+		}
+		return true
+	})
+	if found {
+		return errors.New("a space with this underlying id already exists")
+	}
+
+	// Set the underlying id
+	space.Mutex.Lock()
+	defer space.Mutex.Unlock()
+	before := space.UnderlyingId
+	space.UnderlyingId = underlying
+
+	// Delete the old shared space
+	if err := SendEventToConversation(conversation, SharedSpacesDeleteEvent(conversation, space.Id, "-")); err != nil {
+		space.UnderlyingId = before
+		return err
+	}
+	if err := SendEventToConversation(conversation, SharedSpacesUpdateEvent(space, false)); err != nil {
+		space.UnderlyingId = before
+		return err
+	}
+
+	return nil
 }
