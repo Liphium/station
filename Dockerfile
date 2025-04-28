@@ -1,5 +1,5 @@
 # Use official Golang image as base image
-FROM golang:1.23-bookworm as builder
+FROM golang:latest as builder
 WORKDIR /app
 COPY . .
 RUN go mod download
