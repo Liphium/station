@@ -67,7 +67,7 @@ func SetupConversationActions(router fiber.Router) {
 	// Actions for shared spaces
 	router.Post("/space_add", conversationHandler(space_actions.HandleSpaceAddition))
 	router.Post("/space_rename", conversationHandler(space_actions.HandleSpaceRename))
-	router.Post("/space_pin", conversationHandler(space_actions.HandleSpacePin))
+	router.Post("/space_pin_status", conversationHandler(space_actions.HandleSpacePinStatusChange))
 
 	// Actions for message management
 	router.Post("/msg_delete", conversationHandler(message_actions.HandleDelete))

@@ -27,7 +27,7 @@ func Authorized(router fiber.Router) {
 	// Setup all shared space routes
 	router.Post("/shared_spaces/add", action_helpers.CreateConversationEndpoint(space_actions.HandleSpaceAddition, "space_add"))
 	router.Post("/shared_spaces/rename", action_helpers.CreateConversationEndpoint(space_actions.HandleSpaceRename, "space_rename"))
-	router.Post("/shared_spaces/pin", action_helpers.CreateConversationEndpoint(space_actions.HandleSpacePin, "space_pin"))
+	router.Post("/shared_spaces/pin_status", action_helpers.CreateConversationEndpoint(space_actions.HandleSpacePinStatusChange, "space_pin_status"))
 
 	// Setup all message routes
 	router.Post("/message/send", action_helpers.CreateConversationEndpoint(message_actions.HandleSend, "msg_send"))

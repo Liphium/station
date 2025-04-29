@@ -228,8 +228,8 @@ func RenameSharedSpace(conversation string, id string, name string) {
 	space.Name = name
 }
 
-// Add an underlying id to a shared space
-func AddUnderlyingToSharedSpace(conversation string, id string, underlying string) error {
+// Change the underlying id of a space
+func ChangeSpaceUnderlying(conversation string, id string, underlying string) error {
 
 	// Get the space map for the conversation (or return if not there)
 	obj, ok := sharedSpacesMap.Load(conversation)
@@ -267,11 +267,7 @@ func AddUnderlyingToSharedSpace(conversation string, id string, underlying strin
 	before := space.UnderlyingId
 	space.UnderlyingId = underlying
 
-	// Delete the old shared space
-	if err := SendEventToConversation(conversation, SharedSpacesDeleteEvent(conversation, space.Id, "-")); err != nil {
-		space.UnderlyingId = before
-		return err
-	}
+	// Update the space
 	if err := SendEventToConversation(conversation, SharedSpacesUpdateEvent(space, false)); err != nil {
 		space.UnderlyingId = before
 		return err
