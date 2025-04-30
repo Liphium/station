@@ -52,11 +52,6 @@ func HandleSend(c *fiber.Ctx, token database.ConversationToken, action struct {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	// Update the read state to prevent the message sender from being notified about the message
-	if err := database.DBConn.Model(&database.ConversationToken{}).Where("conversation = ? AND id = ?", token.Conversation, token.ID).Update("last_read", time.Now().UnixMilli()+1).Error; err != nil {
-		return integration.FailedRequest(c, localization.ErrorServer, err)
-	}
-
 	// Load the members of the conversation
 	members, err := caching.LoadMembers(token.Conversation)
 	if err != nil {
