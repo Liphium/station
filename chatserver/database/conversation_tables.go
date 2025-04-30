@@ -2,6 +2,7 @@ package database
 
 import (
 	"regexp"
+	"strings"
 	"unsafe"
 
 	"github.com/Liphium/station/chatserver/util"
@@ -72,6 +73,15 @@ func WithExtra(conversationId string, extra string) string {
 		return conversationId
 	}
 	return conversationId + "_" + extra
+}
+
+// Convert a message conversation id back to conversation id (first in return tuple) and extra
+func IntoConversationAndExtra(conversation string) (string, string) {
+	args := strings.Split(conversation, "_")
+	if len(args) == 1 {
+		return args[0], ""
+	}
+	return args[0], args[1]
 }
 
 // Regex for making sure there are only a-z, A-Z and 1-9 present in the extra part of the conversation id

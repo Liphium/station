@@ -27,7 +27,8 @@ func HandleDelete(c *fiber.Ctx, token database.ConversationToken, messageId stri
 	}
 
 	// Send a system message to delete the message on all clients who are storing it
-	if err := SendSystemMessage(message.Conversation, "", DeletedMessage, []string{messageId}); err != nil {
+	convId, extra := database.IntoConversationAndExtra(message.Conversation)
+	if err := SendSystemMessage(convId, extra, DeletedMessage, []string{messageId}); err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
