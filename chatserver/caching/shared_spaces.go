@@ -226,6 +226,9 @@ func RenameSharedSpace(conversation string, id string, name string) {
 	space.Mutex.Lock()
 	defer space.Mutex.Unlock()
 	space.Name = name
+
+	// Update the space (we don't care about the error here)
+	SendEventToConversation(conversation, SharedSpacesUpdateEvent(space, false))
 }
 
 // Change the underlying id of a space
