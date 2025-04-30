@@ -30,13 +30,13 @@ func updateFriend(c *fiber.Ctx) error {
 
 	// Get the friendship
 	var entry database.Friendship
-	if err := database.DBConn.Model(&database.VaultEntry{}).Where("id = ? AND account = ?", req.Entry, accId).Take(&entry).Error; err != nil {
+	if err := database.DBConn.Where("id = ? AND account = ?", req.Entry, accId).Take(&entry).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Get the latest version in the friendship
 	var version int64
-	if err := database.DBConn.Model(&database.VaultEntry{}).Select("max(version)").Where("account = ?", accId).Scan(&version).Error; err != nil {
+	if err := database.DBConn.Model(&database.Friendship{}).Select("max(version)").Where("account = ?", accId).Scan(&version).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 
