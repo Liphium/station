@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Liphium/station/chatserver/caching"
 	"github.com/Liphium/station/chatserver/database"
@@ -46,8 +47,14 @@ func Start(routine bool) {
 	})
 	app.Use(cors.New())
 
-	// Query current node
-	_, _, currentApp, domain := integration.GetCurrent(integration.IdentifierChatNode)
+	// Query current node (and try again in case it fails)
+	_, _, currentApp, domain, err := integration.GetCurrent(integration.IdentifierChatNode)
+	for err != nil {
+		util.Log.Println("Couldn't connect to backend:", err)
+		util.Log.Println("Trying again in 10 seconds...")
+		time.Sleep(time.Second * 10)
+		_, _, currentApp, domain, err = integration.GetCurrent(integration.IdentifierChatNode)
+	}
 	currentNodeData := integration.Nodes[integration.IdentifierChatNode]
 	currentNodeData.AppId = currentApp
 	integration.Nodes[integration.IdentifierChatNode] = currentNodeData
@@ -56,7 +63,10 @@ func Start(routine bool) {
 	caching.CSNode = pipes.SetupCurrent(fmt.Sprintf("%d", nodeData.NodeId), nodeData.NodeToken)
 
 	// Report online status
-	res := integration.SetOnline(integration.IdentifierChatNode)
+	res, err := integration.SetOnline(integration.IdentifierChatNode)
+	if err != nil {
+		util.Log.Fatalln("Couldn't connect to backend:", err)
+	}
 	parseNodes(res)
 
 	util.Log.Printf("Node %s on app %d\n", caching.CSNode.ID, currentApp)
@@ -76,7 +86,6 @@ func Start(routine bool) {
 
 	// Check if test mode or production
 	var port int
-	var err error
 	port, err = strconv.Atoi(os.Getenv("CHAT_NODE_PORT"))
 	if err != nil {
 		panic(err)

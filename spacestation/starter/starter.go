@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/pipes"
@@ -37,7 +38,13 @@ func Start(loadEnv bool) bool {
 	util.Log.Println("Starting..")
 
 	// Query current node AND JWT TOKEN
-	_, _, currentApp, domain := integration.GetCurrent(integration.IdentifierSpaceNode)
+	_, _, currentApp, domain, err := integration.GetCurrent(integration.IdentifierSpaceNode)
+	for err != nil {
+		util.Log.Println("Couldn't connect to backend:", err)
+		util.Log.Println("Trying again in 10 seconds...")
+		time.Sleep(time.Second * 10)
+		_, _, currentApp, domain, err = integration.GetCurrent(integration.IdentifierSpaceNode)
+	}
 	currentNodeData := integration.Nodes[integration.IdentifierSpaceNode]
 	currentNodeData.AppId = currentApp
 	integration.Nodes[integration.IdentifierSpaceNode] = currentNodeData
@@ -62,11 +69,13 @@ func Start(loadEnv bool) bool {
 	handler.Initialize()
 
 	// Report online status
-	res := integration.SetOnline(integration.IdentifierSpaceNode)
+	res, err := integration.SetOnline(integration.IdentifierSpaceNode)
+	if err != nil {
+		util.Log.Fatalln("Couldn't connect to backend:", err)
+	}
 	parseNodes(res)
 
 	// Check if test mode or production
-	var err error
 	util.Port, err = strconv.Atoi(os.Getenv("SPACE_NODE_PORT"))
 	if err != nil {
 		util.Log.Println("Error: Couldn't parse port of current node")

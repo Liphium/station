@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func GetCurrent(identifier string) (id int64, token string, app uint, domain string) {
+func GetCurrent(identifier string) (id int64, token string, app uint, domain string, err error) {
 
 	res, err := PostRequestBackend("/node/this", fiber.Map{
 		"node":  Nodes[identifier].NodeId,
@@ -16,22 +16,21 @@ func GetCurrent(identifier string) (id int64, token string, app uint, domain str
 	})
 
 	if err != nil {
-		Log.Println("Backend is currently offline!")
-		os.Exit(1)
+		return 0, "", 0, "", err
 	}
 
 	if !res["success"].(bool) {
-		Log.Println("This node may not be registered..")
+		Log.Println("ERROR: This node may not be registered..")
 		os.Exit(1)
 	}
 
 	JwtSecret = res["jwt_secret"].(string)
 	n := res["node"].(map[string]interface{})
 
-	return int64(n["id"].(float64)), n["token"].(string), uint(n["app"].(float64)), n["domain"].(string)
+	return int64(n["id"].(float64)), n["token"].(string), uint(n["app"].(float64)), n["domain"].(string), nil
 }
 
-func SetOnline(identifier string) map[string]interface{} {
+func SetOnline(identifier string) (map[string]interface{}, error) {
 
 	res, err := PostRequestBackend("/node/status/online", fiber.Map{
 		"id":    Nodes[identifier].NodeId,
@@ -39,8 +38,7 @@ func SetOnline(identifier string) map[string]interface{} {
 	})
 
 	if err != nil {
-		Log.Println("Backend is currently offline!")
-		os.Exit(1)
+		return map[string]interface{}{}, err
 	}
 
 	if !res["success"].(bool) {
@@ -48,7 +46,7 @@ func SetOnline(identifier string) map[string]interface{} {
 		os.Exit(1)
 	}
 
-	return res
+	return res, nil
 }
 
 func ReportOffline(node pipes.Node) {
