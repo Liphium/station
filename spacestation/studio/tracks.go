@@ -87,13 +87,13 @@ func (t *Track) CloseChannel(id string, mutex bool) {
 	// Delete all subscriptions from the channel
 	c := obj.(*Channel)
 	c.subscriptions.Range(func(key, value any) bool {
-		value.(*Subscription).Delete()
+		value.(*Subscription).Delete(true)
 		return true
 	})
 
 	// Delete the track in case there are no channels left
 	if t.channelAmount <= 0 {
-		t.Delete(false, false)
+		t.Delete(false, false, true)
 	}
 }
 
@@ -218,8 +218,10 @@ func (t *Track) NewSubscription(c *Client, channelId string) error {
 //
 // Closes all channels in the track, if requested.
 // Locks the mutex, if requested.
+// Removes the track from the publisher, if requested.
+//
 // Returns whether or not the operation was successful.
-func (t *Track) Delete(closeChannels bool, mutex bool) bool {
+func (t *Track) Delete(closeChannels bool, mutex bool, removeFromClient bool) bool {
 
 	// Send a deletion event to everyone in studio
 	t.SendTrackDeletionToAll()
@@ -237,13 +239,15 @@ func (t *Track) Delete(closeChannels bool, mutex bool) bool {
 	t.studio.tracks.Delete(t.id)
 
 	// Get the client sending the track
-	client, valid := t.studio.GetClient(t.sender)
-	if !valid {
-		return false
-	}
+	if removeFromClient {
+		client, valid := t.studio.GetClient(t.sender)
+		if !valid {
+			return false
+		}
 
-	// Tell the client about the removal of the track
-	client.handleRemoveTrack(t)
+		// Tell the client about the removal of the track
+		client.handleRemoveTrack(t)
+	}
 	return true
 }
 

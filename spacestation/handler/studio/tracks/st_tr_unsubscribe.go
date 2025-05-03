@@ -29,7 +29,7 @@ func unsubscribeToTrack(c *pipeshandler.Context, action struct {
 	if !valid {
 		return pipeshandler.ErrorResponse(c, localization.ErrorInvalidRequestContent, nil)
 	}
-	sub.Delete()
+	sub.Delete(true)
 
 	return pipeshandler.SuccessResponse(c)
 }

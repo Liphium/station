@@ -200,3 +200,29 @@ func (c *Client) handleLightwireClose() {
 func (c *Client) HandleIceCandidate(candidate webrtc.ICECandidateInit) error {
 	return c.connection.AddICECandidate(candidate)
 }
+
+// Disconnect all the things the client has
+func (c *Client) handleDisconnect() {
+
+	// Close lightwire
+	c.lightwire.Close()
+
+	// Delete all of the subscriptions the client made
+	c.subscriptions.Range(func(key, value any) bool {
+		sub := value.(*Subscription)
+		sub.Delete(false)
+		return true
+	})
+	c.subscriptions.Clear()
+
+	// Delete all of the client's tracks
+	c.publishedTracks.Range(func(key, value any) bool {
+		track := value.(*Track)
+		track.Delete(true, true, false)
+		return true
+	})
+	c.publishedTracks.Clear()
+
+	// Close the connection
+	c.connection.Close()
+}

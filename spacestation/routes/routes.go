@@ -11,6 +11,7 @@ import (
 	"github.com/Liphium/station/pipeshandler"
 	pipeshroutes "github.com/Liphium/station/pipeshandler/routes"
 	"github.com/Liphium/station/spacestation/caching"
+	"github.com/Liphium/station/spacestation/studio"
 	"github.com/Liphium/station/spacestation/util"
 	"github.com/gofiber/fiber/v2"
 )
@@ -69,8 +70,16 @@ func setupPipesFiber(router fiber.Router) {
 			// Delete all the Warps the guy has
 			caching.StopWarpsBy(client.Session, client.ID)
 
+			// Disconnect the guy from studio
+			studio.GetStudio(client.Session).Disconnect(client.ID)
+
 			// Remove from room
 			caching.RemoveMember(client.Session, client.ID)
+
+			// Delete the studio in case the room has been deleted
+			if _, ok := caching.GetRoom(client.Session); !ok {
+				studio.DeleteStudio(client.Session)
+			}
 		},
 
 		// Validate token and create room

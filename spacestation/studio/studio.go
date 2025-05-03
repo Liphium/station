@@ -126,9 +126,8 @@ func (s *Studio) Disconnect(client string) error {
 	}
 	cl := obj.(*Client)
 
-	// Disconnect the client
-	cl.connection.Close()
-
+	// Let the client handle its own disconnect
+	cl.handleDisconnect()
 	return nil
 }
 
@@ -202,4 +201,9 @@ func GetStudio(room string) *Studio {
 		clientMap = obj.(*Studio)
 	}
 	return clientMap
+}
+
+// Delete studio for room
+func DeleteStudio(room string) {
+	studioMap.Delete(room)
 }

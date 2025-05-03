@@ -16,7 +16,7 @@ type Subscription struct {
 }
 
 // Delete the subscription
-func (s *Subscription) Delete() {
+func (s *Subscription) Delete(deleteOnClient bool) {
 
 	// Remove the track from the connection
 	if err := s.peer.RemoveTrack(s.sender); err != nil {
@@ -34,5 +34,7 @@ func (s *Subscription) Delete() {
 	}
 
 	// Delete the subscription from the client in case it exists
-	s.client.subscriptions.Delete(s.track.id)
+	if deleteOnClient {
+		s.client.subscriptions.Delete(s.track.id)
+	}
 }
