@@ -62,6 +62,7 @@ func Connect() {
 		&AStoredAction{},
 		&VaultEntry{},
 		&KeyRequest{},
+		&RecoveryToken{},
 
 		// Node related tables
 		&Node{},

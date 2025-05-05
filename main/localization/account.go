@@ -32,6 +32,12 @@ func ErrorFriendLimitReached(limit int) Translations {
 	}
 }
 
+func ErrorRecoveryTokenLimitReached(limit int) Translations {
+	return Translations{
+		englishUS: fmt.Sprintf("You've reached the maximum amount of %d recovery tokens. Please get rid of old ones to add more.", limit),
+	}
+}
+
 func ErrorVaultLimitReached(limit int) Translations {
 	return Translations{
 		englishUS: fmt.Sprintf("You've reached the maximum amount of %d vault entries. Please delete some elements from the vault to add more items.", limit),

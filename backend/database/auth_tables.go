@@ -59,3 +59,11 @@ type KeyRequest struct {
 	Payload   string    `json:"payload"`   // Encrypted payload (from the session sending it)
 	CreatedAt int64     `json:"creation" gorm:"not null,autoCreateTime:milli"`
 }
+
+// Recovery tokens for the encryption keys
+type RecoveryToken struct {
+	Account   uuid.UUID `json:"-" gorm:"index"`
+	Token     string    `json:"-"`
+	Data      string    `json:"data"` // All of the keys (encrypted with the token)
+	CreatedAt int64     `json:"creation" gorm:"autoCreateTime:milli"`
+}

@@ -1,6 +1,7 @@
 package keys
 
 import (
+	recovery_routes "github.com/Liphium/station/backend/routes/v1/account/keys/recovery"
 	key_request_routes "github.com/Liphium/station/backend/routes/v1/account/keys/requests"
 	"github.com/gofiber/fiber/v2"
 )
@@ -25,6 +26,9 @@ func Authorized(router fiber.Router) {
 
 	// Routes to manage key synchronization requests
 	router.Route("/requests", key_request_routes.Authorized)
+
+	// Routes to manage key recovery tokens
+	router.Route("/recovery", recovery_routes.Authorized)
 }
 
 func Unauthorized(router fiber.Router) {
