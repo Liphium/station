@@ -58,6 +58,7 @@ FILE_REPO = "/home/some_path"
 # FILE_REPO_BUCKET = "your-bucket"
 
 # SMTP (for emails)
+# SMTP_PRINT = "true" # Will print all emails sent to the console (FOR TESTING ONLY)
 SMTP_SERVER = "mail.example.com"
 SMTP_PORT = "port"
 SMTP_FROM = "no-reply@example.com"
