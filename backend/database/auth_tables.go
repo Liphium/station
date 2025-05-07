@@ -64,6 +64,6 @@ type KeyRequest struct {
 type RecoveryToken struct {
 	Account   uuid.UUID `json:"-" gorm:"index"`
 	Token     string    `json:"-"`
-	Data      string    `json:"data"` // All of the keys (encrypted with the token)
+	Data      string    `json:"-"` // All of the keys (encrypted with the token)
 	CreatedAt int64     `json:"creation" gorm:"autoCreateTime:milli"`
 }

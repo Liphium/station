@@ -24,6 +24,9 @@ var (
 	ErrorInvitesEmpty = Translations{
 		englishUS: "You can't generate any invites right now as you don't have any invites left. You can ask an admin for invites if you want to invite someone.",
 	}
+	ErrorInvalidRecoveryToken = Translations{
+		englishUS: "This recovery token is invalid or has already been deleted.",
+	}
 )
 
 func ErrorFriendLimitReached(limit int) Translations {

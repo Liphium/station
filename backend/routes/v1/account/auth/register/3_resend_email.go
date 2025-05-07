@@ -1,7 +1,6 @@
 package register_routes
 
 import (
-	"log"
 	"time"
 
 	"github.com/Liphium/station/backend/standards"
@@ -37,8 +36,6 @@ func resendEmail(c *fiber.Ctx) error {
 		duration := time.Minute*5 - time.Since(state.LastEmail)
 		return util.ReturnJSON(c, ssr.PopupResponse(c, localization.DialogTitleError, localization.AuthRegisterCodeEmailCooldown(int64(duration.Seconds()))))
 	}
-
-	log.Println("checking email", req.Email)
 
 	// Validate the email
 	valid, normalizedEmail := standards.CheckEmail(req.Email)

@@ -18,4 +18,5 @@ const MaxRecoveryTokens = 5
 func Authorized(router fiber.Router) {
 	router.Post("/generate", generateRecoveryToken)
 	router.Post("/list", listRecoveryTokens)
+	router.Post("/delete", deleteRecoveryToken)
 }
