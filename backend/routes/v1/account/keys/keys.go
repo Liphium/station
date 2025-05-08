@@ -35,4 +35,7 @@ func Unauthorized(router fiber.Router) {
 
 	// Routes to perform a key synchronization request
 	router.Route("/requests", key_request_routes.Unauthorized)
+
+	// Routes to use the recovery tokens
+	router.Route("/recovery", recovery_routes.Unauthorized)
 }

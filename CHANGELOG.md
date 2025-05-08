@@ -1,6 +1,16 @@
 ## Currently in dev
 
-- Added a SFU to Space Station: A new way for audio and video calling (experimental) 
+### Changes
+
+- Incremented protocol version to v8 (due to space-station changes and chat protocol changes)
+- Added Studio to Space Station: A WebRTC SFU for audio and video calling
+- Added Lightwire support to Studio (our own audio engine)
+- Added endpoints and database tables for recovery tokens
+- Added key recovery using recovery tokens
+
+### Fixes
+
+- TODO: Fill with content
 
 ## 0.6.2
 

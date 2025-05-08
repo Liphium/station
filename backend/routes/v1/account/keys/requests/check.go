@@ -18,7 +18,7 @@ type checkRequest struct {
 }
 
 // Route: /account/keys/requests/check
-func check(c *fiber.Ctx) error {
+func checkKeyRequest(c *fiber.Ctx) error {
 
 	// Parse the request
 	var req checkRequest

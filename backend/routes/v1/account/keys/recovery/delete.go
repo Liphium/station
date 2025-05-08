@@ -18,18 +18,15 @@ func deleteRecoveryToken(c *fiber.Ctx) error {
 	if err := util.BodyParser(c, &req); err != nil {
 		return util.FailedRequest(c, localization.ErrorInvalidRequestContent, err)
 	}
-	acc, err := verify.InfoLocals(c).GetAccountUUID()
-	if err != nil {
-		return util.FailedRequest(c, localization.ErrorAccountNotFound, err)
-	}
+	accId := verify.InfoLocals(c).GetAccount()
 
 	// Get the token
-	if err := database.DBConn.Where(&database.RecoveryToken{Account: acc, Token: req.Token}).Take(&database.RecoveryToken{}).Error; err != nil {
+	if err := database.DBConn.Where("account = ? AND token = ?", accId, req.Token).Take(&database.RecoveryToken{}).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorInvalidRecoveryToken, err)
 	}
 
 	// Delete the token
-	if err := database.DBConn.Where(&database.RecoveryToken{Account: acc, Token: req.Token}).Delete(&database.RecoveryToken{}).Error; err != nil {
+	if err := database.DBConn.Where("account = ? AND token = ?", accId, req.Token).Delete(&database.RecoveryToken{}).Error; err != nil {
 		return util.FailedRequest(c, localization.ErrorServer, err)
 	}
 

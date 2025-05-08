@@ -56,7 +56,6 @@ func refreshSession(c *fiber.Ctx) error {
 			Payload: "",
 		}
 		if err := database.DBConn.Where("session = ?", session.ID).Take(&request).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-
 			return util.ReturnJSON(c, fiber.Map{
 				"success":  false,
 				"verified": false,
@@ -69,6 +68,11 @@ func refreshSession(c *fiber.Ctx) error {
 				"success":  false,
 				"verified": false,
 			})
+		}
+
+		// Delete the key request
+		if err := database.DBConn.Delete(&request).Error; err != nil {
+			return util.FailedRequest(c, localization.ErrorServer, err)
 		}
 
 		// Update the session to verified in case it has

@@ -12,7 +12,7 @@ import (
 )
 
 // Route: /account/keys/requests/list
-func list(c *fiber.Ctx) error {
+func listKeyRequests(c *fiber.Ctx) error {
 
 	// Get the account
 	accId, err := verify.InfoLocals(c).GetAccountUUID()

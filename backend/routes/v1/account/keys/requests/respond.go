@@ -16,7 +16,7 @@ type respondRequest struct {
 }
 
 // Route: /account/keys/requests/respond
-func respond(c *fiber.Ctx) error {
+func respondToKeyRequest(c *fiber.Ctx) error {
 
 	// Parse request
 	var req respondRequest

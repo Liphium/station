@@ -15,7 +15,7 @@ type existsRequest struct {
 }
 
 // Route: /account/keys/requests/exists
-func exists(c *fiber.Ctx) error {
+func doesKeyRequestExist(c *fiber.Ctx) error {
 
 	// Parse the request
 	var req existsRequest
