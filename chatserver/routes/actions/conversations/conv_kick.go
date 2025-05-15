@@ -21,6 +21,11 @@ type KickMemberAction struct {
 // Action: conv_kick
 func HandleKick(c *fiber.Ctx, token database.ConversationToken, target string) error {
 
+	// Make sure the token is activated
+	if !token.Activated {
+		return integration.InvalidRequest(c, "not activated token")
+	}
+
 	// Make sure you can't kick yourself
 	if token.ID == target {
 		return integration.InvalidRequest(c, "same token")

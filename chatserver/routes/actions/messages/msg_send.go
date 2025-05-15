@@ -20,7 +20,7 @@ func HandleSend(c *fiber.Ctx, token database.ConversationToken, action struct {
 }) error {
 
 	// Validate request
-	if len(action.Data) == 0 || !database.ValidateExtra(action.Extra) {
+	if len(action.Data) == 0 || !database.ValidateExtra(action.Extra) || !token.Activated {
 		return integration.InvalidRequest(c, "request is invalid")
 	}
 

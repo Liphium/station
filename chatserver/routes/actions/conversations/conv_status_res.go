@@ -15,6 +15,11 @@ func HandleStatusResponse(c *fiber.Ctx, token database.ConversationToken, action
 	Data   string `json:"data"`
 }) error {
 
+	// Make sure the token is activated
+	if !token.Activated {
+		return integration.InvalidRequest(c, "not activated token")
+	}
+
 	// Check if this is a valid conversation
 	members, err := caching.LoadMembers(token.Conversation)
 	if err != nil {

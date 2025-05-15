@@ -16,6 +16,11 @@ type changeDataRequest struct {
 // Action: conv_set_data
 func HandleSetData(c *fiber.Ctx, token database.ConversationToken, action changeDataRequest) error {
 
+	// Make sure the token is activated
+	if !token.Activated {
+		return integration.InvalidRequest(c, "not activated token")
+	}
+
 	// Make sure the person has at least the moderator rank
 	if token.Rank < database.RankModerator {
 		return integration.FailedRequest(c, localization.ErrorMemberNoPermission, nil)

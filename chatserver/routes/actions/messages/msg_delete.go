@@ -10,6 +10,11 @@ import (
 // Action: msg_delete
 func HandleDelete(c *fiber.Ctx, token database.ConversationToken, messageId string) error {
 
+	// Make sure the token is activated
+	if !token.Activated {
+		return integration.InvalidRequest(c, "not activated token")
+	}
+
 	// Get the message
 	var message database.Message
 	if err := database.DBConn.Where("id = ?", messageId).Take(&message).Error; err != nil {

@@ -15,6 +15,11 @@ import (
 // Action: conv_promote
 func HandlePromoteToken(c *fiber.Ctx, token database.ConversationToken, user string) error {
 
+	// Make sure the token is activated
+	if !token.Activated {
+		return integration.InvalidRequest(c, "not activated token")
+	}
+
 	// Make sure the conversation is not a private message
 	var conversation database.Conversation
 	if err := database.DBConn.Where("id = ?", token.Conversation).Find(&conversation).Error; err != nil {

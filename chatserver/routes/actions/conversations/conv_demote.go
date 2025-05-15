@@ -21,7 +21,7 @@ func HandleDemoteToken(c *fiber.Ctx, token database.ConversationToken, user stri
 		return integration.InvalidRequest(c, fmt.Sprintf("couldn't find conversation in database: %s", err.Error()))
 	}
 
-	if conversation.Type == database.ConvTypePrivateMessage {
+	if conversation.Type == database.ConvTypePrivateMessage || !token.Activated {
 		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
