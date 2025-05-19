@@ -22,7 +22,6 @@ func NormalizeEmail(email string) string {
 	// Remove dots (.) from the username part of the email
 	parts := strings.Split(email, "@")
 	username := parts[0]
-	username = strings.ReplaceAll(username, ".", "")
 
 	// Reconstruct the normalized email address
 	normalizedEmail := username + "@" + parts[1]
