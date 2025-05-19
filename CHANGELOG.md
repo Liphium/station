@@ -7,6 +7,7 @@
 - Added Lightwire support to Studio (our own audio engine)
 - Added endpoints and database tables for recovery tokens
 - Added key recovery using recovery tokens
+- Fix the email sanitizer sometimes not working correctly
 
 ### Fixes
 
