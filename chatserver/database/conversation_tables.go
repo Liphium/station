@@ -39,8 +39,8 @@ type SentConversationToken struct {
 
 // * Ranks
 const RankUser = 0
-const RankModerator = 1 // Can remove/add users
-const RankAdmin = 2     // Manages moderators and can delete the conversation
+const RankModerator = 100 // Can remove/add users
+const RankAdmin = 200     // Manages moderators and can delete the conversation
 
 type Conversation struct {
 	ID      string `json:"id" gorm:"primaryKey"`
