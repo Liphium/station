@@ -2,7 +2,6 @@ package integration
 
 import (
 	"bufio"
-	"crypto/rsa"
 	"fmt"
 	"log"
 	"os"
@@ -14,10 +13,6 @@ import (
 
 var Log = log.New(os.Stdout, "node-integration ", log.Flags())
 var FilePath = ""
-
-// * Credentials for this node
-var NodePrivateKey *rsa.PrivateKey // Private key for current node
-var NodePublicKey *rsa.PublicKey   // Public key for current node
 
 type NodeData struct {
 	NodeToken string
@@ -57,17 +52,6 @@ func Setup(identifier string, loadEnv bool) bool {
 
 	scanner := bufio.NewScanner(os.Stdin)
 
-	// Get the public and private key of this node
-	NodePublicKey, err = UnpackageRSAPublicKey(os.Getenv("TC_PUBLIC_KEY"))
-	if err != nil {
-		panic("Couldn't unpackage public key. Required for v1 API. Please set TC_PUBLIC_KEY in your environment variables or .env file.")
-	}
-
-	NodePrivateKey, err = UnpackageRSAPrivateKey(os.Getenv("TC_PRIVATE_KEY"))
-	if err != nil {
-		panic("Couldn't unpackage private key. Required for v1 API. Please set TC_PRIVATE_KEY in your environment variables or .env file.")
-	}
-
 	// Ask for testing if required
 	testing := os.Getenv("TESTING")
 	if testing == "true" {
@@ -100,12 +84,6 @@ func Setup(identifier string, loadEnv bool) bool {
 			Domain = "http://" + Domain
 		}
 
-		Log.Println("Grabbing server public key..")
-		err = grabServerPublicKey()
-		if err != nil {
-			panic(err)
-		}
-
 		return true
 	}
 
@@ -129,12 +107,6 @@ func Setup(identifier string, loadEnv bool) bool {
 
 	if readData(FilePath+"/"+input+".node", identifier) {
 
-		Log.Println("Grabbing server public key..")
-		err = grabServerPublicKey()
-		if err != nil {
-			return false
-		}
-
 		Log.Println("Ready to start.")
 		return true
 	}
@@ -148,12 +120,6 @@ func Setup(identifier string, loadEnv bool) bool {
 	Domain = extractDomain(BasePath)
 	if strings.HasPrefix(BasePath, "http://") {
 		Domain = "http://" + Domain
-	}
-
-	Log.Println("Grabbing server public key..")
-	err = grabServerPublicKey()
-	if err != nil {
-		return false
 	}
 
 	Log.Println("2. Creation Token (Received from a creation request in the admin panel)")

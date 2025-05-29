@@ -7,6 +7,7 @@ import (
 
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/integration"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -135,7 +136,7 @@ func AuthMiddleware() func(c *fiber.Ctx) error {
 
 			// Make sure the token isn't expired
 			if util.IsExpired(c) {
-				return util.InvalidRequest(c)
+				return integration.InvalidRequest(c, "token is expired")
 			}
 
 			// Verify the session
@@ -144,7 +145,7 @@ func AuthMiddleware() func(c *fiber.Ctx) error {
 				if util.Testing {
 					util.Log.Println("invalid session info: " + err.Error())
 				}
-				return util.InvalidRequest(c)
+				return integration.InvalidRequest(c, "session info is invalid")
 			}
 
 			// Make sure the session is valid
@@ -152,7 +153,7 @@ func AuthMiddleware() func(c *fiber.Ctx) error {
 				if util.Testing {
 					util.Log.Println("the session is invalid")
 				}
-				return util.InvalidRequest(c)
+				return integration.InvalidRequest(c, "session is invalid")
 			}
 
 			// Add the info to the locals

@@ -41,10 +41,6 @@ DB_PORT = "5432"
 # JWT
 JWT_SECRET = "secret"
 
-# Through Cloudflare Protection
-TC_PUBLIC_KEY = "PUB_KEY_HERE"
-TC_PRIVATE_KEY = "PRIV_KEY_HERE"
-
 # File storage folder
 # If you want local storage
 FILE_REPO_TYPE = "local"

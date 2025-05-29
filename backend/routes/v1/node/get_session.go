@@ -2,8 +2,8 @@ package node
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -17,27 +17,27 @@ func getSession(c *fiber.Ctx) error {
 		Token   string `json:"token"`
 		Session string `json:"session"`
 	}
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Validate node token
 	_, err := nodes.Node(nodeToU(req.ID), req.Token)
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Get the session and check if it is valid
 	var session database.Session
 	if err := database.DBConn.Where("id = ?", req.Session).Take(&session).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorSessionNotFound, err)
+		return integration.FailedRequest(c, localization.ErrorSessionNotFound, err)
 	}
 
 	if !session.Verified {
-		return util.FailedRequest(c, localization.ErrorSessionNotVerified, err)
+		return integration.FailedRequest(c, localization.ErrorSessionNotVerified, err)
 	}
 
-	return util.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"account": session.Account.String(),
 		"level":   session.PermissionLevel,

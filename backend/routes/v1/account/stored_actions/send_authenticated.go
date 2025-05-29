@@ -2,8 +2,8 @@ package stored_actions
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -14,24 +14,24 @@ func sendAuthenticatedStoredAction(c *fiber.Ctx) error {
 
 	// Parse request
 	var req sendRequest
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	if req.Account == "" || req.Payload == "" {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Parse account id from request
 	id, err := uuid.Parse(req.Account)
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Get account
 	var acc database.Account
 	if err := database.DBConn.Where("id = ?", id).Take(&acc).Error; err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Create stored action
@@ -44,20 +44,20 @@ func sendAuthenticatedStoredAction(c *fiber.Ctx) error {
 	// Check if stored action limit is reached
 	var storedActionCount int64
 	if err := database.DBConn.Model(&database.AStoredAction{}).Where("account = ?", acc.ID).Count(&storedActionCount).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	if storedActionCount >= AuthenticatedStoredActionLimit {
-		return util.FailedRequest(c, localization.ErrorStoredActionLimitReached(AuthenticatedStoredActionLimit), nil)
+		return integration.FailedRequest(c, localization.ErrorStoredActionLimitReached(AuthenticatedStoredActionLimit), nil)
 	}
 
 	var storedActionKey database.StoredActionKey
 	if err := database.DBConn.Where(&database.StoredActionKey{ID: id}).Take(&storedActionKey).Error; err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	if storedActionKey.Key != req.Key {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Save authenticated stored action
@@ -66,11 +66,11 @@ func sendAuthenticatedStoredAction(c *fiber.Ctx) error {
 		Account: storedAction.Account,
 		Payload: storedAction.Payload,
 	}).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Send stored action to account
 	sendStoredActionTo(acc.ID, true, storedAction)
 
-	return util.SuccessfulRequest(c)
+	return integration.SuccessfulRequest(c)
 }

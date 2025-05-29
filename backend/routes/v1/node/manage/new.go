@@ -2,8 +2,8 @@ package manage
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -19,27 +19,27 @@ func newNode(c *fiber.Ctx) error {
 
 	// Parse body to add request
 	var req newRequest
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Check if token is valid
 	var ct database.NodeCreation
 	if err := database.DBConn.Where("token = ?", req.Token).Take(&ct).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
+		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	if req.Domain == "" {
-		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
+		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	if len(req.Domain) < 3 {
-		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
+		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	var app database.App
 	if err := database.DBConn.Take(&app, req.App).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
+		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	// Create node
@@ -53,10 +53,10 @@ func newNode(c *fiber.Ctx) error {
 	}
 
 	if err := database.DBConn.Create(&created).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
+		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
-	return util.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"token":   created.Token,
 		"app":     app.Name,

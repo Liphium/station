@@ -4,8 +4,8 @@ import (
 	"strconv"
 
 	"github.com/Liphium/station/backend/settings"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -19,27 +19,27 @@ func getBoolSetting(c *fiber.Ctx) error {
 		Token   string `json:"token"`
 		Setting string `json:"setting"`
 	}
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Validate node token
 	_, err := nodes.Node(nodeToU(req.ID), req.Token)
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Get the setting and the value of it
 	setting, valid := settings.SettingRegistryBoolean[req.Setting]
 	if !valid {
-		return util.FailedRequest(c, localization.ErrorInvalidRequestContent, nil)
+		return integration.FailedRequest(c, localization.ErrorInvalidRequestContent, nil)
 	}
 	val, err := setting.GetValue()
 	if err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, nil)
+		return integration.FailedRequest(c, localization.ErrorServer, nil)
 	}
 
-	return util.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"value":   val,
 	})

@@ -1,8 +1,6 @@
 package routes
 
 import (
-	"encoding/base64"
-	"errors"
 	"time"
 
 	"github.com/Liphium/station/chatserver/caching"
@@ -21,6 +19,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+const ProtocolVersion = 8
+
 func Setup(router fiber.Router) {
 
 	// Return the public key for TC Protection
@@ -28,7 +28,7 @@ func Setup(router fiber.Router) {
 
 		// Return the public key in a packaged form (string)
 		return c.JSON(fiber.Map{
-			"pub": integration.PackageRSAPublicKey(integration.NodePublicKey),
+			"protocol_version": 8,
 		})
 	})
 
@@ -50,9 +50,6 @@ func authorizedRoutes(router fiber.Router) {
 }
 
 func encryptedRoutes(router fiber.Router) {
-
-	// Add Through Cloudflare Protection middleware
-	router.Use(integration.ThroughCloudflareMiddleware())
 
 	// No authorization needed for this route
 	router.Post("/adoption/socketless", socketless)
@@ -153,22 +150,6 @@ func setupPipesFiber(router fiber.Router) {
 				util.Log.Println("Client connected:", client.ID)
 			}
 
-			// Get the AES key from attachments
-			aesKeyEncrypted, err := base64.StdEncoding.DecodeString(key)
-			if err != nil {
-				return true
-			}
-
-			// Decrypt AES key
-			aesKey, err := integration.DecryptRSA(integration.NodePrivateKey, aesKeyEncrypted)
-			if err != nil {
-				return true
-			}
-
-			// Set AES key in client data
-			client.Data = ExtraClientData{aesKey}
-			caching.CSInstance.UpdateClient(client)
-
 			// Initialize the user and check if he needs to be disconnected
 			disconnect := !initializeUser(client)
 			util.Log.Println("Setup finish")
@@ -178,10 +159,6 @@ func setupPipesFiber(router fiber.Router) {
 			return disconnect
 		},
 
-		//* Set the decoding middleware to use encryption
-		ClientEncodingMiddleware: EncryptionClientEncodingMiddleware,
-		DecodingMiddleware:       EncryptionDecodingMiddleware,
-
 		ErrorHandler: func(err error) {
 			util.Log.Printf("pipes-fiber error: %s \n", err.Error())
 		},
@@ -189,47 +166,6 @@ func setupPipesFiber(router fiber.Router) {
 	router.Route("/", func(router fiber.Router) {
 		pipesfroutes.SetupRoutes(router, caching.CSNode, caching.CSInstance, false)
 	})
-}
-
-// Extra client data attached to the pipes-fiber client
-type ExtraClientData struct {
-	Key []byte // AES encryption key
-}
-
-// Middleware for pipes-fiber to add encryption support
-func EncryptionDecodingMiddleware(client *pipeshandler.Client, instance *pipeshandler.Instance, bytes []byte) ([]byte, error) {
-
-	// Handle potential errors
-	defer func() {
-		if err := recover(); err != nil {
-			instance.ReportClientError(client, "encryption failure", errors.ErrUnsupported)
-		}
-	}()
-
-	// Decrypt the message using AES
-	key := client.Data.(ExtraClientData).Key
-	return integration.DecryptAES(key, bytes)
-}
-
-// Middleware for pipes-fiber to add encryption support (in encoding)
-func EncryptionClientEncodingMiddleware(client *pipeshandler.Client, instance *pipeshandler.Instance, message []byte) ([]byte, error) {
-
-	// Handle potential errors (with casting in particular)
-	defer func() {
-		if err := recover(); err != nil {
-			instance.ReportClientError(client, "encryption failure", errors.ErrUnsupported)
-		}
-	}()
-
-	// Check if the encryption key is set
-	if client.Data == nil {
-		return nil, errors.New("no encryption key set")
-	}
-
-	// Encrypt the message using the client encryption key
-	key := client.Data.(ExtraClientData).Key
-	result, err := integration.EncryptAES(key, message)
-	return result, err
 }
 
 func initializeUser(client *pipeshandler.Client) bool {

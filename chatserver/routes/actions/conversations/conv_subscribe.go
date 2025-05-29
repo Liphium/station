@@ -53,7 +53,7 @@ func HandleRemoteSubscription(c *fiber.Ctx, action RemoteSubscribeAction) error 
 				ID: "s-" + token.ID,
 				Receive: func(ctx *pipes.Context) error {
 					// Send the event to the token through a remote event channel
-					_, err := integration.PostRequestTC(action.Node, "/event_channel/send", fiber.Map{
+					_, err := integration.PostRequest(action.Node, "/event_channel/send", fiber.Map{
 						"id":    token.ID,
 						"token": token.Token,
 						"event": *ctx.Event,
@@ -121,7 +121,7 @@ func HandleRemoteSubscription(c *fiber.Ctx, action RemoteSubscribeAction) error 
 		}
 	}()
 
-	return integration.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"info":    info,
 		"missing": missingTokens,

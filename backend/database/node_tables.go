@@ -37,7 +37,7 @@ func (n *Node) ToEntity() NodeEntity {
 // Send a ping to see if the node is online
 func (n *Node) SendPing() error {
 
-	_, err := util.PostRequestNoTC(util.NodeProtocol+n.Domain+"/ping", map[string]interface{}{})
+	_, err := util.PostRequest(util.NodeProtocol+n.Domain+"/ping", map[string]interface{}{})
 	return err
 }
 

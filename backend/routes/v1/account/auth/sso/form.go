@@ -1,7 +1,7 @@
 package sso_routes
 
 import (
-	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/main/ssr"
 	"github.com/gofiber/fiber/v2"
@@ -15,39 +15,39 @@ func getSSOForm(c *fiber.Ctx) error {
 	var req struct {
 		Token string `json:"token"`
 	}
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Check the token
 	state, msg := checkToken(req.Token)
 	if msg != nil {
-		return util.FailedRequest(c, msg, nil)
+		return integration.FailedRequest(c, msg, nil)
 	}
 
 	// Get the provider from goth
 	provider, err := goth.GetProvider(openIdName)
 	if err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Generate the session
 	session, err := provider.BeginAuth(state.State)
 	if err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Get the url
 	url, err := session.GetAuthURL()
 	if err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Add the goth session to the state
 	state.Session = session.Marshal()
 
 	// Return the SSO check form
-	return util.ReturnJSON(c, ssr.RenderResponse(c, ssr.Components{
+	return c.JSON(ssr.RenderResponse(c, ssr.Components{
 		ssr.Text{
 			Text:  localization.RegisterSSOTitle,
 			Style: ssr.TextStyleHeadline,

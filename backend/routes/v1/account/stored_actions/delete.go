@@ -2,8 +2,8 @@ package stored_actions
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/verify"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -17,22 +17,22 @@ func deleteStoredAction(c *fiber.Ctx) error {
 
 	// Parse request
 	var req deleteRequest
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Delete stored action
 	accId, err := verify.InfoLocals(c).GetAccountUUID()
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid account id")
 	}
 	if err := database.DBConn.Where("account = ? AND id = ?", accId, req.ID).Delete(&database.StoredAction{}).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 	if err := database.DBConn.Where("account = ? AND id = ?", accId, req.ID).Delete(&database.AStoredAction{}).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Return success
-	return util.SuccessfulRequest(c)
+	return integration.SuccessfulRequest(c)
 }

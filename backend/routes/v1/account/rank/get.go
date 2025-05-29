@@ -2,8 +2,8 @@ package rank
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -22,23 +22,23 @@ func getRank(c *fiber.Ctx) error {
 
 	// Parse request
 	var req getRequest
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Check node token
 	_, err := nodes.Node(req.Node, req.Token)
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid node")
 	}
 
 	// Get rank
 	var rank database.Rank
 	if database.DBConn.Where("id = ?", req.ID).Find(&rank).Error != nil {
-		return util.FailedRequest(c, localization.ErrorServer, nil)
+		return integration.FailedRequest(c, localization.ErrorServer, nil)
 	}
 
-	return util.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"rank":    rank,
 	})

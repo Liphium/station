@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/verify"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -17,13 +17,13 @@ func listKeyRequests(c *fiber.Ctx) error {
 	// Get the account
 	accId, err := verify.InfoLocals(c).GetAccountUUID()
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid account id")
 	}
 
 	// Get all key requests for account
 	var requests []database.KeyRequest = []database.KeyRequest{}
 	if err := database.DBConn.Where("account = ?", accId).Find(&requests).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Check if they are still valid
@@ -45,7 +45,7 @@ func listKeyRequests(c *fiber.Ctx) error {
 	}
 
 	// Return the requests as JSON
-	return util.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success":  true,
 		"requests": validRequests,
 	})

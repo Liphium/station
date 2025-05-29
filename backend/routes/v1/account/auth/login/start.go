@@ -1,7 +1,7 @@
 package login_routes
 
 import (
-	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/main/ssr"
 	"github.com/gofiber/fiber/v2"
@@ -14,17 +14,17 @@ func startLogin(c *fiber.Ctx) error {
 	var req struct {
 		Token string `json:"token"`
 	}
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Check the token
 	if msg := testTokenAndRatelimit(req.Token, 1); msg != nil {
-		return util.FailedRequest(c, msg, nil)
+		return integration.FailedRequest(c, msg, nil)
 	}
 
 	// Render the password login page
-	return util.ReturnJSON(c, ssr.RenderResponse(c, ssr.Components{
+	return c.JSON(ssr.RenderResponse(c, ssr.Components{
 		ssr.Text{
 			Style: ssr.TextStyleHeadline,
 			Text:  localization.LoginPasswordTitle,

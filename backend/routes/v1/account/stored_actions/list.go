@@ -4,8 +4,8 @@ import (
 	"sort"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/verify"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -22,14 +22,14 @@ func listStoredActions(c *fiber.Ctx) error {
 	// Get stored actions
 	accId, err := verify.InfoLocals(c).GetAccountUUID()
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid account id")
 	}
 	var returnables = []returnableStoredAction{}
 
 	// Get all normal stored actions and add them as non authenticated ones
 	var storedActions []database.StoredAction
 	if err := database.DBConn.Where("account = ?", accId).Find(&storedActions).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 	for _, storedAction := range storedActions {
 		returnables = append(returnables, returnableStoredAction{
@@ -42,7 +42,7 @@ func listStoredActions(c *fiber.Ctx) error {
 	// Get all authenticated stored actions and mark them as such in the returning phase
 	var aStoredActions []database.AStoredAction
 	if err := database.DBConn.Where("account = ?", accId).Find(&aStoredActions).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 	for _, storedAction := range aStoredActions {
 		returnables = append(returnables, returnableStoredAction{
@@ -58,7 +58,7 @@ func listStoredActions(c *fiber.Ctx) error {
 	})
 
 	// Return stored actions
-	return util.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"actions": returnables,
 	})

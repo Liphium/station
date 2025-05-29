@@ -2,7 +2,7 @@ package account
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -16,28 +16,27 @@ func getAccount(c *fiber.Ctx) error {
 
 	// Parse request
 	var req getRequest
-	if err := util.BodyParser(c, &req); err != nil {
-		util.Log.Println(err)
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Get account
 	var acc database.Account
 	if err := database.DBConn.Select("username", "display_name").Where("id = ?", req.ID).Take(&acc).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	var pub database.PublicKey
 	if err := database.DBConn.Select("key").Where("id = ?", req.ID).Take(&pub).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	var signaturePub database.SignatureKey
 	if err := database.DBConn.Select("key").Where("id = ?", req.ID).Take(&signaturePub).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	return util.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success":      true,
 		"id":           acc.ID,
 		"name":         acc.Username,

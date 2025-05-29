@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/Liphium/station/backend/standards"
-	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/main/ssr"
 	"github.com/gofiber/fiber/v2"
@@ -19,29 +19,29 @@ func checkEmailCode(c *fiber.Ctx) error {
 		Email string `json:"email"`
 		Code  string `json:"code"`
 	}
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Validate the token
 	state, msg := validateToken(req.Token, 3)
 	if msg != nil {
-		return util.FailedRequest(c, msg, nil)
+		return integration.FailedRequest(c, msg, nil)
 	}
 
 	// Rate limit the entering of codes
 	if !ratelimitHandler(state, 3, time.Second*5) {
-		return util.FailedRequest(c, localization.ErrorAuthRatelimit, nil)
+		return integration.FailedRequest(c, localization.ErrorAuthRatelimit, nil)
 	}
 
 	// Check the email code and stuff
 	if state.EmailCode != req.Code {
-		return util.FailedRequest(c, localization.ErrorEmailCodeInvalid, nil)
+		return integration.FailedRequest(c, localization.ErrorEmailCodeInvalid, nil)
 	}
 
 	// Upgrade the token
 	if msg := upgradeToken(req.Token, 4); msg != nil {
-		return util.FailedRequest(c, msg, nil)
+		return integration.FailedRequest(c, msg, nil)
 	}
 
 	return renderUsernameForm(c)
@@ -49,7 +49,7 @@ func checkEmailCode(c *fiber.Ctx) error {
 
 // Render the username creation form
 func renderUsernameForm(c *fiber.Ctx) error {
-	return util.ReturnJSON(c, ssr.RenderResponse(c, ssr.Components{
+	return c.JSON(ssr.RenderResponse(c, ssr.Components{
 		ssr.Text{
 			Text:  localization.RegisterDisplayNameTitle,
 			Style: ssr.TextStyleHeadline,

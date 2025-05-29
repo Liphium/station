@@ -34,7 +34,7 @@ func handleNegotiation(c *fiber.Ctx, action struct {
 	// Save the node to the map
 	tokenMap.Store(action.ID, action.Node)
 
-	return integration.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"node":    util.OwnPath,
 	})

@@ -3,8 +3,8 @@ package profile
 import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/routes/v1/account/files"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/verify"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -15,7 +15,7 @@ func removeProfilePicture(c *fiber.Ctx) error {
 	// Get the account id
 	accId, err := verify.InfoLocals(c).GetAccountUUID()
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Get the current profile
@@ -27,7 +27,7 @@ func removeProfilePicture(c *fiber.Ctx) error {
 
 		// Delete the file from the server (no longer needed)
 		if err := files.Delete([]string{profile.Picture}); err != nil {
-			return util.FailedRequest(c, localization.ErrorServer, err)
+			return integration.FailedRequest(c, localization.ErrorServer, err)
 		}
 
 		profile.Picture = ""
@@ -36,9 +36,9 @@ func removeProfilePicture(c *fiber.Ctx) error {
 
 		// Save new profile
 		if err := database.DBConn.Save(&profile).Error; err != nil {
-			return util.FailedRequest(c, localization.ErrorServer, err)
+			return integration.FailedRequest(c, localization.ErrorServer, err)
 		}
 	}
 
-	return util.SuccessfulRequest(c)
+	return integration.SuccessfulRequest(c)
 }

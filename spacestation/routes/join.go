@@ -17,7 +17,7 @@ func joinSpace(c *fiber.Ctx) error {
 	var req struct {
 		Id string `json:"id"`
 	}
-	if err := integration.BodyParser(c, &req); err != nil {
+	if err := c.BodyParser(&req); err != nil {
 		return integration.InvalidRequest(c, "invalid request body")
 	}
 
@@ -33,7 +33,7 @@ func joinSpace(c *fiber.Ctx) error {
 		return err
 	}
 
-	return integration.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"token":   token,
 		"client":  clientId,

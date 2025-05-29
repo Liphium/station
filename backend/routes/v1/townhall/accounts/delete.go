@@ -3,7 +3,7 @@ package townhall_accounts
 import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/routes/v1/account/files"
-	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -15,8 +15,8 @@ func deleteAccount(c *fiber.Ctx) error {
 	var req struct {
 		Account string `json:"account"`
 	}
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Delete all the data related to the account
@@ -40,11 +40,11 @@ func deleteAccount(c *fiber.Ctx) error {
 	// Get all the files and delete all of them
 	var ids []string
 	if err := database.DBConn.Model(&database.CloudFile{}).Select("id").Where("account = ?", req.Account).Scan(&ids).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 	if err := files.Delete(ids); err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	return util.SuccessfulRequest(c)
+	return integration.SuccessfulRequest(c)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/verify"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -29,23 +30,23 @@ func setProfilePicture(c *fiber.Ctx) error {
 
 	// Parse the request
 	var req setProfileRequest
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 	accId, err := verify.InfoLocals(c).GetAccountUUID()
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid account id")
 	}
 
 	// Make sure the data isn't weird (let's hope I don't regret this, not tested btw xd)
 	if len(req.File) > 1000 || len(req.Container) > 2000 || len(req.Data) > 1000 {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid containers")
 	}
 
 	// Get the profile picture file
 	var file database.CloudFile
 	if err := database.DBConn.Where("id = ?", req.File).Take(&file).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Check if the file extension is correct
@@ -60,7 +61,7 @@ func setProfilePicture(c *fiber.Ctx) error {
 	}
 
 	if !found {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "extension not found")
 	}
 
 	// Get the current profile
@@ -69,7 +70,7 @@ func setProfilePicture(c *fiber.Ctx) error {
 
 	// Only return if there was an error with the database (exclude not found)
 	if err != nil && err != gorm.ErrRecordNotFound {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Check if the profile was found (error has to be gorm.ErrRecordNotFound here cause excluded before)
@@ -77,7 +78,7 @@ func setProfilePicture(c *fiber.Ctx) error {
 
 		// Make previous profile picture no longer saved when it wasn't found
 		if err := database.DBConn.Model(&database.CloudFile{}).Where("id = ?", profile.Picture).Update("system", false).Error; err != nil {
-			return util.FailedRequest(c, localization.ErrorServer, err)
+			return integration.FailedRequest(c, localization.ErrorServer, err)
 		}
 	}
 
@@ -89,13 +90,13 @@ func setProfilePicture(c *fiber.Ctx) error {
 
 	// Save new profile
 	if err := database.DBConn.Save(&profile).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	// Mark new profile picture as system file
 	if err := database.DBConn.Model(&database.CloudFile{}).Where("id = ?", req.File).Update("system", true).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	return util.SuccessfulRequest(c)
+	return integration.SuccessfulRequest(c)
 }

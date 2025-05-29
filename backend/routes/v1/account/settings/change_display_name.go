@@ -1,12 +1,10 @@
 package settings_routes
 
 import (
-	"log"
-
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/standards"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/verify"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -19,24 +17,23 @@ type changeDisplayNameRequest struct {
 func changeDisplayName(c *fiber.Ctx) error {
 
 	var req changeDisplayNameRequest
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 	accId, err := verify.InfoLocals(c).GetAccountUUID()
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid account id")
 	}
 
 	// Make sure the name isn't weird data
 	if message := standards.CheckDisplayName(req.Name); message != nil {
-		return util.FailedRequest(c, message, nil)
+		return integration.FailedRequest(c, message, nil)
 	}
 
 	// Get account from database
 	var acc database.Account
 	if err := database.DBConn.Where("id = ?", accId).Take(&acc).Error; err != nil {
-		log.Println("account no found")
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid account")
 	}
 
 	// Update the display name in the account
@@ -44,8 +41,8 @@ func changeDisplayName(c *fiber.Ctx) error {
 
 	// Save new profile
 	if err := database.DBConn.Save(&acc).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	return util.SuccessfulRequest(c)
+	return integration.SuccessfulRequest(c)
 }

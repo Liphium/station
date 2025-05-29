@@ -3,6 +3,7 @@ package node
 import (
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/nodes"
+	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -16,17 +17,17 @@ func this(c *fiber.Ctx) error {
 
 	// Parse request
 	var req thisRequest
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Get node
 	node, err := nodes.Node(req.Node, req.Token)
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
-	return util.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success":    true,
 		"jwt_secret": util.JWT_SECRET,
 		"node":       node.ToEntity(),

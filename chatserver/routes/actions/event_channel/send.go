@@ -21,7 +21,7 @@ func HandleRemoteEvent(c *fiber.Ctx) error {
 
 	// Parse the request
 	var req remoteEventRequest
-	if err := integration.BodyParser(c, &req); err != nil {
+	if err := c.BodyParser(&req); err != nil {
 		return integration.InvalidRequest(c, "request not valid")
 	}
 

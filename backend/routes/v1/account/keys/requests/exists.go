@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -19,24 +19,24 @@ func doesKeyRequestExist(c *fiber.Ctx) error {
 
 	// Parse the request
 	var req existsRequest
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Get the session and check the token
 	var session database.Session
 	if err := database.DBConn.Where("token = ?", req.Token).Take(&session).Error; err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid session")
 	}
 
 	// Check if there is an existing key sync request
 	var keyRequest database.KeyRequest
 	err := database.DBConn.Where("session = ?", session.ID).Take(&keyRequest).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	return util.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"exists":  err == nil,
 	})

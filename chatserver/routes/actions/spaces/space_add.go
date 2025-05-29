@@ -28,7 +28,7 @@ func HandleSpaceAddition(c *fiber.Ctx, token database.ConversationToken, action 
 
 		// If it already exists, send a different response
 		if exists {
-			return integration.ReturnJSON(c, fiber.Map{
+			return c.JSON(fiber.Map{
 				"success": true,
 				"exists":  true,
 			})
@@ -38,7 +38,7 @@ func HandleSpaceAddition(c *fiber.Ctx, token database.ConversationToken, action 
 		return integration.FailedRequest(c, msg, nil)
 	}
 
-	return integration.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"exists":  false,
 	})

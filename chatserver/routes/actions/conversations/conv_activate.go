@@ -55,7 +55,7 @@ func HandleTokenActivation(c *fiber.Ctx, token database.ConversationToken, _ int
 		}
 	}
 
-	return integration.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"type":    conversation.Type,
 		"data":    conversation.Data,

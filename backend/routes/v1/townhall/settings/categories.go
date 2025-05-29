@@ -1,7 +1,6 @@
 package townhall_settings
 
 import (
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -35,7 +34,7 @@ func getCategories(c *fiber.Ctx) error {
 		}
 	}
 
-	return util.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success":    true,
 		"categories": translated,
 	})

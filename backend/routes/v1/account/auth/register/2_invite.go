@@ -4,9 +4,9 @@ import (
 	"errors"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/backend/util/mail"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/main/ssr"
 	"github.com/gofiber/fiber/v2"
@@ -22,30 +22,30 @@ func checkInvite(c *fiber.Ctx) error {
 		Token  string `json:"token"`
 		Invite string `json:"invite"`
 	}
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Validate the token
 	state, msg := validateToken(req.Token, 2)
 	if msg != nil {
-		return util.FailedRequest(c, msg, nil)
+		return integration.FailedRequest(c, msg, nil)
 	}
 
 	// Validate the invite
 	inviteId, err := uuid.Parse(req.Invite)
 	if err != nil {
-		return util.FailedRequest(c, localization.ErrorInviteInvalid, nil)
+		return integration.FailedRequest(c, localization.ErrorInviteInvalid, nil)
 	}
 	var invite database.Invite
 	if err := database.DBConn.Where("id = ?", inviteId).Take(&invite).Error; err != nil {
 
 		// Send an invalid invite error if the record wasn't found
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return util.FailedRequest(c, localization.ErrorInviteInvalid, nil)
+			return integration.FailedRequest(c, localization.ErrorInviteInvalid, nil)
 		}
 
-		return util.FailedRequest(c, localization.ErrorServer, nil)
+		return integration.FailedRequest(c, localization.ErrorServer, nil)
 	}
 
 	// Add the invite to the state
@@ -56,16 +56,16 @@ func checkInvite(c *fiber.Ctx) error {
 
 	// Send them an email code
 	if err := mail.SendEmail(state.Email, localization.Locale(c), mail.EmailVerification, state.EmailCode); err != nil {
-		return util.FailedRequest(c, localization.ErrorMail, err)
+		return integration.FailedRequest(c, localization.ErrorMail, err)
 	}
 
 	// Upgrade the token for the next step
 	if msg := upgradeToken(req.Token, 3); msg != nil {
-		return util.FailedRequest(c, msg, nil)
+		return integration.FailedRequest(c, msg, nil)
 	}
 
 	// Return the email validate form
-	return util.ReturnJSON(c, ssr.RenderResponse(c, ssr.Components{
+	return c.JSON(ssr.RenderResponse(c, ssr.Components{
 		ssr.Text{
 			Text:  localization.RegisterCodeTitle,
 			Style: ssr.TextStyleHeadline,

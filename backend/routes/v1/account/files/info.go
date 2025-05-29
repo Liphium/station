@@ -2,7 +2,7 @@ package files
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/integration"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -14,17 +14,17 @@ type infoRequest struct {
 func fileInfo(c *fiber.Ctx) error {
 
 	var req infoRequest
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Get file info
 	var cloudFile database.CloudFile
 	if err := database.DBConn.Select("id,name,size,account").Where("id = ?", req.Id).Take(&cloudFile).Error; err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "database error")
 	}
 
-	return util.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"file":    cloudFile,
 	})

@@ -136,45 +136,6 @@ func listenForCommands() {
 			fmt.Println("Packaged public key:", util.PackageRSAPublicKey(pub))
 			fmt.Println("Packaged private key:", util.PackageRSAPrivateKey(priv))
 
-		case "test-message":
-
-			fmt.Print("Test message: ")
-			msg, _ := reader.ReadString('\n')
-			msg = strings.TrimSpace(msg)
-
-			_, pub, err := util.GenerateRSAKey(util.StandardKeySize)
-			if err != nil {
-				fmt.Println("Failed to generate a keypair!")
-				continue
-			}
-
-			// Get default private and public key
-			serverPub, err := util.UnpackageRSAPublicKey(os.Getenv("TC_PUBLIC_KEY"))
-			if err != nil {
-				panic("Couldn't unpackage public key. Required for v1 API. Please set TC_PUBLIC_KEY in your environment variables or .env file.")
-			}
-
-			encrypted, err := util.EncryptRSA(serverPub, []byte(msg))
-			if err != nil {
-				fmt.Println("Couldn't encrypt using server pub")
-				continue
-			}
-
-			directory := os.Getenv("TC_WRITE_TO")
-			if directory == "" {
-				fmt.Println("Please provide the environment variable TC_WRITE_TO (file directory for message).")
-				continue
-			}
-			directory = directory + "/test.msg"
-			util.Log.Println(directory)
-			err = os.WriteFile(directory, encrypted, os.ModeAppend)
-			if err != nil {
-				fmt.Println("Couldn't write file:", err)
-				continue
-			}
-
-			fmt.Println("Packaged public key:", util.PackageRSAPublicKey(pub))
-
 		case "invite-wave":
 
 			invites := 100

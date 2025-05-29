@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/verify"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -18,30 +18,30 @@ type deleteRequest struct {
 func deleteFile(c *fiber.Ctx) error {
 
 	if disabled {
-		return util.FailedRequest(c, localization.ErrorFileDisabled, nil)
+		return integration.FailedRequest(c, localization.ErrorFileDisabled, nil)
 	}
 
 	var req deleteRequest
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 	accId := verify.InfoLocals(c).GetAccount()
 
 	// Get file
 	var file database.CloudFile
 	if database.DBConn.Where("account = ? AND id = ?", accId, req.Id).First(&file).Error != nil {
-		return util.FailedRequest(c, localization.ErrorFileNotFound, nil)
+		return integration.FailedRequest(c, localization.ErrorFileNotFound, nil)
 	}
 
 	// Check for potential malicious requests
 	if strings.Contains(req.Id, "/") {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "contains directory")
 	}
 
 	// Delete the file
 	if err := Delete([]string{req.Id}); err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	return util.SuccessfulRequest(c)
+	return integration.SuccessfulRequest(c)
 }

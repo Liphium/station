@@ -131,7 +131,7 @@ func startSharedSpaceInfoPuller(space *SharedSpace) {
 		for {
 
 			// Pull new info from space station
-			resp, err := integration.PostRequestNoTC(space.Server+"/info", map[string]interface{}{
+			resp, err := integration.PostRequestURL(space.Server+"/info", map[string]interface{}{
 				"room": space.Id,
 			})
 			if err != nil {

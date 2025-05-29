@@ -20,7 +20,7 @@ func SetupRemoteActions(router fiber.Router) {
 
 		// Parse the request
 		var req map[string]interface{}
-		if err := integration.BodyParser(c, &req); err != nil {
+		if err := c.BodyParser(&req); err != nil {
 			return integration.InvalidRequest(c, "request is invalid")
 		}
 
@@ -82,7 +82,7 @@ func actionHandler[T any](handler action_helpers.ActionHandlerFunc[T]) func(*fib
 	return func(c *fiber.Ctx) error {
 		// Parse the action with the request generic
 		var req action_helpers.RemoteActionRequest[T]
-		if err := integration.BodyParser(c, &req); err != nil {
+		if err := c.BodyParser(&req); err != nil {
 			return integration.InvalidRequest(c, "action wasn't valid")
 		}
 
@@ -99,7 +99,7 @@ func conversationHandler[T any](handler action_helpers.ConversationActionHandler
 	return func(c *fiber.Ctx) error {
 		// Parse the action with the request generic
 		var req action_helpers.ConversationActionRequest[T]
-		if err := integration.BodyParser(c, &req); err != nil {
+		if err := c.BodyParser(&req); err != nil {
 			return integration.InvalidRequest(c, "action wasn't valid")
 		}
 

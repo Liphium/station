@@ -16,7 +16,7 @@ func socketless(c *fiber.Ctx) error {
 
 	// Parse request
 	var event socketlessEvent
-	if err := integration.BodyParser(c, &event); err != nil {
+	if err := c.BodyParser(&event); err != nil {
 		return err
 	}
 

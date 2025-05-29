@@ -2,8 +2,8 @@ package friends
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/verify"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -17,21 +17,21 @@ func getReceiveDate(c *fiber.Ctx) error {
 
 	// Parse the request
 	var req getDateRequest
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 	accId, err := verify.InfoLocals(c).GetAccountUUID()
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid account id")
 	}
 
 	// Get the friendship from the database
 	var friendship database.Friendship
 	if err := database.DBConn.Where("id = ? AND account = ?", req.Id, accId).Take(&friendship).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	return util.ReturnJSON(c, map[string]interface{}{
+	return c.JSON(map[string]interface{}{
 		"success": true,
 		"date":    friendship.LastPacket,
 	})
@@ -47,24 +47,24 @@ func updateReceiveDate(c *fiber.Ctx) error {
 
 	// Parse the request
 	var req updateDateRequest
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 	accId, err := verify.InfoLocals(c).GetAccountUUID()
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid account id")
 	}
 
 	// Make sure someone doesn't store their whole house in here
 	if len(req.Date) >= 200 {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid date")
 	}
 
 	// Get the friendship from the database
 	if err := database.DBConn.Model(&database.Friendship{}).Where("id = ? AND account = ?", req.Id, accId).
 		Update("last_packet", req.Date).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	return util.SuccessfulRequest(c)
+	return integration.SuccessfulRequest(c)
 }

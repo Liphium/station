@@ -20,7 +20,7 @@ func HandleListAfter(c *fiber.Ctx, token database.ConversationToken, action stru
 	}
 
 	// Return the messages
-	return integration.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success":  true,
 		"messages": messages,
 	})

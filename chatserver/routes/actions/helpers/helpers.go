@@ -82,7 +82,7 @@ func CreateConversationEndpoint[T any](handler ConversationActionHandlerFunc[T],
 
 		// Parse the request
 		var req ConversationActionRequest[T]
-		if err := integration.BodyParser(c, &req); err != nil {
+		if err := c.BodyParser(&req); err != nil {
 			return integration.InvalidRequest(c, "request was invalid")
 		}
 
@@ -118,7 +118,7 @@ func CreateConversationEndpoint[T any](handler ConversationActionHandlerFunc[T],
 			}
 
 			// Return the response to the client
-			return integration.ReturnJSON(c, res)
+			return c.JSON(res)
 		}
 
 		// Validate the token
@@ -169,7 +169,7 @@ func SendConversationAction(action string, token database.SentConversationToken,
 	// Send the action
 	var res map[string]interface{}
 	var err error
-	if res, err = integration.PostRequestTC(node.Node, "/conv_actions/"+action, fiber.Map{
+	if res, err = integration.PostRequest(node.Node, "/conv_actions/"+action, fiber.Map{
 		"token": token,
 		"data":  data,
 	}); err != nil {

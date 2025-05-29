@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/verify"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -18,18 +18,18 @@ func getAllInformation(c *fiber.Ctx) error {
 	// Retrieve all the information
 	accId, err := verify.InfoLocals(c).GetAccountUUID()
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	var invitesGenerated []uuid.UUID
 	if err := database.DBConn.Model(&database.Invite{}).Where("creator = ?", accId).Limit(30).Order("created_at DESC").Select("id").Scan(&invitesGenerated).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	var inviteCount database.InviteCount
 	err = database.DBConn.Where("account = ?", accId).Take(&inviteCount).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -42,7 +42,7 @@ func getAllInformation(c *fiber.Ctx) error {
 		transformedInvites[i] = invite.String()
 	}
 
-	return util.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"invites": transformedInvites,
 		"count":   inviteCount.Count,

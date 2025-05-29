@@ -1,7 +1,7 @@
 package register_routes
 
 import (
-	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -13,19 +13,19 @@ func fromSSO(c *fiber.Ctx) error {
 	var req struct {
 		Token string `json:"token"`
 	}
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Validate the token
 	state, msg := validateToken(req.Token, 4)
 	if msg != nil {
-		return util.FailedRequest(c, msg, nil)
+		return integration.FailedRequest(c, msg, nil)
 	}
 
 	// Check if it is really a SSO token
 	if !state.SSO {
-		return util.FailedRequest(c, localization.ErrorInvalidRequest, nil)
+		return integration.FailedRequest(c, localization.ErrorInvalidRequest, nil)
 	}
 
 	return renderUsernameForm(c)

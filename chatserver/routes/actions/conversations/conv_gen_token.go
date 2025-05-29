@@ -61,7 +61,7 @@ func HandleGenerateToken(c *fiber.Ctx, token database.ConversationToken, data st
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	return integration.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"id":      generated.ID,
 		"token":   generated.Token,

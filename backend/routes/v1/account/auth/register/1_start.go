@@ -1,7 +1,7 @@
 package register_routes
 
 import (
-	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/main/ssr"
 	"github.com/gofiber/fiber/v2"
@@ -14,23 +14,23 @@ func startRegister(c *fiber.Ctx) error {
 	var req struct {
 		Token string `json:"token"`
 	}
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Validate the token
 	_, msg := validateToken(req.Token, 1)
 	if msg != nil {
-		return util.FailedRequest(c, msg, nil)
+		return integration.FailedRequest(c, msg, nil)
 	}
 
 	// Upgrade the token to step 2
 	if msg := upgradeToken(req.Token, 2); msg != nil {
-		return util.FailedRequest(c, msg, nil)
+		return integration.FailedRequest(c, msg, nil)
 	}
 
 	// Render the invite input form
-	return util.ReturnJSON(c, ssr.RenderResponse(c, ssr.Components{
+	return c.JSON(ssr.RenderResponse(c, ssr.Components{
 		ssr.Text{
 			Text:  localization.RegisterInviteTitle,
 			Style: ssr.TextStyleHeadline,

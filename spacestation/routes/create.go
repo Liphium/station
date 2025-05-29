@@ -16,7 +16,7 @@ func createSpace(c *fiber.Ctx) error {
 	var req struct {
 		Token string `json:"token"`
 	}
-	if err := integration.BodyParser(c, &req); err != nil {
+	if err := c.BodyParser(&req); err != nil {
 		return integration.InvalidRequest(c, "request was invalid")
 	}
 
@@ -47,7 +47,7 @@ func createSpace(c *fiber.Ctx) error {
 		return err
 	}
 
-	return integration.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"client":  clientId,
 		"space":   spaceId,

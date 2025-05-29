@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/verify"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -18,14 +18,14 @@ func syncVault(c *fiber.Ctx) error {
 	var req struct {
 		Tags map[string]int64 `json:"tags"` // Tag -> Version
 	}
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Get account id
 	accId, err := verify.InfoLocals(c).GetAccountUUID()
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid account id")
 	}
 
 	// Pull all of the entries and deletions in parallel
@@ -60,11 +60,11 @@ func syncVault(c *fiber.Ctx) error {
 		if entries, ok := entryMap.Load(tag); ok {
 			allEntries = append(allEntries, entries.([]database.VaultEntry)...)
 		} else {
-			return util.FailedRequest(c, localization.ErrorServer, nil)
+			return integration.FailedRequest(c, localization.ErrorServer, nil)
 		}
 	}
 
-	return util.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"entries": allEntries,
 	})

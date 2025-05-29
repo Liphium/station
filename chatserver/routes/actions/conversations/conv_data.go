@@ -47,7 +47,7 @@ func HandleGetData(c *fiber.Ctx, token database.ConversationToken, _ interface{}
 		}
 	}
 
-	return integration.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"id":      conversation.ID,
 		"version": conversation.Version,

@@ -27,7 +27,7 @@ func HandleTimestamp(c *fiber.Ctx, token database.ConversationToken, data interf
 		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	return integration.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"token":   tk,
 		"stamp":   time,

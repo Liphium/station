@@ -4,6 +4,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/verify"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -15,20 +16,20 @@ func getPublicKey(c *fiber.Ctx) error {
 	accId, err := verify.InfoLocals(c).GetAccountUUID()
 	if err != nil {
 		util.Log.Println("couldn't get account uuid", verify.InfoLocals(c))
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid account id")
 	}
 
 	// Get public key
 	var key database.PublicKey
 	if database.DBConn.Where("id = ?", accId).Take(&key).Error != nil {
-		return util.FailedRequest(c, localization.ErrorKeyNotFound, nil)
+		return integration.FailedRequest(c, localization.ErrorKeyNotFound, nil)
 	}
 
 	if key.Key == "" {
-		return util.FailedRequest(c, localization.ErrorKeyNotFound, nil)
+		return integration.FailedRequest(c, localization.ErrorKeyNotFound, nil)
 	}
 
-	return util.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"key":     key.Key,
 	})
@@ -42,23 +43,23 @@ type setRequest struct {
 func setPublicKey(c *fiber.Ctx) error {
 
 	var req setRequest
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Get account
 	accId, err := verify.InfoLocals(c).GetAccountUUID()
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid account id")
 	}
 
 	var acc database.Account
 	if database.DBConn.Where("id = ?", accId).Take(&acc).Error != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid account")
 	}
 
 	if database.DBConn.Where("id = ?", accId).Take(&database.PublicKey{}).Error == nil {
-		return util.FailedRequest(c, localization.ErrorKeyAlreadySet, nil)
+		return integration.FailedRequest(c, localization.ErrorKeyAlreadySet, nil)
 	}
 
 	// Set public key
@@ -66,8 +67,8 @@ func setPublicKey(c *fiber.Ctx) error {
 		ID:  accId,
 		Key: req.Key,
 	}).Error != nil {
-		return util.FailedRequest(c, localization.ErrorServer, nil)
+		return integration.FailedRequest(c, localization.ErrorServer, nil)
 	}
 
-	return util.SuccessfulRequest(c)
+	return integration.SuccessfulRequest(c)
 }

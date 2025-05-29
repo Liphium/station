@@ -2,9 +2,9 @@ package vault
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/backend/util/verify"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
 )
@@ -19,22 +19,22 @@ func addEntry(c *fiber.Ctx) error {
 
 	// Parse request
 	var req addEntryRequest
-	if err := util.BodyParser(c, &req); err != nil {
-		return util.InvalidRequest(c)
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "invalid request")
 	}
 
 	// Check if the account has too many entries
 	accId, err := verify.InfoLocals(c).GetAccountUUID()
 	if err != nil {
-		return util.InvalidRequest(c)
+		return integration.InvalidRequest(c, "invalid account id")
 	}
 	var entryCount int64
 	if err := database.DBConn.Model(&database.VaultEntry{}).Where("account = ?", accId).Count(&entryCount).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
 	if entryCount >= MaximumEntries {
-		return util.FailedRequest(c, localization.ErrorVaultLimitReached(MaximumEntries), nil)
+		return integration.FailedRequest(c, localization.ErrorVaultLimitReached(MaximumEntries), nil)
 	}
 
 	// Get the best version
@@ -52,10 +52,10 @@ func addEntry(c *fiber.Ctx) error {
 		Version: version + 1,
 	}
 	if err := database.DBConn.Create(&vaultEntry).Error; err != nil {
-		return util.FailedRequest(c, localization.ErrorServer, err)
+		return integration.FailedRequest(c, localization.ErrorServer, err)
 	}
 
-	return util.ReturnJSON(c, fiber.Map{
+	return c.JSON(fiber.Map{
 		"success": true,
 		"id":      vaultEntry.ID,
 		"version": version + 1,

@@ -33,21 +33,6 @@ func main() {
 	printWithPrefix("Starting Liphium station..")
 	printWithPrefix("Starting backend..")
 
-	// Set environment variables
-	if os.Getenv("TC_PUBLIC_KEY") == "" {
-		pub, priv, err := backend_starter.GenerateKeyPair()
-		if err != nil {
-			printWithPrefix("Error generating key pair: " + err.Error())
-			return
-		}
-
-		printWithPrefix("Please set the following environment variables in your .env file:")
-		printWithPrefix("TC_PUBLIC_KEY=\"" + pub + "\"")
-		printWithPrefix("TC_PRIVATE_KEY=\"" + priv + "\"")
-
-		return
-	}
-
 	// Check if a system uuid is set
 	if os.Getenv("SYSTEM_UUID") == "" {
 		printWithPrefix("Please set the following environment variables in your .env file:")
