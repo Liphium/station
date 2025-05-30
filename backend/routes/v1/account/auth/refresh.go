@@ -87,7 +87,7 @@ func refreshSession(c *fiber.Ctx) error {
 	}
 
 	// Create new token
-	jwtToken, err := util.Token(session.ID, session.Account, session.PermissionLevel, time.Now().Add(time.Hour*24*3))
+	jwtToken, err := util.Token(session.ID, session.Account, session.PermissionLevel, time.Now().Add(time.Hour*2))
 
 	if err != nil {
 		return integration.FailedRequest(c, localization.ErrorServer, err)
