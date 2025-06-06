@@ -1,5 +1,7 @@
 # Liphium: Decentralization for everyone
 
+### This server implementation is stull under heavy development. Use at your own risk. We're currently reworking a lot of stuff so expect breaking changes. Updates can be found on our [discord server](https://liphium.dev/discord).
+
 Want to learn how to set up a Liphium town? You can find [our docs here](https://docs.liphium.com).
 
 Welcome to everything powering the magic experience you get in the [Liphium app](https://github.com/Liphium/chat_interface). Station powers all of Liphium's features and is it's backbone. Just as a quick note, we call all servers running station "town", because that makes explaining decentralization a lot easier. If you hear "town", you can assume we mean a server running station.
