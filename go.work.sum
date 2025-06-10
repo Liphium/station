@@ -183,6 +183,8 @@ github.com/Liphium/magic v1.0.0-rc4 h1:800XdagI6CHz7IQrUJ7uMG0RjOBsHoqZ7u8BDdkjp
 github.com/Liphium/magic v1.0.0-rc4/go.mod h1:sK7LbD//DJGe2zd/bhUKfFrrDej6uEblyfLCNHybOuI=
 github.com/Liphium/magic v1.0.0-rc5 h1:DwvCdlnZlTwA9vakllWd6OuQGeLSIA091P3eAqiQEcQ=
 github.com/Liphium/magic v1.0.0-rc5/go.mod h1:sK7LbD//DJGe2zd/bhUKfFrrDej6uEblyfLCNHybOuI=
+github.com/Liphium/magic v1.0.0-rc7 h1:h5caAZATUsex5Dfz6zokNAyHaBGmaCU7WxNlVyNypvg=
+github.com/Liphium/magic v1.0.0-rc7/go.mod h1:sK7LbD//DJGe2zd/bhUKfFrrDej6uEblyfLCNHybOuI=
 github.com/Liphium/station/pipes v0.0.0-20240219163320-6c1c75b81d20 h1:dmfqbL58b/3TQHywAqzHw4EWXkHRCYtjvIKmAJCBsTo=
 github.com/Liphium/station/pipes v0.0.0-20240219163320-6c1c75b81d20/go.mod h1:dhcvL+cGB1xMPfoz2Q2q84h1EHPcPwWr1dfy2CVosDI=
 github.com/Microsoft/go-winio v0.4.14/go.mod h1:qXqCSQ3Xa7+6tgxaGTIe4Kpcdsi+P8jBhyzoq1bpyYA=

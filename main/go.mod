@@ -13,7 +13,7 @@ replace github.com/Liphium/station/spacestation => ../spacestation
 replace github.com/Liphium/station/backend => ../backend
 
 require (
-	github.com/Liphium/magic v1.0.0-rc5
+	github.com/Liphium/magic v1.0.0-rc7
 	github.com/Liphium/station/backend v0.0.0-20250116162322-137676363896
 	github.com/Liphium/station/chatserver v0.0.0-20250116162322-137676363896
 	github.com/Liphium/station/pipes v0.0.0-20250116162322-137676363896
