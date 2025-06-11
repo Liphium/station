@@ -58,7 +58,13 @@ var (
 
 	// Localization for the auth start page
 	AuthStartTitle = Translations{
-		englishUS: "Your email, please.",
+		englishUS: "Welcome to Liphium!",
+	}
+	AuthStartDescription = Translations{
+		englishUS: "With an account or not, just click \"Next step\"  and we'll figure out the rest.",
+	}
+	AuthStartEmailLabel = Translations{
+		englishUS: "Email",
 	}
 	AuthStartEmailPlaceholder = Translations{
 		englishUS: "you@email.com",

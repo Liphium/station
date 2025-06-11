@@ -28,6 +28,7 @@ func (t Text) render(locale string) fiber.Map {
 }
 
 type Input struct {
+	Label       localization.Translations // Label right above the input
 	Placeholder localization.Translations // Placeholder inside the input on the client
 	Hidden      bool                      // If the characters inside the input should be hidden
 	Value       string                    // A pre-filled value already in the input
@@ -45,6 +46,7 @@ func (i Input) render(locale string) fiber.Map {
 
 	return fiber.Map{
 		"type":        "input",
+		"label":       localization.TranslateLocale(locale, i.Label),
 		"placeholder": localization.TranslateLocale(locale, i.Placeholder),
 		"hidden":      i.Hidden,
 		"value":       i.Value,

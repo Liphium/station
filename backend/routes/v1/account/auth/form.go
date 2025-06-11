@@ -24,7 +24,12 @@ func getStartForm(c *fiber.Ctx) error {
 			Style: ssr.TextStyleHeadline,
 			Text:  localization.AuthStartTitle,
 		},
+		ssr.Text{
+			Style: ssr.TextStyleDescription,
+			Text:  localization.AuthStartDescription,
+		},
 		ssr.Input{
+			Label:       localization.AuthStartEmailLabel,
 			Placeholder: localization.AuthStartEmailPlaceholder,
 			Name:        "email",
 		},
