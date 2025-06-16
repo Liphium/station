@@ -35,7 +35,12 @@ func startRegister(c *fiber.Ctx) error {
 			Text:  localization.RegisterInviteTitle,
 			Style: ssr.TextStyleHeadline,
 		},
+		ssr.Text{
+			Text:  localization.RegisterInviteDescription,
+			Style: ssr.TextStyleDescription,
+		},
 		ssr.Input{
+			Label:       localization.RegisterInviteInputLabel,
 			Placeholder: localization.RegisterInvitePlaceholder,
 			Name:        "invite",
 		},

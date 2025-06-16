@@ -75,7 +75,13 @@ var (
 
 	// Localization for the password page
 	LoginPasswordTitle = Translations{
-		englishUS: "Your password, please.",
+		englishUS: "Log into your account",
+	}
+	LoginPasswordDescription = Translations{
+		englishUS: "Welcome back, now your password is all that's keeping you from logging in.",
+	}
+	LoginPasswordInputLabel = Translations{
+		englishUS: "Password",
 	}
 	LoginPasswordPlaceholder = Translations{
 		englishUS: "yourmum123 (don't use this)",
@@ -83,7 +89,13 @@ var (
 
 	// Localization for register invite form
 	RegisterInviteTitle = Translations{
-		englishUS: "Your invite, please.",
+		englishUS: "Enter your invite code",
+	}
+	RegisterInviteDescription = Translations{
+		englishUS: "To create an account in this town, an invite is needed. If you don't have one, ask an admin to generate one.",
+	}
+	RegisterInviteInputLabel = Translations{
+		englishUS: "Invite code",
 	}
 	RegisterInvitePlaceholder = Translations{
 		englishUS: "your-invite-here",
@@ -96,6 +108,9 @@ var (
 	RegisterCodeDescription = Translations{
 		englishUS: "We sent you an email containing a verification code in the title and text. In case you entered the wrong email address in the beginning, you can still change it by using the input field below. If the email didn't reach your inbox, try clicking the resend button below.",
 	}
+	RegisterCodeInputLabel = Translations{
+		englishUS: "Verification code",
+	}
 	RegisterCodePlaceholder = Translations{
 		englishUS: "111111",
 	}
@@ -105,10 +120,13 @@ var (
 
 	// Localization for username registration form
 	RegisterUsernameTitle = Translations{
-		englishUS: "Create your username.",
+		englishUS: "Choose your username",
 	}
 	RegisterUsernameDescription = Translations{
 		englishUS: "Your username is the name other people can use to add you as a friend. It can only contain lowercase characters, numbers together with _ or -.",
+	}
+	RegisterUsernameInputLabel = Translations{
+		englishUS: "Username",
 	}
 	RegisterUsernamePlaceholder = Translations{
 		englishUS: "test123",
@@ -116,10 +134,13 @@ var (
 
 	// Localization for display name registration form
 	RegisterDisplayNameTitle = Translations{
-		englishUS: "Create your display name.",
+		englishUS: "Choose your display name",
 	}
 	RegisterDisplayNameDescription = Translations{
 		englishUS: "Your display name is the name everyone sees. No special requirements.",
+	}
+	RegisterDisplayNameInputLabel = Translations{
+		englishUS: "Display name",
 	}
 	RegisterDisplayNamePlaceholder = Translations{
 		englishUS: "Test 123",
@@ -127,10 +148,13 @@ var (
 
 	// Localization for the password adding form
 	RegisterPasswordTitle = Translations{
-		englishUS: "Create your password.",
+		englishUS: "Choose your password",
 	}
 	RegisterPasswordRequirements = Translations{
 		englishUS: "No big requirements, just create a password that's longer than 8 characters. And please don't use a bad one!",
+	}
+	RegisterPasswordLabel = Translations{
+		englishUS: "Password",
 	}
 	RegisterPasswordPlaceholder = Translations{
 		englishUS: "Password",

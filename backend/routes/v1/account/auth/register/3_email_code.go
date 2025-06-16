@@ -59,6 +59,7 @@ func renderUsernameForm(c *fiber.Ctx) error {
 			Style: ssr.TextStyleDescription,
 		},
 		ssr.Input{
+			Label:       localization.RegisterDisplayNameInputLabel,
 			Placeholder: localization.RegisterDisplayNamePlaceholder,
 			Name:        "display_name",
 			MaxLength:   standards.MaxUsernameLength,

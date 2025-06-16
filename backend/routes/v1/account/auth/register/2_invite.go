@@ -75,11 +75,13 @@ func checkInvite(c *fiber.Ctx) error {
 			Style: ssr.TextStyleDescription,
 		},
 		ssr.Input{
+			Label:       localization.AuthStartEmailLabel,
 			Placeholder: localization.AuthStartEmailPlaceholder,
 			Value:       state.Email,
 			Name:        "email",
 		},
 		ssr.Input{
+			Label:       localization.RegisterCodeInputLabel,
 			Placeholder: localization.RegisterCodePlaceholder,
 			Name:        "code",
 		},

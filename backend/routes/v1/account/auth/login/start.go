@@ -29,7 +29,12 @@ func startLogin(c *fiber.Ctx) error {
 			Style: ssr.TextStyleHeadline,
 			Text:  localization.LoginPasswordTitle,
 		},
+		ssr.Text{
+			Style: ssr.TextStyleDescription,
+			Text:  localization.LoginPasswordDescription,
+		},
 		ssr.Input{
+			Label:       localization.LoginPasswordInputLabel,
 			Placeholder: localization.LoginPasswordPlaceholder,
 			Hidden:      true,
 			Name:        "password",

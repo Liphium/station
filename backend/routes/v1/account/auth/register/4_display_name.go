@@ -57,6 +57,7 @@ func checkDisplayName(c *fiber.Ctx) error {
 			Style: ssr.TextStyleDescription,
 		},
 		ssr.Input{
+			Label:       localization.RegisterUsernameInputLabel,
 			Placeholder: localization.RegisterUsernamePlaceholder,
 			Name:        "username",
 			MaxLength:   standards.MaxDisplayNameLength,

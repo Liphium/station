@@ -57,12 +57,13 @@ func checkUsername(c *fiber.Ctx) error {
 			Style: ssr.TextStyleDescription,
 		},
 		ssr.Input{
-			Placeholder: localization.RegisterPasswordPlaceholder,
+			Label:       localization.RegisterPasswordLabel,
+			Placeholder: localization.LoginPasswordPlaceholder,
 			Name:        "password",
 			Hidden:      true,
 		},
 		ssr.Input{
-			Placeholder: localization.RegisterPasswordConfirmPlaceholder,
+			Placeholder: localization.LoginPasswordPlaceholder,
 			Name:        "confirm_password",
 			Hidden:      true,
 		},

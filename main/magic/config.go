@@ -55,7 +55,7 @@ func Run(ctx *mconfig.Context) {
 		"PROTOCOL":       mconfig.ValueStatic("http://"),
 		"SYSTEM_UUID":    mconfig.ValueStatic("fb2b217b-db14-4500-9b11-1dd675532e76"), // DO NOT USE THIS IN PRODUCTION
 		"JWT_SECRET":     mconfig.ValueStatic("secret"),                               // DO NOT USE THIS IN PRODUCTION
-		"SMTP_DEBUG":     mconfig.ValueStatic("true"),
+		"SMTP_PRINT":     mconfig.ValueStatic("true"),
 
 		// Database for backend
 		"DB_USER":     main.Username(),
