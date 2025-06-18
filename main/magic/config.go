@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/Liphium/magic/mconfig"
 	"github.com/Liphium/station/main/starter"
@@ -21,6 +23,19 @@ func Run(ctx *mconfig.Context) {
 	basePort := ctx.ValuePort(3000)
 	chatPort := ctx.ValuePort(3001)
 	spacePort := ctx.ValuePort(3002)
+
+	// Create the file store
+	fileRepo := filepath.Join(ctx.MagicDirectory(), "files", ctx.Profile())
+	if err := os.MkdirAll(fileRepo, 0755); err != nil {
+		log.Fatalln("Couldn't create file directory for profile:", err)
+	}
+
+	// Clear the file repo in case in testing mode
+	if ctx.Profile() == "test" {
+		if err := os.RemoveAll(fileRepo); err != nil {
+			log.Fatalln("Couldn't remove all files in test directory:", err)
+		}
+	}
 
 	// Add the databases to the environment
 	ctx.WithEnvironment(&mconfig.Environment{
@@ -56,6 +71,10 @@ func Run(ctx *mconfig.Context) {
 		"SYSTEM_UUID":    mconfig.ValueStatic("fb2b217b-db14-4500-9b11-1dd675532e76"), // DO NOT USE THIS IN PRODUCTION
 		"JWT_SECRET":     mconfig.ValueStatic("secret"),                               // DO NOT USE THIS IN PRODUCTION
 		"SMTP_PRINT":     mconfig.ValueStatic("true"),
+
+		// File storage location
+		"FILE_REPO_TYPE": mconfig.ValueStatic("local"),
+		"FILE_REPO":      mconfig.ValueStatic(fileRepo),
 
 		// Database for backend
 		"DB_USER":     main.Username(),

@@ -1,5 +1,5 @@
-github.com/Liphium/magic v1.0.0-rc2 h1:ITEhvVZhP8Js13jh1UPuxrCaRY4K0ziQ7ZFRl+EZjh4=
-github.com/Liphium/magic v1.0.0-rc2/go.mod h1:sK7LbD//DJGe2zd/bhUKfFrrDej6uEblyfLCNHybOuI=
+github.com/Liphium/magic v1.0.0-rc10 h1:n/UUuRaHSGLOJCON8SBzb+55O0AJ4tK6zespmEiDmDg=
+github.com/Liphium/magic v1.0.0-rc10/go.mod h1:bLjrH2lD/VCBI4YqY70O/0pwBGP83NEYEamDKCT4Y5M=
 github.com/MicahParks/keyfunc/v2 v2.1.0 h1:6ZXKb9Rp6qp1bDbJefnG7cTH8yMN1IC/4nf+GVjO99k=
 github.com/MicahParks/keyfunc/v2 v2.1.0/go.mod h1:rW42fi+xgLJ2FRRXAfNx9ZA8WpD4OeE/yHVMteCkw9k=
 github.com/andybalholm/brotli v1.1.1 h1:PR2pgnyFznKEugtsUo0xLdDop5SKXd5Qf5ysW+7XdTA=
