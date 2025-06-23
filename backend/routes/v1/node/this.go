@@ -29,7 +29,7 @@ func this(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{
 		"success":    true,
-		"jwt_secret": util.JWT_SECRET,
+		"jwt_secret": util.JwtSecret,
 		"node":       node.ToEntity(),
 	})
 

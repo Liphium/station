@@ -34,7 +34,7 @@ func Startup(routine bool) {
 			util.Log.Fatal("Error loading .env file")
 		}
 	}
-	util.JWT_SECRET = os.Getenv("JWT_SECRET")
+	util.JwtSecret = os.Getenv("JWT_SECRET")
 
 	// Set node protocol
 	if os.Getenv("PROTOCOL") == "" {

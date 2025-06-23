@@ -71,6 +71,11 @@ func Connect() {
 		// Server related tables
 		&App{},
 		&Setting{},
+
+		// Chatting related tables
+		&Conversation{},
+		&ConversationToken{},
+		&Message{},
 	)
 
 	// Assign the database to the global variable

@@ -28,7 +28,7 @@ var LogErrors = true
 
 var Log = log.New(os.Stdout, "backend ", log.Flags())
 
-var JWT_SECRET = ""
+var JwtSecret = ""
 
 var NodeProtocol = "http://"
 

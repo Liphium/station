@@ -34,7 +34,7 @@ func ConnectionToken(account uuid.UUID, session string, extra string, node uint)
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := tk.SignedString([]byte(JWT_SECRET))
+	tokenString, err := tk.SignedString([]byte(JwtSecret))
 
 	if err != nil {
 		return "", err
@@ -53,7 +53,7 @@ func Token(session uuid.UUID, account uuid.UUID, lvl uint, exp time.Time) (strin
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := tk.SignedString([]byte(JWT_SECRET))
+	tokenString, err := tk.SignedString([]byte(JwtSecret))
 
 	if err != nil {
 		return "", err

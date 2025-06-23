@@ -128,7 +128,7 @@ func AuthMiddleware() func(c *fiber.Ctx) error {
 	return jwtware.New(jwtware.Config{
 		SigningKey: jwtware.SigningKey{
 			JWTAlg: jwtware.HS512,
-			Key:    []byte(util.JWT_SECRET),
+			Key:    []byte(util.JwtSecret),
 		},
 
 		// Checks if the token is expired

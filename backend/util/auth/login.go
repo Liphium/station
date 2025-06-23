@@ -20,7 +20,7 @@ func GenerateLoginTokenWithStep(id uuid.UUID, device string, step uint) (string,
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := tk.SignedString([]byte(util.JWT_SECRET))
+	tokenString, err := tk.SignedString([]byte(util.JwtSecret))
 
 	if err != nil {
 		return "", err
