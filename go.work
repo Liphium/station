@@ -7,4 +7,5 @@ use (
 	./pipes
 	./pipeshandler
 	./spacestation
+	./neogate
 )
