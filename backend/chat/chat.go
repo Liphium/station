@@ -1,5 +1,5 @@
 package chat
 
-import "github.com/Liphium/station/pipeshandler"
+import "github.com/Liphium/station/neogate"
 
-var Instance *pipeshandler.Instance
+var Instance *neogate.Instance

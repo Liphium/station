@@ -66,3 +66,5 @@ require (
 )
 
 replace github.com/Liphium/station/main => ../main
+
+replace github.com/Liphium/station/neogate => ../neogate

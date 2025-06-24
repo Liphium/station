@@ -5,24 +5,22 @@ import (
 	"strings"
 
 	"github.com/Liphium/station/main/localization"
-	"github.com/Liphium/station/pipes"
-	pipeshutil "github.com/Liphium/station/pipeshandler/util"
 )
 
-func NormalResponse(ctx *Context, data map[string]interface{}) pipes.Event {
+func NormalResponse(ctx *Context, data map[string]interface{}) Event {
 	return Response(ctx, data, ctx.Instance)
 }
 
-func SuccessResponse(ctx *Context) pipes.Event {
+func SuccessResponse(ctx *Context) Event {
 	return Response(ctx, map[string]interface{}{
 		"success": true,
 	}, ctx.Instance)
 }
 
-func ErrorResponse(ctx *Context, message localization.Translations, err error) pipes.Event {
+func ErrorResponse(ctx *Context, message localization.Translations, err error) Event {
 
-	if pipes.DebugLogs {
-		pipeshutil.Log.Println("error with action "+ctx.Action+" (", message, "): ", err)
+	if DebugLogs {
+		Log.Println("error with action "+ctx.Action+" (", message, "): ", err)
 		debug.PrintStack()
 	}
 
@@ -45,8 +43,8 @@ func Translate(c *Context, message localization.Translations) string {
 	return msg
 }
 
-func Response(ctx *Context, data map[string]interface{}, instance *Instance) pipes.Event {
-	return pipes.Event{
+func Response(ctx *Context, data map[string]interface{}, instance *Instance) Event {
+	return Event{
 		Name: "res:" + ctx.Action + ":" + ctx.ResponseId,
 		Data: data,
 	}

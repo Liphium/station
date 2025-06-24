@@ -1,24 +1,24 @@
 module github.com/Liphium/station/neogate
 
-go 1.24.0
+go 1.24.3
 
 require (
 	github.com/Liphium/station/chatserver v0.0.0-20250116162322-137676363896
 	github.com/Liphium/station/main v0.0.0-20250116162322-137676363896
-	github.com/Liphium/station/pipes v0.0.0-20250116162322-137676363896
 	github.com/bytedance/sonic v1.13.1
-	github.com/dgraph-io/ristretto v0.2.0
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/gofiber/websocket/v2 v2.2.1
 	github.com/golang-jwt/jwt/v5 v5.2.1
 )
 
 require (
+	github.com/Liphium/station/pipes v0.0.0-20250116162322-137676363896 // indirect
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
 	github.com/coder/websocket v1.8.13 // indirect
+	github.com/dgraph-io/ristretto v0.2.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fasthttp/websocket v1.5.12 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -36,7 +36,7 @@ require (
 	github.com/valyala/fasthttp v1.59.0 // indirect
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/net v0.37.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
 )
 
 replace github.com/Liphium/station/pipes => ../pipes

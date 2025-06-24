@@ -1,11 +1,12 @@
 package stored_actions
 
 import (
+	"github.com/Liphium/station/backend/chat"
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util/auth"
-	"github.com/Liphium/station/backend/util/requests"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
+	"github.com/Liphium/station/neogate"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -105,19 +106,12 @@ func sendStoredAction(c *fiber.Ctx) error {
 }
 
 func sendStoredActionTo(accId uuid.UUID, authenticated bool, storedAction database.StoredAction) {
-
-	var session database.Session
-	if err := database.DBConn.Where("account = ? AND node != ?", accId, 0).Take(&session).Error; err == nil {
-
-		// No error handling, cause it doesn't matter if it couldn't send
-		requests.SendEventToNode(session.Node, accId.String(), requests.Event{
-			Sender: "0",
-			Name:   "s_a", // Stored action
-			Data: map[string]interface{}{
-				"a":       authenticated, // Authenticated
-				"id":      storedAction.ID,
-				"payload": storedAction.Payload,
-			},
-		})
-	}
+	chat.Instance.Send([]string{accId.String()}, neogate.Event{
+		Name: "stored_action",
+		Data: map[string]interface{}{
+			"a":       authenticated, // Authenticated
+			"id":      storedAction.ID,
+			"payload": storedAction.Payload,
+		},
+	})
 }

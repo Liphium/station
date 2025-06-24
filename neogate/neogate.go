@@ -5,19 +5,18 @@ import (
 	"log"
 	"sync"
 
-	"github.com/Liphium/station/pipes"
-	"github.com/dgraph-io/ristretto"
 	"github.com/gofiber/websocket/v2"
 )
 
+var DebugLogs = true
 var Log = log.New(log.Writer(), "neogate ", log.Flags())
 
 type Instance struct {
 	Config           Config
-	connectionsCache *ristretto.Cache // ID:Session -> Client
-	sessionsCache    *ristretto.Cache // ID -> Session list
-	adapters         *sync.Map        // ID -> Adapter
-	routes           map[string]func(*Context) pipes.Event
+	connectionsCache *sync.Map // ID:Session -> Client
+	sessionsCache    *sync.Map // ID -> Session list
+	adapters         *sync.Map // ID -> Adapter
+	routes           map[string]func(*Context) Event
 }
 
 type ClientInfo struct {
@@ -39,8 +38,7 @@ func (info ClientInfo) ToClient(conn *websocket.Conn) Client {
 
 // ! If the functions aren't implemented pipesfiber will panic
 type Config struct {
-	ExpectedConnections int64
-	Secret              []byte // JWT secret (for authorization)
+	Secret []byte // JWT secret (for authorization)
 
 	// Called when a client attempts to connection using a token. Return true if the token is valid. MUST BE SPECIFIED.
 	CheckToken func(token string, attachments string) (ClientInfo, bool)
@@ -77,11 +75,12 @@ func DefaultDecodingMiddleware(client *Client, bytes []byte) ([]byte, error) {
 // Setup neogate using the config. Use the returned *Instance for interfacing with neogate.
 func Setup(config Config) *Instance {
 	instance := &Instance{
-		Config:   config,
-		adapters: &sync.Map{},
-		routes:   make(map[string]func(*Context) pipes.Event),
+		Config:           config,
+		adapters:         &sync.Map{},
+		connectionsCache: &sync.Map{},
+		sessionsCache:    &sync.Map{},
+		routes:           make(map[string]func(*Context) Event),
 	}
-	instance.SetupConnectionsCache(config.ExpectedConnections)
 	return instance
 }
 

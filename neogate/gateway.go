@@ -104,7 +104,7 @@ func ws(conn *websocket.Conn, instance *Instance) {
 
 	// Add adapter for pipes (if this is the first session)
 	if len(instance.GetSessions(info.Account)) == 1 {
-		instance.Adapt(createAction{
+		instance.Adapt(CreateAction{
 			ID: info.Account,
 			OnEvent: func(c *AdapterContext) error {
 				if err := instance.SendToAccount(info.Account, c.Message); err != nil {

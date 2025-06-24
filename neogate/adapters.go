@@ -29,14 +29,14 @@ type Event struct {
 	Data map[string]interface{} `json:"data"`
 }
 
-type createAction struct {
+type CreateAction struct {
 	ID      string      // Id of the adapter
 	OnEvent AdapterFunc // Function that handles events received by the adapter
 	OnError func(error) // Function that handles errors encountered by the adapter
 }
 
 // Register a new adapter for websocket/sl (all safe protocols)
-func (instance *Instance) Adapt(createAction createAction) {
+func (instance *Instance) Adapt(createAction CreateAction) {
 	_, ok := instance.adapters.Load(createAction.ID)
 	if ok {
 		instance.adapters.Delete(createAction.ID)

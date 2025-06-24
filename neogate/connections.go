@@ -2,13 +2,11 @@ package neogate
 
 import (
 	"errors"
+	"slices"
 	"sync"
 	"time"
 
-	"github.com/Liphium/station/pipes"
-	pipeshutil "github.com/Liphium/station/pipeshandler/util"
 	"github.com/bytedance/sonic"
-	"github.com/dgraph-io/ristretto"
 	"github.com/gofiber/websocket/v2"
 )
 
@@ -23,7 +21,7 @@ type Client struct {
 }
 
 // Sends an event to the client
-func (instance *Instance) SendEventToClient(c *Client, event pipes.Event) error {
+func (instance *Instance) SendEventToClient(c *Client, event Event) error {
 	msg, err := sonic.Marshal(event)
 	if err != nil {
 		return err
@@ -37,31 +35,6 @@ func (c *Client) IsExpired() bool {
 	return c.End.Before(time.Now())
 }
 
-func (instance *Instance) SetupConnectionsCache(expected int64) {
-
-	var err error
-	instance.connectionsCache, err = ristretto.NewCache(&ristretto.Config{
-		NumCounters: expected * 10, // pass in expected items
-		MaxCost:     1 << 30,       // maximum cost of cache is 1GB
-		BufferItems: 64,            // Some random number, check docs
-	})
-
-	if err != nil {
-		panic(err)
-	}
-
-	instance.sessionsCache, err = ristretto.NewCache(&ristretto.Config{
-		NumCounters: expected * 10, // pass in expected items
-		MaxCost:     1 << 30,       // maximum cost of cache is 1GB
-		BufferItems: 64,            // Some random number, check docs
-	})
-
-	if err != nil {
-		panic(err)
-	}
-
-}
-
 func getKey(id string, session string) string {
 	return id + ":" + session
 }
@@ -69,9 +42,8 @@ func getKey(id string, session string) string {
 func (instance *Instance) AddClient(client Client) *Client {
 
 	// Add the session
-	_, valid := instance.connectionsCache.Get(getKey(client.ID, client.Session))
-	instance.connectionsCache.Set(getKey(client.ID, client.Session), client, 1)
-	instance.connectionsCache.Wait()
+	_, valid := instance.connectionsCache.Load(getKey(client.ID, client.Session))
+	instance.connectionsCache.Store(getKey(client.ID, client.Session), client)
 
 	// If the session is not yet added, make sure to add it to the list
 	if !valid {
@@ -82,12 +54,11 @@ func (instance *Instance) AddClient(client Client) *Client {
 }
 
 func (instance *Instance) UpdateClient(client *Client) {
-	instance.connectionsCache.Set(getKey(client.ID, client.Session), *client, 1)
-	instance.connectionsCache.Wait()
+	instance.connectionsCache.Store(getKey(client.ID, client.Session), *client)
 }
 
 func (instance *Instance) GetSessions(id string) []string {
-	sessions, valid := instance.sessionsCache.Get(id)
+	sessions, valid := instance.sessionsCache.Load(id)
 	if valid {
 		return sessions.([]string)
 	}
@@ -97,26 +68,27 @@ func (instance *Instance) GetSessions(id string) []string {
 
 func (instance *Instance) addSession(id string, session string) {
 
-	sessions, valid := instance.sessionsCache.Get(id)
+	sessions, valid := instance.sessionsCache.Load(id)
 	if valid {
-		instance.sessionsCache.Set(id, append(sessions.([]string), session), 1)
+		instance.sessionsCache.Store(id, append(sessions.([]string), session))
 	} else {
-		instance.sessionsCache.Set(id, []string{session}, 1)
+		instance.sessionsCache.Store(id, []string{session})
 	}
-	instance.sessionsCache.Wait()
 }
 
 func (instance *Instance) removeSession(id string, session string) {
 
-	sessions, valid := instance.sessionsCache.Get(id)
+	sessions, valid := instance.sessionsCache.Load(id)
 	if valid {
 
 		if len(sessions.([]string)) == 1 {
-			instance.sessionsCache.Del(id)
+			instance.sessionsCache.Delete(id)
 			return
 		}
 
-		instance.sessionsCache.Set(id, pipeshutil.RemoveString(sessions.([]string), session), 1)
+		instance.sessionsCache.Store(id, slices.DeleteFunc(sessions.([]string), func(s string) bool {
+			return s == session
+		}))
 	}
 }
 
@@ -131,7 +103,7 @@ func (instance *Instance) Remove(id string, session string) {
 	} else {
 		instance.ReportGeneralError("client "+id+" doesn't exist", errors.New("couldn't delete"))
 	}
-	instance.connectionsCache.Del(getKey(id, session))
+	instance.connectionsCache.Delete(getKey(id, session))
 	instance.removeSession(id, session)
 }
 
@@ -151,7 +123,7 @@ func (instance *Instance) Disconnect(id string, session string) {
 
 // Send bytes to an account id
 func (instance *Instance) SendToAccount(id string, msg []byte) error {
-	sessions, ok := instance.sessionsCache.Get(id)
+	sessions, ok := instance.sessionsCache.Load(id)
 	if !ok {
 		return errors.New("no sessions found")
 	}
@@ -199,7 +171,7 @@ func (instance *Instance) SendToClient(client *Client, msg []byte) error {
 }
 
 func (instance *Instance) ExistsConnection(id string, session string) bool {
-	_, ok := instance.connectionsCache.Get(getKey(id, session))
+	_, ok := instance.connectionsCache.Load(getKey(id, session))
 	if !ok {
 		return false
 	}
@@ -208,7 +180,7 @@ func (instance *Instance) ExistsConnection(id string, session string) bool {
 }
 
 func (instance *Instance) Get(id string, session string) (*Client, bool) {
-	client, valid := instance.connectionsCache.Get(getKey(id, session))
+	client, valid := instance.connectionsCache.Load(getKey(id, session))
 	if !valid {
 		return &Client{}, false
 	}
@@ -218,7 +190,7 @@ func (instance *Instance) Get(id string, session string) (*Client, bool) {
 }
 
 func (instance *Instance) GetConnections(id string) int {
-	clients, ok := instance.sessionsCache.Get(id)
+	clients, ok := instance.sessionsCache.Load(id)
 	if !ok {
 		return 0
 	}

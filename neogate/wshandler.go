@@ -2,8 +2,6 @@ package neogate
 
 import (
 	"github.com/Liphium/station/main/localization"
-	"github.com/Liphium/station/pipes"
-	pipeshutil "github.com/Liphium/station/pipeshandler/util"
 	"github.com/bytedance/sonic"
 )
 
@@ -17,8 +15,8 @@ type Context struct {
 }
 
 // Create a handler for an action using generics (with parsing already implemented)
-func CreateHandlerFor[T any](instance *Instance, action string, handler func(*Context, T) pipes.Event) {
-	instance.routes[action] = func(c *Context) pipes.Event {
+func CreateHandlerFor[T any](instance *Instance, action string, handler func(*Context, T) Event) {
+	instance.routes[action] = func(c *Context) Event {
 
 		// Parse the action
 		var action Message[T]
@@ -38,7 +36,7 @@ func (instance *Instance) Handle(ctx *Context) bool {
 		return false
 	}
 
-	pipeshutil.Log.Println("Handling message: " + ctx.Action)
+	Log.Println("Handling message: " + ctx.Action)
 
 	go instance.route(ctx)
 
@@ -48,9 +46,9 @@ func (instance *Instance) Handle(ctx *Context) bool {
 func (instance *Instance) route(ctx *Context) {
 	defer func() {
 		if err := recover(); err != nil {
-			pipeshutil.Log.Println("recovered from error in action", ctx.Action, "by", ctx.Client.ID, ":", err)
+			Log.Println("recovered from error in action", ctx.Action, "by", ctx.Client.ID, ":", err)
 			if err := instance.SendEventToClient(ctx.Client, ErrorResponse(ctx, localization.ErrorInvalidRequest, nil)); err != nil {
-				pipeshutil.Log.Println("couldn't send invalid event to connection after recover:", err)
+				Log.Println("couldn't send invalid event to connection after recover:", err)
 			}
 		}
 	}()
@@ -61,6 +59,6 @@ func (instance *Instance) route(ctx *Context) {
 	// Send the action to the thing
 	err := instance.SendEventToClient(ctx.Client, res)
 	if err != nil {
-		pipeshutil.Log.Println("error while sending response to", ctx.Action, ":", err)
+		Log.Println("error while sending response to", ctx.Action, ":", err)
 	}
 }
