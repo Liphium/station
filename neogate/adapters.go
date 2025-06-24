@@ -3,6 +3,8 @@ package neogate
 import (
 	"errors"
 	"sync"
+
+	"github.com/bytedance/sonic"
 )
 
 type AdapterFunc = func(*AdapterContext) error
@@ -78,4 +80,17 @@ func (instance *Instance) AdapterReceive(ID string, event Event, msg []byte) err
 		Log.Printf("[ws] Error receiving message from target %s: %s \n", ID, err)
 	}
 	return err
+}
+
+// Send an event to all adapters
+func (instance *Instance) Send(adapters []string, event Event) error {
+	msg, err := sonic.Marshal(event)
+	if err != nil {
+		return err
+	}
+
+	for _, adapter := range adapters {
+		instance.AdapterReceive(adapter, event, msg)
+	}
+	return nil
 }

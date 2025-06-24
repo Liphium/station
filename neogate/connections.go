@@ -22,15 +22,14 @@ type Client struct {
 	Mutex   *sync.Mutex
 }
 
-// Sends an event to the only ONE session of the connected account
-func (instance *Instance) SendEventToOne(c *Client, event pipes.Event) error {
-
+// Sends an event to the client
+func (instance *Instance) SendEventToClient(c *Client, event pipes.Event) error {
 	msg, err := sonic.Marshal(event)
 	if err != nil {
 		return err
 	}
 
-	err = instance.SendMessage(c, msg)
+	err = instance.SendToClient(c, msg)
 	return err
 }
 
@@ -150,11 +149,11 @@ func (instance *Instance) Disconnect(id string, session string) {
 	client.Conn.Close()
 }
 
-func (instance *Instance) Send(id string, msg []byte) {
+// Send bytes to an account id
+func (instance *Instance) SendToAccount(id string, msg []byte) error {
 	sessions, ok := instance.sessionsCache.Get(id)
-
 	if !ok {
-		return
+		return errors.New("no sessions found")
 	}
 
 	for _, session := range sessions.([]string) {
@@ -163,21 +162,24 @@ func (instance *Instance) Send(id string, msg []byte) {
 			continue
 		}
 
-		instance.SendMessage(client, msg)
+		if err := instance.SendToClient(client, msg); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func (instance *Instance) SendSession(id string, session string, msg []byte) bool {
+func (instance *Instance) SendToSession(id string, session string, msg []byte) bool {
 	client, valid := instance.Get(id, session)
 	if !valid {
 		return false
 	}
 
-	instance.SendMessage(client, msg)
+	instance.SendToClient(client, msg)
 	return true
 }
 
-func (instance *Instance) SendMessage(client *Client, msg []byte) error {
+func (instance *Instance) SendToClient(client *Client, msg []byte) error {
 
 	msg, err := instance.Config.ClientEncodingMiddleware(client, instance, msg)
 	if err != nil {

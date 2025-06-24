@@ -107,21 +107,10 @@ func ws(conn *websocket.Conn, instance *Instance) {
 		instance.Adapt(createAction{
 			ID: info.Account,
 			OnEvent: func(c *AdapterContext) error {
-				for _, session := range instance.GetSessions(info.Account) {
-					// Get the client
-					client, valid := instance.Get(info.Account, session)
-					if !valid {
-						instance.ReportGeneralError("couldn't get client", fmt.Errorf("%s (%s)", info.Account, session))
-						return errors.New("couldn't get client")
-					}
-
-					// Send message encoded with client encoding middleware
-					if err := instance.SendMessage(client, c.Message); err != nil {
-						instance.ReportClientError(client, "couldn't send received message", err)
-						return err
-					}
+				if err := instance.SendToAccount(info.Account, c.Message); err != nil {
+					instance.ReportClientError(client, "couldn't send received message", err)
+					return err
 				}
-
 				return nil
 			},
 

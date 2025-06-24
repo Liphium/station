@@ -49,7 +49,7 @@ func (instance *Instance) route(ctx *Context) {
 	defer func() {
 		if err := recover(); err != nil {
 			pipeshutil.Log.Println("recovered from error in action", ctx.Action, "by", ctx.Client.ID, ":", err)
-			if err := instance.SendEventToOne(ctx.Client, ErrorResponse(ctx, localization.ErrorInvalidRequest, nil)); err != nil {
+			if err := instance.SendEventToClient(ctx.Client, ErrorResponse(ctx, localization.ErrorInvalidRequest, nil)); err != nil {
 				pipeshutil.Log.Println("couldn't send invalid event to connection after recover:", err)
 			}
 		}
@@ -59,7 +59,7 @@ func (instance *Instance) route(ctx *Context) {
 	res := instance.routes[ctx.Action](ctx)
 
 	// Send the action to the thing
-	err := instance.SendEventToOne(ctx.Client, res)
+	err := instance.SendEventToClient(ctx.Client, res)
 	if err != nil {
 		pipeshutil.Log.Println("error while sending response to", ctx.Action, ":", err)
 	}
