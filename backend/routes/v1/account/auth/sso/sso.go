@@ -1,11 +1,11 @@
 package sso_routes
 
 import (
-	"log"
 	"os"
 	"strings"
 
 	"github.com/Liphium/station/backend/kv"
+	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -24,7 +24,7 @@ import (
 var openIdName = ""
 var Enabled = false
 
-func Unencrypted(router fiber.Router) {
+func Unauthorized(router fiber.Router) {
 
 	if os.Getenv("SSO_ENABLED") != "true" {
 		return
@@ -54,22 +54,14 @@ func Unencrypted(router fiber.Router) {
 
 	// Set it to enabled
 	Enabled = true
-
-	log.Println("SSO is enabled")
-
-	// Register the callback endpoint
-	router.Get("/callback", callback)
-}
-
-func Unauthorized(router fiber.Router) {
-
-	if os.Getenv("SSO_ENABLED") != "true" {
-		return
-	}
+	util.Log.Println("SSO successfully enabled.")
 
 	// Register all the endpoints for SSR
 	router.Post("/form", getSSOForm)
 	router.Post("/check", checkSSO)
+
+	// Register the callback endpoint
+	router.Get("/callback", callback)
 }
 
 // Implementation of goth.Params copied from goth_fiber (look at notice above)

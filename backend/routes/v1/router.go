@@ -29,18 +29,16 @@ func Router(router fiber.Router) {
 		return c.Next()
 	})
 
-	// Unencrypted account routes
-	router.Route("/v1/account", account.Unencrypted)
-	router.Route("/v1", encryptedRoutes)
+	router.Route("/v1", unauthorizedRoutes)
 }
 
-func encryptedRoutes(router fiber.Router) {
+func unauthorizedRoutes(router fiber.Router) {
 
 	// Unauthorized routes
 	// router.Route("/node", node.Unauthorized)
 	router.Route("/account", account.Unauthorized)
 
-	router.Route("/", authorizedRoutes)
+	router.Route("/a", authorizedRoutes)
 }
 
 func authorizedRoutes(router fiber.Router) {

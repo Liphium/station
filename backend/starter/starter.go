@@ -24,8 +24,6 @@ func Startup(routine bool) {
 		StreamRequestBody: true, // TODO: Proper request body protection (Make only certain endpoints accept streams)
 	})
 
-	util.TestAES()
-
 	// Load environment variables (don't if isolated cause not needed)
 	var err error
 	if !routine {

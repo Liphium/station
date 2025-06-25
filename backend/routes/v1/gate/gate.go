@@ -46,6 +46,11 @@ func Unauthorized(router fiber.Router) {
 			return false
 		},
 
+		// Set the adapter name of the client to include the address
+		ClientAdapterHandler: func(client *neogate.Client) string {
+			return service.LiphiumAddress(client.ID)
+		},
+
 		ErrorHandler: func(err error) {
 			util.Log.Printf("pipeshandler error: %s \n", err.Error())
 		},

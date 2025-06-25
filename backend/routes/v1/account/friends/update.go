@@ -1,5 +1,6 @@
 package friends
 
+/*
 import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/util/verify"
@@ -52,3 +53,4 @@ func updateFriend(c *fiber.Ctx) error {
 		"version": version + 1,
 	})
 }
+*/

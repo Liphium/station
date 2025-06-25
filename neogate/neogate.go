@@ -48,6 +48,9 @@ type Config struct {
 	ClientConnectHandler      func(client *Client, attachments string) bool // Called after websocket connection is established, returns if the client should be disconnected (true = disconnect)
 	ClientEnterNetworkHandler func(client *Client, attachments string) bool // Called after pipes adapter is registered, returns if the client should be disconnected (true = disconnect)
 
+	// Determines the id of the event adapter for a client.
+	ClientAdapterHandler func(client *Client) string
+
 	// Codec middleware
 	ClientEncodingMiddleware func(client *Client, instance *Instance, message []byte) ([]byte, error)
 	DecodingMiddleware       func(client *Client, instance *Instance, message []byte) ([]byte, error)

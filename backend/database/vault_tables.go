@@ -37,12 +37,10 @@ type AStoredAction struct {
 type Friendship struct {
 	ID string `json:"id" gorm:"primaryKey"`
 
-	Account    uuid.UUID `json:"account" gorm:"not null"`
-	Payload    string    `json:"friend" gorm:"not null"` // Encrypted (with account's public key) friend key + data
-	LastPacket string    `json:"-"`                      // When the last packet was received (to prevent replay attacks, encrypted)
-	Version    int64     `json:"version" gorm:"index;default:1"`
-	Deleted    bool      `json:"deleted" gorm:"index;default:false"`
-	UpdatedAt  int64     `json:"updated_at" gorm:"autoUpdateTime:milli"`
+	Account   uuid.UUID `json:"account" gorm:"not null;index"`
+	Target    string    `json:"target" gorm:"not null;index"` // This id is with @server
+	Token     string    `json:"token" gorm:"not null;index"`
+	CreatedAt int64     `json:"created_at" gorm:"autoCreateTime:milli;index"`
 }
 
 // Vault for all kinds of things (e.g. conversation tokens, etc.)

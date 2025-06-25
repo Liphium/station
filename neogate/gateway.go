@@ -104,8 +104,9 @@ func ws(conn *websocket.Conn, instance *Instance) {
 
 	// Add adapter for pipes (if this is the first session)
 	if len(instance.GetSessions(info.Account)) == 1 {
+		adapterName := instance.Config.ClientAdapterHandler(client)
 		instance.Adapt(CreateAction{
-			ID: info.Account,
+			ID: adapterName,
 			OnEvent: func(c *AdapterContext) error {
 				if err := instance.SendToAccount(info.Account, c.Message); err != nil {
 					instance.ReportClientError(client, "couldn't send received message", err)
@@ -116,7 +117,7 @@ func ws(conn *websocket.Conn, instance *Instance) {
 
 			// Disconnect the user on error
 			OnError: func(err error) {
-				instance.RemoveAdapter(info.Account)
+				instance.RemoveAdapter(adapterName)
 			},
 		})
 	}

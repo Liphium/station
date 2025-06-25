@@ -125,17 +125,6 @@ func listenForCommands() {
 			database.DBConn.Where("account = ?", acc.ID).Delete(&database.VaultEntry{})
 			database.DBConn.Where("id = ?", acc.ID).Delete(&database.Profile{})
 
-		case "keypair":
-
-			priv, pub, err := util.GenerateRSAKey(util.StandardKeySize)
-			if err != nil {
-				fmt.Println("Failed to generate a keypair!")
-				continue
-			}
-
-			fmt.Println("Packaged public key:", util.PackageRSAPublicKey(pub))
-			fmt.Println("Packaged private key:", util.PackageRSAPrivateKey(priv))
-
 		case "invite-wave":
 
 			invites := 100
@@ -276,15 +265,6 @@ func listenForCommands() {
 			fmt.Println("Unknown command. Type 'help' for a list of commands.")
 		}
 	}
-}
-
-func GenerateKeyPair() (publicKey string, privateKey string, theError error) {
-	priv, pub, err := util.GenerateRSAKey(util.StandardKeySize)
-	if err != nil {
-		return "", "", err
-	}
-
-	return util.PackageRSAPublicKey(pub), util.PackageRSAPrivateKey(priv), nil
 }
 
 func CreateDefaultObjects() {
