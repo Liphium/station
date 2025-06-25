@@ -8,6 +8,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	routes_v1 "github.com/Liphium/station/backend/routes/v1"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/requests"
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -36,9 +37,9 @@ func Startup(routine bool) {
 
 	// Set node protocol
 	if os.Getenv("PROTOCOL") == "" {
-		util.NodeProtocol = "https://"
+		requests.Protocol = "https://"
 	} else {
-		util.NodeProtocol = os.Getenv("PROTOCOL")
+		requests.Protocol = os.Getenv("PROTOCOL")
 	}
 
 	// Connect to the databases

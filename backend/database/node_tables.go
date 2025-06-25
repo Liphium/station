@@ -2,8 +2,6 @@ package database
 
 import (
 	"time"
-
-	"github.com/Liphium/station/backend/util"
 )
 
 type NodeCreation struct {
@@ -32,13 +30,6 @@ func (n *Node) ToEntity() NodeEntity {
 		App:    n.AppID,
 		Domain: n.Domain,
 	}
-}
-
-// Send a ping to see if the node is online
-func (n *Node) SendPing() error {
-
-	_, err := util.PostRequest(util.NodeProtocol+n.Domain+"/ping", map[string]interface{}{})
-	return err
 }
 
 const StatusStarted = 1

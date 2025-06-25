@@ -2,7 +2,7 @@ package townhall_accounts
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/routes/v1/account/files"
+	"github.com/Liphium/station/backend/routes/v1/accounts/files"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"

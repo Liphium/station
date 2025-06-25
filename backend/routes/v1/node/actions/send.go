@@ -1,10 +1,7 @@
 package node_action_routes
 
 import (
-	"fmt"
-
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/gofiber/fiber/v2"
@@ -38,20 +35,23 @@ func sendNodeAction(c *fiber.Ctx) error {
 		return integration.FailedRequest(c, localization.ErrorNotSetup, nil)
 	}
 
-	// Send the remote action to the node
-	answer, err := util.PostRequest(util.NodeProtocol+lowest.Domain+"/actions/"+req.Action, fiber.Map{
-		"id":     fmt.Sprintf("%d", lowest.ID),
-		"token":  lowest.Token,
-		"sender": req.Sender,
-		"action": req.Action,
-		"data":   req.Data,
-	})
-	if err != nil {
-		return integration.FailedRequest(c, localization.ErrorServer, err)
-	}
+	/*
+		// Send the remote action to the node
+		answer, err := util.PostRequest(util.NodeProtocol+lowest.Domain+"/actions/"+req.Action, fiber.Map{
+			"id":     fmt.Sprintf("%d", lowest.ID),
+			"token":  lowest.Token,
+			"sender": req.Sender,
+			"action": req.Action,
+			"data":   req.Data,
+		})
+		if err != nil {
+			return integration.FailedRequest(c, localization.ErrorServer, err)
+		}
 
-	return c.JSON(fiber.Map{
-		"success": true,
-		"answer":  answer,
-	})
+		return c.JSON(fiber.Map{
+			"success": true,
+			"answer":  answer,
+		})
+	*/
+	return nil
 }

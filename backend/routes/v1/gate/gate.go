@@ -2,6 +2,7 @@ package chat_routes
 
 import (
 	"github.com/Liphium/station/backend/service"
+	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/zapshare"
 	"github.com/Liphium/station/main/integration"
@@ -48,7 +49,7 @@ func Unauthorized(router fiber.Router) {
 
 		// Set the adapter name of the client to include the address
 		ClientAdapterHandler: func(client *neogate.Client) string {
-			return service.LiphiumAddress(client.ID)
+			return standards.LiphiumAddress(client.ID)
 		},
 
 		ErrorHandler: func(err error) {

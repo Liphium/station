@@ -1,6 +1,8 @@
 package standards
 
 import (
+	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -92,4 +94,35 @@ func CheckDisplayName(username string) localization.Translations {
 	}
 
 	return nil
+}
+
+// Standards for the account address
+
+const AddressAllowedCharacters = "^[\\p{Ll}\\p{Lu}\\p{N}_\\-]+$"
+
+// Get the Liphium address for this town and an account id.
+func LiphiumAddress(accountId string) string {
+	return fmt.Sprintf("%s@%s", accountId, CurrentTown())
+}
+
+// Get the current town address, same as the one in the LPH address of everyone in this town.
+func CurrentTown() string {
+	protocol := os.Getenv("PROTOCOL")
+	if protocol == "http://" {
+		return protocol + os.Getenv("BASE_PATH")
+	}
+	return os.Getenv("BASE_PATH")
+}
+
+// Splits the Liphium address using the @, returns false for the boolean when invalid.
+//
+// Checks the first part of the address to make sure it's valid.
+// Second part (town) should be verified using a request.
+func SplitLiphiumAddress(address string) (string, string, bool) {
+	accountId, townUrl, valid := strings.Cut(address, "@")
+	if !valid {
+		return "", "", false
+	}
+	matched, err := regexp.Match(AddressAllowedCharacters, []byte(accountId))
+	return accountId, townUrl, err == nil && matched
 }
