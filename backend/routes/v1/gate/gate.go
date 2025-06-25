@@ -1,7 +1,7 @@
 package chat_routes
 
 import (
-	"github.com/Liphium/station/backend/chat"
+	"github.com/Liphium/station/backend/service"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/zapshare"
 	"github.com/Liphium/station/main/integration"
@@ -16,7 +16,7 @@ func Authorized(router fiber.Router) {
 func Unauthorized(router fiber.Router) {
 
 	// Create the gateway
-	chat.Instance = neogate.Setup(neogate.Config{
+	service.Instance = neogate.Setup(neogate.Config{
 		Secret: []byte(util.JwtSecret),
 
 		// Handle client disconnect
@@ -52,5 +52,5 @@ func Unauthorized(router fiber.Router) {
 	})
 
 	// Add all the routes for the gateway
-	router.Route("/", chat.Instance.MountGateway)
+	router.Route("/connect", service.Instance.MountGateway)
 }

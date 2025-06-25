@@ -1,12 +1,13 @@
 package stored_actions
 
 import (
-	"github.com/Liphium/station/backend/chat"
 	"github.com/Liphium/station/backend/database"
+	"github.com/Liphium/station/backend/service"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/neogate"
+	"github.com/Liphium/station/spacestation/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -106,12 +107,14 @@ func sendStoredAction(c *fiber.Ctx) error {
 }
 
 func sendStoredActionTo(accId uuid.UUID, authenticated bool, storedAction database.StoredAction) {
-	chat.Instance.Send([]string{accId.String()}, neogate.Event{
+	if err := service.Instance.Send([]string{accId.String()}, neogate.Event{
 		Name: "stored_action",
 		Data: map[string]interface{}{
 			"a":       authenticated, // Authenticated
 			"id":      storedAction.ID,
 			"payload": storedAction.Payload,
 		},
-	})
+	}); err != nil {
+		util.Log.Println("Couldn't send stored action:", err)
+	}
 }

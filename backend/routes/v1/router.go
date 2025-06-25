@@ -2,7 +2,6 @@ package routes_v1
 
 import (
 	"github.com/Liphium/station/backend/routes/v1/account"
-	"github.com/Liphium/station/backend/routes/v1/node"
 	townhall_routes "github.com/Liphium/station/backend/routes/v1/townhall"
 	"github.com/Liphium/station/backend/util"
 	"github.com/Liphium/station/backend/util/verify"
@@ -38,7 +37,7 @@ func Router(router fiber.Router) {
 func encryptedRoutes(router fiber.Router) {
 
 	// Unauthorized routes
-	router.Route("/node", node.Unauthorized)
+	// router.Route("/node", node.Unauthorized)
 	router.Route("/account", account.Unauthorized)
 
 	router.Route("/", authorizedRoutes)
@@ -51,6 +50,6 @@ func authorizedRoutes(router fiber.Router) {
 
 	// Authorized routes
 	router.Route("/account", account.Authorized)
-	router.Route("/node", node.Authorized)
+	// router.Route("/node", node.Authorized)
 	router.Route("/townhall", townhall_routes.Authorized)
 }

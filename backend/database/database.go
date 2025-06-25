@@ -48,34 +48,34 @@ func Connect() {
 		&Rank{},
 		&PublicKey{},
 		&ProfileKey{},
-		&VaultKey{},
+		// &VaultKey{},
 		&SignatureKey{},
-		&StoredActionKey{},
-		&CloudFile{},
+		// &StoredActionKey{},
+		// &CloudFile{},
 		&Invite{},
 		&InviteCount{},
 
 		// Properties related tables
-		&Friendship{},
-		&Profile{},
-		&StoredAction{},
-		&AStoredAction{},
-		&VaultEntry{},
+		&Friendship{}, // TODO: New architecture for friends to make the server know your friends
+		&Profile{},    // TODO: Handle on its own without using file uploads (maybe)
+		// &StoredAction{},
+		// &AStoredAction{},
+		// &VaultEntry{}, Vault is probably not needed anymore
 		&KeyRequest{},
 		&RecoveryToken{},
 
-		// Node related tables
-		&Node{},
-		&NodeCreation{},
+		// Node related tables (we're killing this system)
+		// &Node{},
+		// &NodeCreation{},
 
 		// Server related tables
-		&App{},
+		// &App{}, No more apps as nodes are getting killed
 		&Setting{},
 
-		// Chatting related tables
-		&Conversation{},
-		&ConversationToken{},
-		&Message{},
+		// Chatting related tables (well, we're removing it)
+		// &Conversation{},
+		// &ConversationToken{},
+		// &Message{},
 	)
 
 	// Assign the database to the global variable

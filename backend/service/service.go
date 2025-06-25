@@ -1,4 +1,4 @@
-package chat
+package service
 
 import "github.com/Liphium/station/neogate"
 
