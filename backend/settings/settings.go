@@ -70,6 +70,16 @@ func (s *setting[T]) SetValue(value T) error {
 	return nil
 }
 
+// Get the value of the setting or its default value
+func (s *setting[T]) ValueOrDefault() T {
+	val, err := s.GetValue()
+	if err != nil {
+		return s.DefaultValue
+	}
+	return val
+}
+
+// Get the value of the setting, may do a database request in case not cached
 func (s *setting[T]) GetValue() (T, error) {
 
 	// Check if the value is already cached

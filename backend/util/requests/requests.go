@@ -9,12 +9,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Liphium/station/backend/settings"
 	"github.com/Liphium/station/backend/util"
 	"github.com/bytedance/sonic"
 )
-
-// Type alias for map to make it more easily accessible
-type Map = map[string]interface{}
 
 // Type alias for a map of strings to make it easier to define headers
 type Headers = map[string]string
@@ -50,6 +48,14 @@ func PostRequest(server string, path string, body Map) (Map, error) {
 // Send a post request to any server. Uses Liphium standards.
 func PostRequestGeneric[T any](server string, path string, body Map) (T, error) {
 	var data T
+
+	// Make sure the server follows decentralization requirements
+	if !settings.DecentralizationEnabled.ValueOrDefault() {
+		return data, fmt.Errorf("decentralization is not allowed")
+	}
+	if strings.HasPrefix(server, "http://") && !settings.DecentralizationAllowUnsafe.ValueOrDefault() {
+		return data, fmt.Errorf("decentralization with unsafe servers not allowed")
+	}
 
 	// Make sure there is a protocol specified on the server
 	if !strings.HasPrefix(server, "http://") && !strings.HasPrefix(server, "https://") {
