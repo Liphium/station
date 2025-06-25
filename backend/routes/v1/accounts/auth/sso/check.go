@@ -2,8 +2,8 @@ package sso_routes
 
 import (
 	"github.com/Liphium/station/backend/database"
-	login_routes "github.com/Liphium/station/backend/routes/v1/account/auth/login"
-	register_routes "github.com/Liphium/station/backend/routes/v1/account/auth/register"
+	login_routes "github.com/Liphium/station/backend/routes/v1/accounts/auth/login"
+	register_routes "github.com/Liphium/station/backend/routes/v1/accounts/auth/register"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/main/ssr"

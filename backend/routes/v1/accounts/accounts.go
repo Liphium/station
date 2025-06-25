@@ -1,13 +1,13 @@
-package account
+package account_routes
 
 import (
-	auth_routes "github.com/Liphium/station/backend/routes/v1/account/auth"
-	friends2_routes "github.com/Liphium/station/backend/routes/v1/account/friends2"
-	invite_routes "github.com/Liphium/station/backend/routes/v1/account/invite"
-	"github.com/Liphium/station/backend/routes/v1/account/keys"
-	"github.com/Liphium/station/backend/routes/v1/account/profile"
-	"github.com/Liphium/station/backend/routes/v1/account/rank"
-	settings_routes "github.com/Liphium/station/backend/routes/v1/account/settings"
+	auth_routes "github.com/Liphium/station/backend/routes/v1/accounts/auth"
+	friends2_routes "github.com/Liphium/station/backend/routes/v1/accounts/friends2"
+	invite_routes "github.com/Liphium/station/backend/routes/v1/accounts/invite"
+	"github.com/Liphium/station/backend/routes/v1/accounts/keys"
+	"github.com/Liphium/station/backend/routes/v1/accounts/profile"
+	rank_routes "github.com/Liphium/station/backend/routes/v1/accounts/rank"
+	settings_routes "github.com/Liphium/station/backend/routes/v1/accounts/settings"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -16,7 +16,7 @@ func Unauthorized(router fiber.Router) {
 	router.Route("/keys", keys.Unauthorized)
 	router.Route("/friends", friends2_routes.Unauthorized)
 	// router.Route("/file_info", files.Unauthorized) // This is this way because of routing issues with fiber (can't blame them though, this is way too complex)
-	router.Route("/rank", rank.Unauthorized)
+	router.Route("/rank", rank_routes.Unauthorized)
 	// router.Route("/stored_actions", stored_actions.Unauthorized)
 
 	router.Route("/profile", profile.Unauthorized)

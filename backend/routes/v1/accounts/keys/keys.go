@@ -1,8 +1,8 @@
 package keys
 
 import (
-	recovery_routes "github.com/Liphium/station/backend/routes/v1/account/keys/recovery"
-	key_request_routes "github.com/Liphium/station/backend/routes/v1/account/keys/requests"
+	recovery_routes "github.com/Liphium/station/backend/routes/v1/accounts/keys/recovery"
+	key_request_routes "github.com/Liphium/station/backend/routes/v1/accounts/keys/requests"
 	"github.com/gofiber/fiber/v2"
 )
 

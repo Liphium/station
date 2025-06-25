@@ -12,7 +12,7 @@ import "github.com/gofiber/fiber/v2"
 - Token needed for Target or you to break the friendship (to verify on external servers).
 
 ## Friend adding process
-1. Call /add to send request. Mirror database entry with returned result.
+1. Call /add to send request. In case not current server, call server/.../add_external, mirror database entry with returned result.
 
 Target can then:
 1. Call /remove to get rid of the request (also uses BreakToken to verify).

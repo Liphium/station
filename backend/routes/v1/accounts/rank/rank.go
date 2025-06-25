@@ -1,4 +1,4 @@
-package rank
+package rank_routes
 
 import "github.com/gofiber/fiber/v2"
 

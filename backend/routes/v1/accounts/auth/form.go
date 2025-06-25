@@ -1,7 +1,7 @@
 package auth_routes
 
 import (
-	sso_routes "github.com/Liphium/station/backend/routes/v1/account/auth/sso"
+	sso_routes "github.com/Liphium/station/backend/routes/v1/accounts/auth/sso"
 	"github.com/Liphium/station/main/localization"
 	"github.com/Liphium/station/main/ssr"
 	"github.com/gofiber/fiber/v2"

@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/Liphium/station/backend/database"
-	login_routes "github.com/Liphium/station/backend/routes/v1/account/auth/login"
+	login_routes "github.com/Liphium/station/backend/routes/v1/accounts/auth/login"
 	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"

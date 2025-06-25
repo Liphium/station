@@ -1,4 +1,4 @@
-package account
+package account_routes
 
 import (
 	"github.com/Liphium/station/backend/database"

@@ -1,8 +1,8 @@
-package account
+package account_routes
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/routes/v1/account/stored_actions"
+	"github.com/Liphium/station/backend/routes/v1/accounts/stored_actions"
 	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/integration"
