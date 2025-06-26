@@ -26,8 +26,6 @@ type StoredAction struct {
 
 // Authenticated stored actions (stored actions but with a key)
 type AStoredAction struct {
-	ID string `json:"id" gorm:"primaryKey"`
-
 	Account   uuid.UUID `json:"-" gorm:"not null"`
 	Payload   string    `json:"payload" gorm:"not null"` // Encrypted payload (encrypted with the account's public key)
 	CreatedAt int64     `json:"-" gorm:"not null,autoCreateTime:milli"`
@@ -35,12 +33,12 @@ type AStoredAction struct {
 
 // Friend vault
 type Friendship struct {
-	ID string `json:"id" gorm:"primaryKey"`
+	Token uuid.UUID `json:"id" gorm:"primaryKey,type:uuid;default:uuid_generate_v4()"`
 
-	Account   uuid.UUID `json:"account" gorm:"not null;index"`
-	Target    string    `json:"target" gorm:"not null;index"` // This id is with @server
-	Token     string    `json:"token" gorm:"not null;index"`
-	CreatedAt int64     `json:"created_at" gorm:"autoCreateTime:milli;index"`
+	Request   bool   `json:"request" gorm:"not null"`
+	Account   string `json:"account" gorm:"not null;index"` // This id is with @server
+	Target    string `json:"target" gorm:"not null;index"`  // This id is with @server
+	CreatedAt int64  `json:"created_at" gorm:"autoCreateTime:milli;index"`
 }
 
 // Vault for all kinds of things (e.g. conversation tokens, etc.)

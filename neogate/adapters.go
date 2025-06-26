@@ -94,3 +94,8 @@ func (instance *Instance) Send(adapters []string, event Event) error {
 	}
 	return nil
 }
+
+// Sends an event to the account
+func (instance *Instance) SendOne(adapter string, event Event) error {
+	return instance.Send([]string{adapter}, event)
+}

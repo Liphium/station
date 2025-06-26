@@ -2,8 +2,6 @@ package account_routes
 
 import (
 	"github.com/Liphium/station/backend/database"
-	"github.com/Liphium/station/backend/routes/v1/accounts/stored_actions"
-	"github.com/Liphium/station/backend/util/auth"
 	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/main/localization"
@@ -62,22 +60,6 @@ func me(c *fiber.Ctx) error {
 		return integration.FailedRequest(c, localization.ErrorKeyNotFound, nil)
 	}
 
-	// Get authenticated stored action key
-	var storedActionKey database.StoredActionKey
-	if database.DBConn.Where(&database.StoredActionKey{ID: acc.ID}).Take(&storedActionKey).Error != nil {
-
-		// Generate new stored action key
-		storedActionKey = database.StoredActionKey{
-			ID:  acc.ID,
-			Key: auth.GenerateToken(stored_actions.StoredActionTokenLength),
-		}
-
-		// Save stored action key
-		if err := database.DBConn.Create(&storedActionKey).Error; err != nil {
-			return integration.FailedRequest(c, localization.ErrorServer, err)
-		}
-	}
-
 	// Retrun details
 	return c.JSON(fiber.Map{
 		"success":     true,
@@ -86,6 +68,5 @@ func me(c *fiber.Ctx) error {
 		"ranks":       ranks,
 		"vault":       vaultKey.Key,
 		"profile":     profileKey.Key,
-		"actions":     storedActionKey.Key,
 	})
 }
