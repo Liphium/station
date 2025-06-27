@@ -21,6 +21,8 @@ func addFriendFromExternal(c *fiber.Ctx) error {
 }
 
 // Create a friend request from a target account id for an account. “accountLPH“ should be an address.
+//
+// Accepts the friend request in case there was one.
 func createFriendRequest(accountLPH string, target uuid.UUID) error {
 	accountId, origin, valid := standards.SplitLiphiumAddress(accountLPH)
 	if !valid {
@@ -78,6 +80,7 @@ func createFriendRequest(accountLPH string, target uuid.UUID) error {
 		return fmt.Errorf("invalid account info")
 	}
 
+	// TODO: Accept when already exists
 	if err := database.DBConn.Create(&database.Friendship{
 		Request:   false,
 		Account:   accountId,
