@@ -95,6 +95,10 @@ func LoadAccount(address standards.LPHAddress) (AccountInfo, error) {
 		accountInfo.SignatureKey = signatureKey.Key
 	}
 
+	if accountInfo.Username == "" || accountInfo.DisplayName == "" || accountInfo.PublicKey == "" || accountInfo.SignatureKey == "" {
+		return accountInfo, fmt.Errorf("invalid account info")
+	}
+
 	// Cache for future requests
 	accountCache.Store(address, accountInfo)
 

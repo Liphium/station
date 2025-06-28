@@ -95,7 +95,9 @@ func (instance *Instance) Send(adapters []string, event Event) error {
 	return nil
 }
 
-// Sends an event to the account
+// Sends an event to the account.
+//
+// Only returns errors for encoding, not retrieval (cause adapters handle that themselves).
 func (instance *Instance) SendOne(adapter string, event Event) error {
 	return instance.Send([]string{adapter}, event)
 }

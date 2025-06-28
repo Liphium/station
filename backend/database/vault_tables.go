@@ -35,10 +35,11 @@ type AStoredAction struct {
 type Friendship struct {
 	Token uuid.UUID `json:"id" gorm:"primaryKey,type:uuid;default:uuid_generate_v4()"`
 
-	Request   bool   `json:"request" gorm:"not null"`
-	Account   string `json:"account" gorm:"not null;index"` // This id is with @server
-	Target    string `json:"target" gorm:"not null;index"`  // This id is with @server
-	CreatedAt int64  `json:"created_at" gorm:"autoCreateTime:milli;index"`
+	Request    bool   `json:"request" gorm:"not null"`
+	Account    string `json:"account" gorm:"not null;index"` // This id is with @server
+	Target     string `json:"target" gorm:"not null;index"`  // This id is with @server
+	ProfileKey string `json:"profile_key" gorm:"not null"`   // Encrypted key for target to decrypt account's profile
+	CreatedAt  int64  `json:"created_at" gorm:"autoCreateTime:milli;index"`
 }
 
 // Vault for all kinds of things (e.g. conversation tokens, etc.)

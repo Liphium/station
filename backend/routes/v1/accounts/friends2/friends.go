@@ -1,6 +1,12 @@
 package friends2_routes
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"github.com/Liphium/station/backend/service"
+	"github.com/Liphium/station/backend/standards"
+	"github.com/Liphium/station/backend/util/requests"
+	"github.com/Liphium/station/neogate"
+	"github.com/gofiber/fiber/v2"
+)
 
 /*
 # Architecture brainstorming
@@ -49,4 +55,25 @@ func Authorized(router fiber.Router) {
 
 func Unauthorized(router fiber.Router) {
 
+}
+
+// Event for a new friend or request
+func FriendEvent(request bool, account standards.LPHAddress, name string, displayName string, publicKey string, signatureKey string, profileKey string) neogate.Event {
+	return neogate.Event{
+		Name: "fr_rq",
+		Data: requests.Map{
+			"request":      request,
+			"id":           account,
+			"name":         name,
+			"display_name": displayName,
+			"pub":          publicKey,
+			"sig":          signatureKey,
+			"prf":          profileKey,
+		},
+	}
+}
+
+// Simple helper function using account info
+func FriendEventFromAccountInfo(request bool, accInfo service.AccountInfo, profileKey string) neogate.Event {
+	return FriendEvent(request, accInfo.Id, accInfo.Username, accInfo.DisplayName, accInfo.PublicKey, accInfo.SignatureKey, profileKey)
 }
