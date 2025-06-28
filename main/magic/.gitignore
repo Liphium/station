@@ -3,5 +3,8 @@
 # Directories for caching/local persistence (don't remove plz)
 cache/
 
+# For the local file store Liphium needs to persist uploaded files
+files/
+
 # Because macOS is annoying
 *.DS_Store
