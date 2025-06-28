@@ -8,26 +8,31 @@ import (
 	"github.com/Liphium/station/backend/database"
 	magic_util "github.com/Liphium/station/backend/magic/scripts/util"
 	"github.com/Liphium/station/backend/util/auth"
+	"github.com/google/uuid"
 )
 
 const DefaultPub = "some_pub"
 const DefaultSig = "some_sig"
 
 // Create a test account.
-func TestAccount(p *mconfig.Plan, name string) {
+func TestAccount(p *mconfig.Plan, name string) uuid.UUID {
 	magic_util.PrepareEnvironment(p)
 	database.Connect()
+
+	var rank database.Rank
+	if err := database.DBConn.Where("level = (?)", database.DBConn.Model(&database.Rank{}).Select("min(level)")).Take(&rank).Error; err != nil {
+		log.Fatalln("couldn't get default rank:", err)
+	}
 
 	// Create the actual account
 	acc := &database.Account{
 		Email:       name + "@liphium.app",
 		DisplayName: name,
 		Username:    name,
-		RankID:      1, // Default
+		RankID:      rank.ID, // Default
 	}
 	if err := database.DBConn.Create(&acc).Error; err != nil {
 		log.Fatalln("couldn't create account:", err)
-
 	}
 
 	// Create the password
@@ -62,4 +67,6 @@ func TestAccount(p *mconfig.Plan, name string) {
 		fmt.Println("E-Mail:", name+"@liphium.app")
 		fmt.Println("Password: yourmum123")
 	}
+
+	return acc.ID
 }
