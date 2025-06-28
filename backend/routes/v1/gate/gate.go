@@ -49,7 +49,7 @@ func Unauthorized(router fiber.Router) {
 
 		// Set the adapter name of the client to include the address
 		ClientAdapterHandler: func(client *neogate.Client) string {
-			return standards.LiphiumAddress(client.ID)
+			return standards.LiphiumAddress(client.ID).String()
 		},
 
 		ErrorHandler: func(err error) {

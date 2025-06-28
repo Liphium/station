@@ -1,9 +1,13 @@
 module github.com/Liphium/station/backend
 
-go 1.24.0
+go 1.24.3
 
 require (
+	github.com/Liphium/magic v1.0.0-rc10
+	github.com/Liphium/station/chatserver v0.0.0-20250116162322-137676363896
 	github.com/Liphium/station/main v0.0.0-20250116162322-137676363896
+	github.com/Liphium/station/neogate v0.0.0-00010101000000-000000000000
+	github.com/Liphium/station/pipes v0.0.0-20250116162322-137676363896
 	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/config v1.29.9
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.62
@@ -18,6 +22,7 @@ require (
 )
 
 require (
+	github.com/Liphium/station/pipeshandler v0.0.0-20250116162322-137676363896 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.10 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.30 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.34 // indirect
@@ -33,10 +38,19 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.17 // indirect
 	github.com/aws/smithy-go v1.22.3 // indirect
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
+	github.com/coder/websocket v1.8.13 // indirect
+	github.com/dgraph-io/ristretto v0.2.0 // indirect
+	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/fasthttp/websocket v1.5.12 // indirect
+	github.com/gofiber/websocket/v2 v2.2.1 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/savsgio/gotils v0.0.0-20240704082632-aef3928b8a38 // indirect
+	golang.org/x/net v0.37.0 // indirect
 	golang.org/x/oauth2 v0.28.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/sync v0.14.0 // indirect
 )
 
 require (
@@ -61,8 +75,8 @@ require (
 	github.com/valyala/fasthttp v1.59.0 // indirect
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/crypto v0.36.0
-	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
 )
 
 replace github.com/Liphium/station/main => ../main

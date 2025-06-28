@@ -98,11 +98,19 @@ func CheckDisplayName(username string) localization.Translations {
 
 // Standards for the account address
 
+// A type for the Liphium address. Use this to specify if you are using an address in all fields.
+type LPHAddress string
+
+// Get the address as a string.
+func (address LPHAddress) String() string {
+	return string(address)
+}
+
 const AddressAllowedCharacters = "^[\\p{Ll}\\p{Lu}\\p{N}_\\-]+$"
 
 // Get the Liphium address for this town and an account id.
-func LiphiumAddress(accountId string) string {
-	return fmt.Sprintf("%s@%s", accountId, CurrentTown())
+func LiphiumAddress(accountId string) LPHAddress {
+	return LPHAddress(fmt.Sprintf("%s@%s", accountId, CurrentTown()))
 }
 
 // Get the current town address, same as the one in the LPH address of everyone in this town.
@@ -118,8 +126,8 @@ func CurrentTown() string {
 //
 // Checks the first part of the address to make sure it's valid.
 // Second part (town) should be verified using a request.
-func SplitLiphiumAddress(address string) (string, string, bool) {
-	accountId, townUrl, valid := strings.Cut(address, "@")
+func (address LPHAddress) Split() (string, string, bool) {
+	accountId, townUrl, valid := strings.Cut(address.String(), "@")
 	if !valid {
 		return "", "", false
 	}

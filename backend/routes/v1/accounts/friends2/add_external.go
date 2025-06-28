@@ -8,6 +8,7 @@ import (
 	"github.com/Liphium/station/backend/service"
 	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util/requests"
+	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/neogate"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -17,14 +18,22 @@ var NodeProtocol = "http://"
 
 // Route: /accounts/friends/add_external
 func addFriendFromExternal(c *fiber.Ctx) error {
-	return nil
+	var req struct {
+		From string `json:"from"` // Address of the sender
+		To   string `json:"to"`   // Address of the target (on current town)
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return integration.InvalidRequest(c, "request not valid")
+	}
+
+	return integration.SuccessfulRequest(c)
 }
 
 // Create a friend request from a target account id for an account. “accountLPH“ should be an address.
 //
 // Accepts the friend request in case there was one.
-func createFriendRequest(accountLPH string, target uuid.UUID) error {
-	accountId, origin, valid := standards.SplitLiphiumAddress(accountLPH)
+func createFriendRequest(accountLPH standards.LPHAddress, target uuid.UUID) error {
+	accountId, origin, valid := accountLPH.Split()
 	if !valid {
 		return fmt.Errorf("invalid address: %s", accountLPH)
 	}
@@ -91,7 +100,7 @@ func createFriendRequest(accountLPH string, target uuid.UUID) error {
 	}
 
 	// Notify the target to send them a notification
-	if err := service.Instance.SendOne(standards.LiphiumAddress(target.String()), neogate.Event{
+	if err := service.Instance.SendOne(standards.LiphiumAddress(target.String()).String(), neogate.Event{
 		Name: "fr_rq",
 		Data: requests.Map{
 			"account":      accountLPH,
