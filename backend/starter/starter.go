@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"time"
 
+	"github.com/Liphium/magic/msdk"
 	"github.com/Liphium/station/backend/database"
 	routes_v1 "github.com/Liphium/station/backend/routes/v1"
 	"github.com/Liphium/station/backend/util"
@@ -28,10 +30,7 @@ func Startup(routine bool) {
 	// Load environment variables (don't if isolated cause not needed)
 	var err error
 	if !routine {
-		err = godotenv.Load()
-		if err != nil {
-			util.Log.Fatal("Error loading .env file")
-		}
+		godotenv.Load()
 	}
 	util.JwtSecret = os.Getenv("JWT_SECRET")
 
@@ -44,6 +43,7 @@ func Startup(routine bool) {
 
 	// Connect to the databases
 	database.Connect()
+	CreateDefaultObjects()
 
 	app.Use(cors.New())
 	app.Use(logger.New())
@@ -72,6 +72,12 @@ func Startup(routine bool) {
 
 	// Ask user for test mode
 	testMode()
+
+	// Tell magic we're ready in like a second
+	go func() {
+		time.Sleep(1 * time.Second)
+		msdk.SignalSuccessfulStart()
+	}()
 
 	// Listen on port 3000
 	listenAddress := fmt.Sprintf("%s:%s", os.Getenv("LISTEN"), os.Getenv("BASE_PORT"))

@@ -2,6 +2,7 @@
 
 # Directories for caching/local persistence (don't remove plz)
 cache/
+files/
 
 # Because macOS is annoying
 *.DS_Store

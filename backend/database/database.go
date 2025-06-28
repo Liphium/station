@@ -11,9 +11,13 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-var DBConn *gorm.DB
+var DBConn *gorm.DB = nil
 
 func Connect() {
+	if DBConn != nil {
+		return
+	}
+
 	url := "host=" + os.Getenv("DB_HOST") + " user=" + os.Getenv("DB_USER") + " password=" + os.Getenv("DB_PASSWORD") + " dbname=" + os.Getenv("DB_DATABASE") + " port=" + os.Getenv("DB_PORT")
 
 	db, err := gorm.Open(postgres.Open(url), &gorm.Config{
