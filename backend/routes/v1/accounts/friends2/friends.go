@@ -50,17 +50,17 @@ TODO: See if other endpoints may be needed.
 */
 
 func Authorized(router fiber.Router) {
-
+	router.Post("/add", addFriend)
 }
 
 func Unauthorized(router fiber.Router) {
-
+	router.Post("/add_external", addFriendFromExternal)
 }
 
 // Event for a new friend or request
 func FriendEvent(request bool, account standards.LPHAddress, name string, displayName string, publicKey string, signatureKey string, profileKey string) neogate.Event {
 	return neogate.Event{
-		Name: "fr_rq",
+		Name: "fr",
 		Data: requests.Map{
 			"request":      request,
 			"id":           account,

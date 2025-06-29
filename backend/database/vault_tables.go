@@ -33,13 +33,12 @@ type AStoredAction struct {
 
 // Friend vault
 type Friendship struct {
-	Token uuid.UUID `json:"id" gorm:"primaryKey,type:uuid;default:uuid_generate_v4()"`
-
+	Token      string `json:"token" gorm:"type:uuid;default:uuid_generate_v4()"` // To allow the other server to access this friendship
 	Request    bool   `json:"request" gorm:"not null"`
 	Account    string `json:"account" gorm:"not null;index"` // This id is with @server
 	Target     string `json:"target" gorm:"not null;index"`  // This id is with @server
 	ProfileKey string `json:"profile_key" gorm:"not null"`   // Encrypted key for target to decrypt account's profile
-	CreatedAt  int64  `json:"created_at" gorm:"autoCreateTime:milli;index"`
+	CreatedAt  int64  `json:"-" gorm:"autoCreateTime:milli;index"`
 }
 
 // Vault for all kinds of things (e.g. conversation tokens, etc.)

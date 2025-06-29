@@ -18,23 +18,23 @@ func MagicService(t *testing.T, p *mconfig.Plan) {
 
 	// Test invalid addresses
 	t.Run("invalid addresses", func(t *testing.T) {
-		if _, err := service.LoadAccount("test1"); err == nil {
+		if _, _, err := service.LoadAccount("test1"); err == nil {
 			t.Fail()
 		}
-		if _, err := service.LoadAccount("@@@@@@"); err == nil {
+		if _, _, err := service.LoadAccount("@@@@@@"); err == nil {
 			t.Fail()
 		}
-		if _, err := service.LoadAccount("test!!!!@"); err == nil {
+		if _, _, err := service.LoadAccount("test!!!!@"); err == nil {
 			t.Fail()
 		}
-		if _, err := service.LoadAccount("!a!a!"); err == nil {
+		if _, _, err := service.LoadAccount("!a!a!"); err == nil {
 			t.Fail()
 		}
 	})
 
 	// Test an account that doesn't exist
 	t.Run("invalid account", func(t *testing.T) {
-		if _, err := service.LoadAccount(standards.LiphiumAddress("hello")); err == nil {
+		if _, _, err := service.LoadAccount(standards.LiphiumAddress("hello")); err == nil {
 			t.Fail()
 		}
 	})
@@ -43,7 +43,7 @@ func MagicService(t *testing.T, p *mconfig.Plan) {
 	t.Run("invalid account", func(t *testing.T) {
 		id := magic_accounts.TestAccount(p, "test1")
 
-		info, err := service.LoadAccount(standards.LiphiumAddress(id.String()))
+		info, _, err := service.LoadAccount(standards.LiphiumAddress(id.String()))
 		if err != nil {
 			log.Fatalln("couldn't load account:", err)
 		}

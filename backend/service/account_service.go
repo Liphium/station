@@ -8,6 +8,7 @@ import (
 	"github.com/Liphium/station/backend/database"
 	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util/requests"
+	"github.com/Liphium/station/main/localization"
 	"github.com/google/uuid"
 )
 
@@ -36,17 +37,17 @@ var accountCache *sync.Map = &sync.Map{}
 //
 // The duration of 30 minutes is there to make sure that, even if the update event gets lost somewhere, the
 // account info is still correct after some time.
-func LoadAccount(address standards.LPHAddress) (AccountInfo, error) {
+func LoadAccount(address standards.LPHAddress) (AccountInfo, localization.Translations, error) {
 
 	// Check cache before doing anything else
 	if obj, ok := accountCache.Load(address); ok && time.Since(obj.(AccountInfo).CreatedAt) < accountCacheDuration {
-		return obj.(AccountInfo), nil
+		return obj.(AccountInfo), nil, nil
 	}
 
 	// Make sure the address is valid
 	accountId, origin, valid := address.Split()
 	if !valid {
-		return AccountInfo{}, fmt.Errorf("invalid liphium address")
+		return AccountInfo{}, nil, fmt.Errorf("invalid liphium address")
 	}
 
 	// Get the account info either from the database or the other server
@@ -56,13 +57,13 @@ func LoadAccount(address standards.LPHAddress) (AccountInfo, error) {
 			"id": accountId,
 		})
 		if err != nil {
-			return accountInfo, fmt.Errorf("couldn't verify account on origin: %s", err)
+			return accountInfo, localization.ErrorOtherServer, fmt.Errorf("couldn't verify account on origin: %s", err)
 		}
 		if !requests.ValueOr(res, "success", false) {
-			return accountInfo, fmt.Errorf("account verification failed with: %s", requests.ValueOr(res, "message", "unknown error"))
+			return accountInfo, nil, fmt.Errorf("account verification failed with: %s", requests.ValueOr(res, "message", "unknown error"))
 		}
 		if requests.ValueOr(res, "id", "-") != accountId {
-			return accountInfo, fmt.Errorf("sender account id is invalid")
+			return accountInfo, localization.ErrorOtherServer, fmt.Errorf("sender account id is invalid")
 		}
 		accountInfo.Id = address
 		accountInfo.Username = requests.ValueOr(res, "name", "")
@@ -73,20 +74,20 @@ func LoadAccount(address standards.LPHAddress) (AccountInfo, error) {
 		// Parse to UUID (as it's the standard at least on this server)
 		accountUuid, err := uuid.Parse(accountId)
 		if err != nil {
-			return accountInfo, fmt.Errorf("invalid account uuid: %s", err)
+			return accountInfo, nil, fmt.Errorf("invalid account uuid: %s", err)
 		}
 
 		var account database.Account
 		if err := database.DBConn.Where("id = ?", accountUuid).Take(&account).Error; err != nil {
-			return accountInfo, fmt.Errorf("couldn't get account from database: %s", err)
+			return accountInfo, nil, fmt.Errorf("couldn't get account from database: %s", err)
 		}
 		var publicKey database.PublicKey
 		if err := database.DBConn.Where("id = ?", accountUuid).Take(&publicKey).Error; err != nil {
-			return accountInfo, fmt.Errorf("couldn't get public key from db: %s", err)
+			return accountInfo, nil, fmt.Errorf("couldn't get public key from db: %s", err)
 		}
 		var signatureKey database.SignatureKey
 		if err := database.DBConn.Where("id = ?", accountUuid).Take(&signatureKey).Error; err != nil {
-			return accountInfo, fmt.Errorf("couldn't get signature key from db: %s", err)
+			return accountInfo, nil, fmt.Errorf("couldn't get signature key from db: %s", err)
 		}
 		accountInfo.Id = address
 		accountInfo.Username = account.Username
@@ -96,13 +97,13 @@ func LoadAccount(address standards.LPHAddress) (AccountInfo, error) {
 	}
 
 	if accountInfo.Username == "" || accountInfo.DisplayName == "" || accountInfo.PublicKey == "" || accountInfo.SignatureKey == "" {
-		return accountInfo, fmt.Errorf("invalid account info")
+		return accountInfo, nil, fmt.Errorf("invalid account info")
 	}
 
 	// Cache for future requests
 	accountCache.Store(address, accountInfo)
 
-	return accountInfo, nil
+	return accountInfo, nil, nil
 }
 
 func LoadAccounts() {

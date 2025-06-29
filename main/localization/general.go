@@ -1,5 +1,9 @@
 package localization
 
+import (
+	"fmt"
+)
+
 var (
 	ErrorInvalidRequest = Translations{
 		englishUS: "The request was invalid. Maybe try upgrading to the newest version?",
@@ -48,3 +52,9 @@ var (
 		englishUS: "Success",
 	}
 )
+
+func ErrorFromOtherServer(err string) Translations {
+	return Translations{
+		englishUS: fmt.Sprintf("There was an error on a different server: %s", err),
+	}
+}
