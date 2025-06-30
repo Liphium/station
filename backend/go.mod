@@ -3,7 +3,7 @@ module github.com/Liphium/station/backend
 go 1.24.3
 
 require (
-	github.com/Liphium/magic v1.0.0-rc10
+	github.com/Liphium/magic v1.0.0-rc12
 	github.com/Liphium/station/chatserver v0.0.0-20250116162322-137676363896
 	github.com/Liphium/station/main v0.0.0-20250116162322-137676363896
 	github.com/Liphium/station/neogate v0.0.0-00010101000000-000000000000

@@ -179,8 +179,8 @@ cloud.google.com/go/workflows v1.12.4/go.mod h1:yQ7HUqOkdJK4duVtMeBCAOPiN1ZF1E9p
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/Liphium/magic v1.0.0-rc10 h1:n/UUuRaHSGLOJCON8SBzb+55O0AJ4tK6zespmEiDmDg=
-github.com/Liphium/magic v1.0.0-rc10/go.mod h1:bLjrH2lD/VCBI4YqY70O/0pwBGP83NEYEamDKCT4Y5M=
+github.com/Liphium/magic v1.0.0-rc12 h1:69TWv6DJSke1Vy4hwmjYGCERABxIdP0YBm81WaD6ms4=
+github.com/Liphium/magic v1.0.0-rc12/go.mod h1:bLjrH2lD/VCBI4YqY70O/0pwBGP83NEYEamDKCT4Y5M=
 github.com/Liphium/magic v1.0.0-rc4 h1:800XdagI6CHz7IQrUJ7uMG0RjOBsHoqZ7u8BDdkjp3o=
 github.com/Liphium/magic v1.0.0-rc4/go.mod h1:sK7LbD//DJGe2zd/bhUKfFrrDej6uEblyfLCNHybOuI=
 github.com/Liphium/magic v1.0.0-rc5 h1:DwvCdlnZlTwA9vakllWd6OuQGeLSIA091P3eAqiQEcQ=
