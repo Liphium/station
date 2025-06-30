@@ -64,9 +64,19 @@ func Token(session uuid.UUID, account uuid.UUID, lvl uint, exp time.Time) (strin
 
 // IsExpired checks if the token is expired
 func IsExpired(c *fiber.Ctx) bool {
-	user := c.Locals("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
+	user, ok := c.Locals("user").(*jwt.Token)
+	if !ok {
+		return false
+	}
+	claims, ok := user.Claims.(jwt.MapClaims)
+	if !ok {
+		return false
+	}
+	return IsExpiredJwt(claims)
+}
 
+// Helper function to check if jwt token is expired
+func IsExpiredJwt(claims jwt.MapClaims) bool {
 	num := claims["e_u"].(float64)
 	exp := int64(num)
 

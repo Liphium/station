@@ -66,12 +66,12 @@ type Message[T any] struct {
 }
 
 // Default pipes-fiber encoding middleware (using JSON)
-func DefaultClientEncodingMiddleware(client *Client, message []byte) ([]byte, error) {
+func DefaultClientEncodingMiddleware(client *Client, instance *Instance, message []byte) ([]byte, error) {
 	return message, nil
 }
 
 // Default pipes-fiber decoding middleware (using JSON)
-func DefaultDecodingMiddleware(client *Client, bytes []byte) ([]byte, error) {
+func DefaultDecodingMiddleware(client *Client, instance *Instance, bytes []byte) ([]byte, error) {
 	return bytes, nil
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -41,12 +42,12 @@ type publicResponse struct {
 }
 
 // Send a post request to any server (no generics). Uses Liphium standards.
-func PostRequest(server string, path string, body Map) (Map, error) {
-	return PostRequestURLGeneric[Map](server+"/"+ApiVersion+path, body)
+func PostRequest(server string, path string, body interface{}) (Map, error) {
+	return PostRequestGeneric[Map](server, path, body)
 }
 
 // Send a post request to any server. Uses Liphium standards.
-func PostRequestGeneric[T any](server string, path string, body Map) (T, error) {
+func PostRequestGeneric[T any](server string, path string, body interface{}) (T, error) {
 	var data T
 
 	// Make sure the server follows decentralization requirements
@@ -82,21 +83,21 @@ func PostRequestGeneric[T any](server string, path string, body Map) (T, error) 
 	}
 
 	// Send the actual request
-	return PostRequestURLGeneric[T](server+"/"+ApiVersion+path, body)
+	return PostRequestURLGeneric[T](ServerPath(server, path), body)
 }
 
 // Send a post request to any URL
-func PostRequestURL(url string, body Map) (Map, error) {
+func PostRequestURL(url string, body interface{}) (Map, error) {
 	return PostRequestURLGenericWithHeaders[Map](url, body, Headers{})
 }
 
 // Send a post request to any URL
-func PostRequestURLGeneric[T any](url string, body Map) (T, error) {
+func PostRequestURLGeneric[T any](url string, body interface{}) (T, error) {
 	return PostRequestURLGenericWithHeaders[T](url, body, Headers{})
 }
 
 // Send a post request to any URL with headers attached
-func PostRequestURLGenericWithHeaders[T any](url string, body Map, headers Headers) (T, error) {
+func PostRequestURLGenericWithHeaders[T any](url string, body interface{}, headers Headers) (T, error) {
 
 	// Declared here so it can be returned as nil before it's actually used
 	var data T
@@ -140,6 +141,22 @@ func PostRequestURLGenericWithHeaders[T any](url string, body Map, headers Heade
 		return data, err
 	}
 	return data, nil
+}
+
+// Get a url for a path on the current server (with api version, etc.)
+func CurrentPath(path string) string {
+	return ServerPath(os.Getenv("PROTOCOL")+os.Getenv("BASE_PATH"), path)
+}
+
+// Get a url for a path on a server (with api version, etc.)
+func ServerPath(server string, path string) string {
+
+	// Make sure there is a protocol specified on the server
+	if !strings.HasPrefix(server, "http://") && !strings.HasPrefix(server, "https://") {
+		server = "https://" + server
+	}
+
+	return server + "/" + ApiVersion + path
 }
 
 // A useful helper struct for the normal response you get from the server (use with generics).

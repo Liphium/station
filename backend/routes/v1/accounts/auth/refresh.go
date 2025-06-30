@@ -14,7 +14,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type refreshRequest struct {
+type RefreshRequest struct {
 	Session string `json:"session"`
 	Token   string `json:"token"`
 }
@@ -23,7 +23,7 @@ type refreshRequest struct {
 func refreshSession(c *fiber.Ctx) error {
 
 	// Parse request
-	var req refreshRequest
+	var req RefreshRequest
 	if err := c.BodyParser(&req); err != nil {
 		return integration.InvalidRequest(c, "invalid request")
 	}

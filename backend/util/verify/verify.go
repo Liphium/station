@@ -2,6 +2,7 @@ package verify
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -75,6 +76,12 @@ func GetSessionInfo(c *fiber.Ctx) (*SessionInformation, error) {
 		return nil, errors.New("no jwt token found")
 	}
 	claims := user.Claims.(jwt.MapClaims)
+
+	return getSessionInfoJwt(claims)
+}
+
+// Helper function get session info from jwt claims
+func getSessionInfoJwt(claims jwt.MapClaims) (*SessionInformation, error) {
 
 	// Parse the uuid
 	id, err := uuid.Parse(claims["ses"].(string))
@@ -171,6 +178,42 @@ func AuthMiddleware() func(c *fiber.Ctx) error {
 			return c.SendStatus(401)
 		},
 	})
+}
+
+// Validate a token straight from a string.
+func ValidateToken(jwtToken string) (*SessionInformation, error) {
+	var info *SessionInformation
+
+	// Parse the actual token
+	token, err := jwt.Parse(jwtToken, func(t *jwt.Token) (interface{}, error) {
+		return []byte(util.JwtSecret), nil
+	})
+	if err != nil {
+		return info, fmt.Errorf("couldn't parse token: %s", err)
+	}
+	if !token.Valid {
+		return info, fmt.Errorf("invalid token")
+	}
+
+	// Make sure the claims are valid
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return info, fmt.Errorf("no normal claims")
+	}
+	if util.IsExpiredJwt(claims) {
+		return info, fmt.Errorf("token expired")
+	}
+
+	// Verify the session
+	info, err = getSessionInfoJwt(claims)
+	if err != nil {
+		return info, fmt.Errorf("couldn't validate session: %s", err)
+	}
+	if !info.IsValid() {
+		return info, fmt.Errorf("invalid session")
+	}
+
+	return info, nil
 }
 
 // Get the session information from the locals (just makes the process a little easier)

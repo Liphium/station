@@ -3,14 +3,20 @@ package neogate
 import (
 	"errors"
 	"fmt"
+	"runtime/debug"
 	"strings"
 	"time"
 
-	"github.com/Liphium/station/chatserver/util"
 	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
 )
+
+// The packet needed for authenticating at the beginning of a neogate connection.
+type AuthPacket struct {
+	Token       string `json:"token"`
+	Attachments string `json:"attachments"`
+}
 
 // Mount the neogate gateway using a fiber router.
 func (instance *Instance) MountGateway(router fiber.Router) {
@@ -36,9 +42,9 @@ func (instance *Instance) MountGateway(router fiber.Router) {
 func ws(conn *websocket.Conn, instance *Instance) {
 
 	defer func() {
-		util.PrintIfTesting("failed connection attempt")
 		if err := recover(); err != nil {
-			util.Log.Println("There was an error with a connection: ", err)
+			Log.Println("There was an error with a connection: ", err)
+			debug.PrintStack()
 		}
 
 		// Close the connection
@@ -49,25 +55,22 @@ func ws(conn *websocket.Conn, instance *Instance) {
 	conn.SetReadDeadline(time.Now().Add(time.Second * 30))
 
 	// Read the auth packet
-	var authPacket struct {
-		Token       string `json:"token"`
-		Attachments string `json:"attachments"`
-	}
+	var authPacket AuthPacket
 	if err := conn.ReadJSON(&authPacket); err != nil {
-		util.PrintIfTesting("closed connection: couldn't decode auth packet: ", err)
+		Log.Println("closed connection: couldn't decode auth packet: ", err)
 		return
 	}
 
 	// Check if the token is valid
 	info, ok := instance.Config.CheckToken(authPacket.Token, authPacket.Attachments)
 	if !ok {
-		util.PrintIfTesting("closed connection: invalid auth token")
+		Log.Println("closed connection: invalid auth token")
 		return
 	}
 
 	// Make sure the session isn't already connected
 	if instance.ExistsConnection(info.Account, info.Session) {
-		util.PrintIfTesting("closed connection: already connected")
+		Log.Println("closed connection: already connected")
 		return
 	}
 
@@ -79,7 +82,7 @@ func ws(conn *websocket.Conn, instance *Instance) {
 
 		// Recover from a failure (in case of a cast issue maybe?)
 		if err := recover(); err != nil {
-			util.Log.Println("connection with", client.ID, "crashed cause of:", err)
+			Log.Println("connection with", client.ID, "crashed cause of:", err)
 		}
 
 		// Get the client

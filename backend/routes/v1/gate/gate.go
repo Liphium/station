@@ -1,9 +1,10 @@
-package chat_routes
+package gate_routes
 
 import (
 	"github.com/Liphium/station/backend/service"
 	"github.com/Liphium/station/backend/standards"
 	"github.com/Liphium/station/backend/util"
+	"github.com/Liphium/station/backend/util/verify"
 	"github.com/Liphium/station/backend/zapshare"
 	"github.com/Liphium/station/main/integration"
 	"github.com/Liphium/station/neogate"
@@ -44,7 +45,31 @@ func Unauthorized(router fiber.Router) {
 			if integration.Testing {
 				util.Log.Println("Client connected:", client.ID)
 			}
+
+			// Send an event to notify of connection success
+			service.Instance.SendEventToClient(client, neogate.Event{
+				Name: "ng_success",
+			})
+
 			return false
+		},
+
+		// Check the delivered token
+		CheckToken: func(token, attachments string) (neogate.ClientInfo, bool) {
+			var clientInfo neogate.ClientInfo
+
+			info, err := verify.ValidateToken(token)
+			if err != nil {
+				util.Log.Println("client failed to connect:", err)
+				return clientInfo, false
+			}
+
+			clientInfo = neogate.ClientInfo{
+				Account: info.GetAccount(),
+				Session: info.GetSession(),
+				Extra:   info,
+			}
+			return clientInfo, true
 		},
 
 		// Set the adapter name of the client to include the address
@@ -53,8 +78,11 @@ func Unauthorized(router fiber.Router) {
 		},
 
 		ErrorHandler: func(err error) {
-			util.Log.Printf("pipeshandler error: %s \n", err.Error())
+			util.Log.Printf("neogate error: %s \n", err.Error())
 		},
+
+		ClientEncodingMiddleware: neogate.DefaultClientEncodingMiddleware,
+		DecodingMiddleware:       neogate.DefaultDecodingMiddleware,
 	})
 
 	// Add all the routes for the gateway

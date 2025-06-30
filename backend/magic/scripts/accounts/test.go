@@ -13,6 +13,7 @@ import (
 
 const DefaultPub = "some_pub"
 const DefaultSig = "some_sig"
+const DefaultPassword = "yourmum123"
 
 // Create a test account.
 func TestAccount(p *mconfig.Plan, name string) uuid.UUID {
@@ -36,9 +37,9 @@ func TestAccount(p *mconfig.Plan, name string) uuid.UUID {
 	}
 
 	// Create the password
-	hash, err := auth.HashPassword("yourmum123", acc.ID)
+	hash, err := auth.HashPassword(DefaultPassword, acc.ID)
 	if err != nil {
-		log.Fatalln("couldn't hash yourmum123:", err)
+		log.Fatalln("couldn't hash", DefaultPassword+":", err)
 	}
 	if err := database.DBConn.Create(&database.Authentication{
 		Account: acc.ID,
@@ -65,7 +66,7 @@ func TestAccount(p *mconfig.Plan, name string) uuid.UUID {
 	if p.Profile != "test" {
 		fmt.Println("Created account")
 		fmt.Println("E-Mail:", name+"@liphium.app")
-		fmt.Println("Password: yourmum123")
+		fmt.Println("Password:", DefaultPassword)
 	}
 
 	return acc.ID
