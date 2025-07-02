@@ -11,17 +11,19 @@ import (
 	"github.com/google/uuid"
 )
 
+type FriendAddRequest struct {
+	Id         standards.LPHAddress `json:"id"`
+	ProfileKey string               `json:"prf"`
+}
+
 // Route: /accounts/friends/add
 func addFriend(c *fiber.Ctx) error {
-	var req struct {
-		Id         string `json:"id"`
-		ProfileKey string `json:"prf"`
-	}
+	var req FriendAddRequest
 	if err := c.BodyParser(&req); err != nil {
 		return integration.InvalidRequest(c, "request is invalid")
 	}
 
-	targetId, targetTown, ok := standards.LiphiumAddress(req.Id).Split()
+	targetId, targetTown, ok := req.Id.Split()
 	if !ok {
 		return integration.FailedRequest(c, localization.ErrorInvalidRequestContent, nil)
 	}
@@ -46,7 +48,7 @@ func addFriend(c *fiber.Ctx) error {
 				Token:      requests.ValueOr(res, "token", ""),
 				Request:    false,
 				Account:    standards.LiphiumAddress(verify.InfoLocals(c).GetAccount()).String(),
-				Target:     req.Id,
+				Target:     req.Id.String(),
 				ProfileKey: req.ProfileKey,
 			}).Error; err != nil {
 				// TODO: Call remove on the other server (spec not completed, so waiting for final version)

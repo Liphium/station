@@ -14,13 +14,15 @@ import (
 	"gorm.io/gorm"
 )
 
+type FriendAddExternalRequest struct {
+	From       string `json:"from"` // Address of the sender
+	ProfileKey string `json:"prf"`  // Profile key to decrypt from's profile (for to, sealed)
+	To         string `json:"to"`   // Address of the target (on current town)
+}
+
 // Route: /accounts/friends/add_external
 func addFriendFromExternal(c *fiber.Ctx) error {
-	var req struct {
-		From       string `json:"from"` // Address of the sender
-		ProfileKey string `json:"prf"`  // Profile key to decrypt from's profile (for to, sealed)
-		To         string `json:"to"`   // Address of the target (on current town)
-	}
+	var req FriendAddExternalRequest
 	if err := c.BodyParser(&req); err != nil {
 		return integration.InvalidRequest(c, "request not valid")
 	}

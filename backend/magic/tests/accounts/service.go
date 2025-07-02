@@ -41,16 +41,16 @@ func MagicService(t *testing.T, p *mconfig.Plan) {
 
 	// Make sure correct info is returned for an actual account
 	t.Run("invalid account", func(t *testing.T) {
-		id := magic_accounts.TestAccount(p, "test1")
+		acc := magic_accounts.TestAccount(p, "test1")
 
-		info, _, err := service.LoadAccount(standards.LiphiumAddress(id.String()))
+		info, _, err := service.LoadAccount(standards.LiphiumAddress(acc.ID.String()))
 		if err != nil {
 			log.Fatalln("couldn't load account:", err)
 		}
 
-		magic_util.AssertEq(info.Username, "test1")
-		magic_util.AssertEq(info.DisplayName, "test1")
-		magic_util.AssertEq(info.PublicKey, magic_accounts.DefaultPub)
-		magic_util.AssertEq(info.SignatureKey, magic_accounts.DefaultSig)
+		magic_util.AssertEq(t, info.Username, "test1")
+		magic_util.AssertEq(t, info.DisplayName, "test1")
+		magic_util.AssertEq(t, info.PublicKey, magic_accounts.DefaultPub)
+		magic_util.AssertEq(t, info.SignatureKey, magic_accounts.DefaultSig)
 	})
 }

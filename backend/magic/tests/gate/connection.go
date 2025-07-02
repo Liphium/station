@@ -3,6 +3,7 @@ package magic_gate
 import (
 	"log"
 	"testing"
+	"time"
 
 	"github.com/Liphium/magic/mconfig"
 	magic_accounts "github.com/Liphium/station/backend/magic/scripts/accounts"
@@ -21,10 +22,8 @@ func MagicConnection(t *testing.T, p *mconfig.Plan) {
 		_, tk := magic_accounts.GetTestToken(p, "test1")
 
 		// Validate connections work
-		conn := NewGateConnection(tk)
-		defer conn.Close()
-		event := conn.ReadEvent()
-		magic_util.AssertEq(event.Name, "ng_success")
+		conn := NewGateConnection(t, tk)
+		defer conn.Close(t)
 	})
 }
 
@@ -33,7 +32,7 @@ type GateConnection struct {
 }
 
 // Create a new gate connection (FOR TESTING ONLY)
-func NewGateConnection(token string) *GateConnection {
+func NewGateConnection(t *testing.T, token string) *GateConnection {
 	ws, err := websocket.Dial(magic_util.GatewayURL(), "", "http://localhost/")
 	if err != nil {
 		log.Fatalln("couldn't connect to gate:", err)
@@ -46,16 +45,22 @@ func NewGateConnection(token string) *GateConnection {
 		Token:       token,
 		Attachments: "",
 	}))
-	magic_util.WebsocketError(err)
+	magic_util.WebsocketError(t, err)
+
+	ev := connection.ReadEvent(t)
+	magic_util.AssertEq(t, ev.Name, "ng_success")
 
 	return connection
 }
 
 // Read a new event from the gate connection (FOR TESTING ONLY)
-func (g *GateConnection) ReadEvent() neogate.Event {
+func (g *GateConnection) ReadEvent(t *testing.T) neogate.Event {
+	// Set 1 second timeout for read operation
+	g.conn.SetReadDeadline(time.Now().Add(1 * time.Second))
+
 	buffer := make([]byte, 8*1024)
 	n, err := g.conn.Read(buffer)
-	magic_util.WebsocketError(err)
+	magic_util.WebsocketError(t, err)
 
 	var event neogate.Event
 	magic_util.Unmarshal(buffer[:n], &event)
@@ -63,6 +68,6 @@ func (g *GateConnection) ReadEvent() neogate.Event {
 }
 
 // Close the connection to the gate
-func (g *GateConnection) Close() {
-	magic_util.WebsocketError(g.conn.Close())
+func (g *GateConnection) Close(t *testing.T) {
+	magic_util.WebsocketError(t, g.conn.Close())
 }

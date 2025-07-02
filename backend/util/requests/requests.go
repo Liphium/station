@@ -91,6 +91,18 @@ func PostRequestURL(url string, body interface{}) (Map, error) {
 	return PostRequestURLGenericWithHeaders[Map](url, body, Headers{})
 }
 
+// Send an authorized post request to any URL
+func PostRequestAuthURL(url string, token string, body interface{}) (Map, error) {
+	return PostRequestAuthURLGeneric[Map](url, token, body)
+}
+
+// Send an authorized post request to any URL
+func PostRequestAuthURLGeneric[T any](url string, token string, body interface{}) (T, error) {
+	return PostRequestURLGenericWithHeaders[T](url, body, Headers{
+		"Authorization": fmt.Sprintf("Bearer %s", token),
+	})
+}
+
 // Send a post request to any URL
 func PostRequestURLGeneric[T any](url string, body interface{}) (T, error) {
 	return PostRequestURLGenericWithHeaders[T](url, body, Headers{})

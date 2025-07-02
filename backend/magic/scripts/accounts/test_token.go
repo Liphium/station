@@ -17,10 +17,10 @@ import (
 func GetTestToken(p *mconfig.Plan, username string) (refreshToken string, token string) {
 
 	var account database.Account
-	magic_util.DatabaseError(database.DBConn.Where("username = ?", username).Preload("Rank").Take(&account))
+	magic_util.DatabaseError(nil, database.DBConn.Where("username = ?", username).Preload("Rank").Take(&account))
 
 	var session database.Session
-	magic_util.DatabaseError(database.DBConn.Where("account = ?", account.ID).FirstOrCreate(&session, database.Session{
+	magic_util.DatabaseError(nil, database.DBConn.Where("account = ?", account.ID).FirstOrCreate(&session, database.Session{
 		Token:           integration.GenerateToken(20),
 		Verified:        true,
 		Account:         account.ID,
@@ -48,10 +48,12 @@ func GetTestToken(p *mconfig.Plan, username string) (refreshToken string, token 
 		log.Fatalln("not valid smh")
 	}
 
-	fmt.Println()
-	fmt.Println("Refresh token:", session.Token)
-	fmt.Println("Token (for requests):", requests.ValueOr(res, "token", "HUH"))
-	fmt.Println()
+	if p.Profile != "test" {
+		fmt.Println()
+		fmt.Println("Refresh token:", session.Token)
+		fmt.Println("Token (for requests):", requests.ValueOr(res, "token", "HUH"))
+		fmt.Println()
+	}
 
 	return session.Token, requests.ValueOr(res, "token", "HUH")
 }

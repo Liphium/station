@@ -8,7 +8,6 @@ import (
 	"github.com/Liphium/station/backend/database"
 	magic_util "github.com/Liphium/station/backend/magic/scripts/util"
 	"github.com/Liphium/station/backend/util/auth"
-	"github.com/google/uuid"
 )
 
 const DefaultPub = "some_pub"
@@ -16,7 +15,7 @@ const DefaultSig = "some_sig"
 const DefaultPassword = "yourmum123"
 
 // Create a test account.
-func TestAccount(p *mconfig.Plan, name string) uuid.UUID {
+func TestAccount(p *mconfig.Plan, name string) database.Account {
 	magic_util.PrepareEnvironment(p)
 	database.Connect()
 
@@ -69,5 +68,5 @@ func TestAccount(p *mconfig.Plan, name string) uuid.UUID {
 		fmt.Println("Password:", DefaultPassword)
 	}
 
-	return acc.ID
+	return *acc
 }
