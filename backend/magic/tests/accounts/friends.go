@@ -42,7 +42,7 @@ func MagicFriendAdding(t *testing.T, p *mconfig.Plan) {
 		frEv := test2Gate.ReadEvent(t)
 		test1Info, _, err := service.LoadAccount(test1LPH)
 		magic_util.AccountServiceError(t, err)
-		magic_util.AssertEventsEq(t, frEv, friends2_routes.FriendEventFromAccountInfo(true, test1Info, "prof"))
+		magic_util.AssertDeepEq(t, frEv, friends2_routes.FriendEventFromAccountInfo(true, test1Info, "prof"))
 	})
 
 	t.Run("friend request accepting", func(t *testing.T) {
@@ -57,12 +57,12 @@ func MagicFriendAdding(t *testing.T, p *mconfig.Plan) {
 		frEv := test1Gate.ReadEvent(t)
 		test2Info, _, err := service.LoadAccount(test2LPH)
 		magic_util.AccountServiceError(t, err)
-		magic_util.AssertEventsEq(t, frEv, friends2_routes.FriendEventFromAccountInfo(false, test2Info, "prof"))
+		magic_util.AssertDeepEq(t, frEv, friends2_routes.FriendEventFromAccountInfo(false, test2Info, "prof"))
 
 		// Event for test2
 		frEv = test2Gate.ReadEvent(t)
 		test1Info, _, err := service.LoadAccount(test1LPH)
 		magic_util.AccountServiceError(t, err)
-		magic_util.AssertEventsEq(t, frEv, friends2_routes.FriendEventFromAccountInfo(false, test1Info, "prof"))
+		magic_util.AssertDeepEq(t, frEv, friends2_routes.FriendEventFromAccountInfo(false, test1Info, "prof"))
 	})
 }

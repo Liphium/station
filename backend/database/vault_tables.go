@@ -33,6 +33,8 @@ type AStoredAction struct {
 
 // Friend vault
 type Friendship struct {
+	ID string `json:"-" gorm:"type:uuid;default:uuid_generate_v4();primaryKey"` // For deleting and stuff
+
 	Token      string `json:"token" gorm:"type:uuid;default:uuid_generate_v4()"` // To allow the other server to access this friendship
 	Request    bool   `json:"request" gorm:"not null"`
 	Account    string `json:"account" gorm:"not null;index"` // This id is with @server

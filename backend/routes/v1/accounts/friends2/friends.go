@@ -63,7 +63,7 @@ func FriendEvent(request bool, account standards.LPHAddress, name string, displa
 		Name: "fr",
 		Data: requests.Map{
 			"request":      request,
-			"id":           account,
+			"id":           account.String(),
 			"name":         name,
 			"display_name": displayName,
 			"pub":          publicKey,
