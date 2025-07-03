@@ -16,7 +16,7 @@ type FriendAddRequest struct {
 	ProfileKey string               `json:"prf"`
 }
 
-// Route: /accounts/friends/add
+// Route: /a/accounts/friends/add
 func addFriend(c *fiber.Ctx) error {
 	var req FriendAddRequest
 	if err := c.BodyParser(&req); err != nil {
