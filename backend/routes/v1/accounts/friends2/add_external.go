@@ -47,13 +47,13 @@ func addFriendFromExternal(c *fiber.Ctx) error {
 	if createdRq != nil {
 		return c.JSON(fiber.Map{
 			"success": true,
-			"request": true,
+			"created": true,
 			"token":   createdRq.Token,
 		})
 	}
 	return c.JSON(fiber.Map{
 		"success": true,
-		"request": false,
+		"created": false,
 	})
 }
 
