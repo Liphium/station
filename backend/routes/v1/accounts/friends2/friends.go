@@ -73,6 +73,16 @@ func FriendEvent(request bool, account standards.LPHAddress, name string, displa
 	}
 }
 
+// Event for friend removal
+func FriendRemoveEvent(account standards.LPHAddress) neogate.Event {
+	return neogate.Event{
+		Name: "fr_rem",
+		Data: requests.Map{
+			"id": account.String(),
+		},
+	}
+}
+
 // Simple helper function using account info
 func FriendEventFromAccountInfo(request bool, accInfo service.AccountInfo, profileKey string) neogate.Event {
 	return FriendEvent(request, accInfo.Id, accInfo.Username, accInfo.DisplayName, accInfo.PublicKey, accInfo.SignatureKey, profileKey)
