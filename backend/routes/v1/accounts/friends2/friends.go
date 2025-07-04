@@ -51,10 +51,12 @@ TODO: See if other endpoints may be needed.
 
 func Authorized(router fiber.Router) {
 	router.Post("/add", addFriend)
+	router.Post("/remove", removeFriend)
 }
 
 func Unauthorized(router fiber.Router) {
 	router.Post("/add_external", addFriendFromExternal)
+	router.Post("/remove_external", removeFriendFromExternal)
 }
 
 // Event for a new friend or request
