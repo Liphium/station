@@ -16,7 +16,7 @@ import (
 	// remove
 		remove func
 		send remove event to account
-		send deleteion request to remove_external
+		send deletion request to remove_external
 
 	// remove_external
 		if external:
@@ -33,7 +33,7 @@ import (
 */
 
 type FriendRemoveRequest struct {
-	Id standards.LPHAddress `json:"id"` // Address of friend to delete
+	Id standards.LPHAddress `json:"id"` // Address of friend to remove
 }
 
 // Route: /a/accounts/friends/remove
