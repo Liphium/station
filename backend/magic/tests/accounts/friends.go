@@ -6,7 +6,6 @@ import (
 	"github.com/Liphium/magic/mconfig"
 	magic_accounts "github.com/Liphium/station/backend/magic/scripts/accounts"
 	magic_util "github.com/Liphium/station/backend/magic/scripts/util"
-	magic_gate "github.com/Liphium/station/backend/magic/tests/gate"
 	friends2_routes "github.com/Liphium/station/backend/routes/v1/accounts/friends2"
 	"github.com/Liphium/station/backend/service"
 	"github.com/Liphium/station/backend/standards"
@@ -26,9 +25,9 @@ func MagicFriendAdding(t *testing.T, p *mconfig.Plan) {
 	test2LPH := standards.LiphiumAddress(test2.ID.String())
 	_, tk2 := magic_accounts.GetTestToken(p, "test2")
 
-	test1Gate := magic_gate.NewGateConnection(t, tk)
+	test1Gate := magic_util.NewGateConnection(t, tk)
 	defer test1Gate.Close(t)
-	test2Gate := magic_gate.NewGateConnection(t, tk2)
+	test2Gate := magic_util.NewGateConnection(t, tk2)
 	defer test2Gate.Close(t)
 
 	t.Run("friend request sending", func(t *testing.T) {
